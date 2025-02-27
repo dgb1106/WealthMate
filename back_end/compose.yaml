@@ -12,10 +12,11 @@ services:
     build:
       context: .
     environment:
-      NODE_ENV: production
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
     ports:
       - 3000:3000
-
 # The commented out section below is an example of how to define a PostgreSQL
 # database that your application can use. `depends_on` tells Docker Compose to
 # start the database before your application. The `db-data` volume persists the
