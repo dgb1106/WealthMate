@@ -1,53 +1,24 @@
-# syntax=docker/dockerfile:1
+# Use Node.js base image
+FROM node:22.14.0-alpine
 
-ARG NODE_VERSION=22.14.0
+# Set working directory
+WORKDIR /app
 
-################################################################################
-# Base Image
-FROM node:${NODE_VERSION}-alpine as base
-WORKDIR /usr/src/app
+# Copy package files and install dependencies
+COPY package*.json ./
 
-################################################################################
-# Install Dependencies
-FROM base as deps
+RUN npm install
 
-# Copy package files first to optimize Docker caching
-COPY package.json package-lock.json ./
-
-# Install only production dependencies
-RUN npm ci --omit=dev
-
-################################################################################
-# Build Application
-FROM base as build
-
-# Copy package files
-COPY package.json package-lock.json ./
-
-# Install all dependencies (including devDependencies for building)
-RUN npm ci
-
-# Copy all source files and build the app
+# Copy application files
 COPY . .
+
+# Generate Prisma Client
+RUN npx prisma generate
+
 RUN npm run build
 
-################################################################################
-# Final Runtime Image
-FROM base as final
-
-# Set production environment
-ENV NODE_ENV=production
-
-# Set non-root user for security
-USER node
-
-# Copy necessary files from previous stages
-COPY package.json ./
-COPY --from=deps /usr/src/app/node_modules ./node_modules
-COPY --from=build /usr/src/app/dist ./dist
-
-# Expose the NestJS application port
+# Expose port
 EXPOSE 3000
 
-# Run the application
-CMD ["node", "dist/main.js"]
+# Start the application
+CMD ["node", "dist/src/main.js"]
