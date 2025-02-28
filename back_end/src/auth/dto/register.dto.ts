@@ -1,4 +1,4 @@
-import { PreferredGoal, PreferredMood } from "src/common/enums/preferred.enum";
+import { PreferredGoal, PreferredMood } from "src/common/enums/enum";
 
 
 export class RegisterDto {

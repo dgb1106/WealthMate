@@ -1,4 +1,4 @@
-import { PreferredMood, PreferredGoal} from "src/common/enums/preferred.enum";
+import { PreferredMood, PreferredGoal} from "src/common/enums/enum";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
