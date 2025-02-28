@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -23,6 +17,46 @@ enum PreferredGoal {
   INVESTMENT
 }
 
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum Frequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum GoalStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum RecommendationType {
+  SAVINGS
+  INVESTMENT
+  EXPENSE_REDUCTION
+}
+
+enum LoanStatus {
+  ACTIVE
+  PAID
+  DEFAULTED
+}
+
+enum JarType {
+  NECESSARY
+  FNIANCIAL_FREEDOM
+  PLAY
+  LONG_TERM_SAVING
+  EDUCATION
+  GIVING
+  INVESTMENT
+}
+
 model Users {
   id              String         @id @default(uuid())
   name            String         @db.VarChar(255)
@@ -38,6 +72,158 @@ model Users {
   create_at       DateTime       @db.Date
   updated_at      DateTime       @db.Date
 
+  transactions    Transactions[]
+  recurringTransactions RecurringTransactions[]
+  budgets         Budgets[]
+  goals           Goals[]
+  loans           Loans[]
+  jwtTokens       JWT[]
+  aiRecommendations AIRecommendations[]
+
   @@map("Users")
 }
 
+model Transactions {
+  id          BigInt         @id @default(autoincrement())
+  userId      String
+  categoryId  BigInt
+  amount      Decimal        @db.Decimal(8, 2)
+  created_at  DateTime       @db.Date
+  description String         @db.VarChar(255)
+
+  user        Users          @relation(fields: [userId], references: [id], onUpdate: Cascade)
+  category    Categories     @relation(fields: [categoryId], references: [id], onUpdate: Cascade)
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([created_at])
+  @@map("Transactions")
+}
+
+model RecurringTransactions {
+  id             BigInt         @id @default(autoincrement())
+  userId         String
+  categoryId     BigInt
+  amount         Decimal        @db.Decimal(8, 2)
+  frequency      Frequency
+  created_at     DateTime       @db.Date
+  next_occurence DateTime       @db.Date
+  description    String         @db.VarChar(255)
+
+  user           Users          @relation(fields: [userId], references: [id], onUpdate: Cascade)
+  category       Categories     @relation(fields: [categoryId], references: [id], onUpdate: Cascade)
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([next_occurence])
+  @@map("RecurringTransactions")
+}
+
+model Categories {
+  id     BigInt         @id @default(autoincrement())
+  jarId  BigInt
+  name   String         @db.VarChar(255)
+  type   TransactionType
+
+  jar    Jars          @relation(fields: [jarId], references: [id], onUpdate: Cascade)
+  transactions         Transactions[]
+  recurringTransactions RecurringTransactions[]
+  budgets              Budgets[]   
+   
+  @@index([jarId])
+  @@map("Categories")
+}
+
+model Budgets {
+  id          BigInt         @id @default(autoincrement())
+  userId      String
+  categoryId  BigInt
+  limit_amount Decimal       @db.Decimal(8, 2)
+  start_date  DateTime       @db.Date
+  end_date    DateTime       @db.Date
+  spent_amount Decimal       @db.Decimal(8, 2)
+
+  user        Users         @relation(fields: [userId], references: [id], onUpdate: Cascade)
+  category    Categories    @relation(fields: [categoryId], references: [id], onUpdate: Cascade)
+
+  @@index([userId])
+  @@index([categoryId])
+  @@map("Budgets")
+}
+
+model Goals {
+  id           BigInt         @id @default(autoincrement())
+  userId       String
+  name         String         @db.VarChar(255)
+  target_amount Decimal       @db.Decimal(8, 2)
+  saved_amount Decimal        @db.Decimal(8, 2)
+  status       GoalStatus
+  due_date     DateTime       @db.Date
+  created_at   DateTime       @db.Date
+
+  user         Users         @relation(fields: [userId], references: [id], onUpdate: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([due_date])
+  @@map("Goals")
+}
+
+model Jars {
+  id                   BigInt         @id @default(autoincrement())
+  name                 String         @db.VarChar(255)
+  limit_amount         Decimal        @db.Decimal(8, 2)
+  type                 JarType
+  allocation_percentage Decimal       @db.Decimal(8, 2)
+
+  categories           Categories[]
+
+  @@index([name])
+  @@map("Jars")
+}
+
+model Loans {
+  id              BigInt         @id @default(autoincrement())
+  userId          String
+  name            String         @db.VarChar(255)
+  due_date        DateTime       @db.Date
+  created_at      DateTime       @db.Date
+  total_amount    Decimal        @db.Decimal(8, 2)
+  remaining_amount Decimal       @db.Decimal(8, 2)
+  status          LoanStatus
+  interest_rate   Decimal        @db.Decimal(8, 2)
+  monthly_payment Decimal        @db.Decimal(8, 2)
+  description     String         @db.VarChar(255)
+
+  user           Users          @relation(fields: [userId], references: [id], onUpdate: Cascade)
+
+  @@index([userId])
+  @@map("Loans")
+}
+
+model JWT {
+  id          BigInt         @id @default(autoincrement())
+  userId      String
+  token       String         @unique @db.VarChar(255)
+  expires_at  DateTime       @db.Date
+  created_at  DateTime       @db.Date
+
+  user        Users         @relation(fields: [userId], references: [id], onUpdate: Cascade)
+
+  @@index([userId])
+  @@map("JWT")
+}
+
+model AIRecommendations {
+  id                  BigInt         @id @default(autoincrement())
+  userId              String
+  recommendation_text String         @db.VarChar(255)
+  recommendation_type RecommendationType
+  created_at          DateTime       @db.Date
+
+  user                Users         @relation(fields: [userId], references: [id], onUpdate: Cascade)
+
+  @@index([userId])
+  @@index([recommendation_type])
+  @@map("AIRecommendations")
+}

@@ -1,4 +1,5 @@
-import { PreferredMood, PreferredGoal, PrismaClient } from '@prisma/client';
+import { PreferredMood, PreferredGoal} from "src/common/enums/enum";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -6,7 +7,7 @@ async function main() {
   await prisma.users.createMany({
     data: [
       {
-        id: "550e8400-e29b-41d4-a716-446655440000", // Nếu dùng UUID, có thể bỏ qua để Prisma tự tạo
+        id: "550e8400-e29b-41d4-a716-446655440000",
         name: "John Doe",
         email: "john@example.com",
         phone: "123456789",
