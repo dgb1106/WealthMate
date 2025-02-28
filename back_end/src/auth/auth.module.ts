@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
+import { AuthViewController } from './views/auth.view.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
@@ -11,13 +12,13 @@ import { UsersModule } from '../users/users.module';
   imports: [
     PassportModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET, // In production, use environment variable
+      secret: process.env.JWT_SECRET, 
       signOptions: { expiresIn: '1h' },
     }),
     PrismaModule,
-    UsersModule, // Import UsersModule to make UsersService available
+    UsersModule,
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, AuthViewController],
   providers: [AuthService, JwtStrategy],
   exports: [AuthService],
 })
