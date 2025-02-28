@@ -11,10 +11,11 @@ import { GoalsModule } from './goals/goals.module';
 import { RecurringTransactionsModule } from './recurring-transactions/recurring-transactions.module';
 import { CategoriesModule } from './categories/categories.module';
 import { JarsModule } from './jars/jars.module';
-import { LoansModule } from './nest/loans/loans.module';
+import { LoansModule } from './loans/loans.module';
 import { LoansController } from './loans/loans.controller';
 import { LoansService } from './loans/loans.service';
 import { AiRecommendationsModule } from './ai-recommendations/ai-recommendations.module';
+
 
 @Module({
   imports: [
