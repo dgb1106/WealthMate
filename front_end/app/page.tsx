@@ -1,13 +1,6 @@
-import Image from "next/image";
-import Link from "next/link";
-import ProductCard from "./components/ProductCard";
+import { redirect } from 'next/navigation';
 
 export default function Home() {
-  return (
-    <main>
-      <h1>Hello lmao</h1>
-      <Link href="/users"><h2>Click</h2></Link>
-      <ProductCard />
-    </main>
-  );
+  // Redirect from the root to the login page
+  redirect('/pages/auth/login');
 }

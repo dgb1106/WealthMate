@@ -1,7 +1,7 @@
 import React from 'react';
 import Head from 'next/head';
-import AuthLayout from '../../../components/layouts/AuthLayout';
-import RegisterForm from '../../components/auth/RegisterForm';
+import AuthLayout from '@/app/components/layouts/AuthLayout';
+import RegisterForm from '@/app/components/auth/RegisterForm';
 
 const RegisterPage: React.FC = () => {
   return (
