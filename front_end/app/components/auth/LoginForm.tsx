@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -86,7 +88,7 @@ const LoginForm: React.FC = () => {
       <div className="text-center mt-4">
         <p className="text-sm text-gray-600">
           Don&apos;t have an account?{' '}
-          <Link href="/auth/register" className="text-blue-600 hover:text-blue-500 font-medium">
+          <Link href="/pages/auth/register" className="text-blue-600 hover:text-blue-500 font-medium">
             Sign up
           </Link>
         </p>
