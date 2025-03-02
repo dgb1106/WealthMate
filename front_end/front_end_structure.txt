@@ -1,0 +1,79 @@
+personal-finance-tracker-frontend/
+├── public/
+│   ├── assets/                # Static assets like images, icons, etc.
+│   │   └── logo.png
+│   └── favicon.ico
+├── app/
+│   ├── components/            # Reusable UI components
+│   │   ├── auth/
+│   │   │   ├── LoginForm.tsx
+│   │   │   └── RegisterForm.tsx
+│   │   ├── dashboard/
+│   │   │   ├── BudgetOverview.tsx
+│   │   │   ├── ExpenseChart.tsx
+│   │   │   ├── IncomeChart.tsx
+│   │   │   └── TransactionTable.tsx
+│   │   ├── forms/
+│   │   │   ├── AddTransactionForm.tsx
+│   │   │   └── BudgetForm.tsx
+│   │   ├── layouts/
+│   │   │   ├── MainLayout.tsx
+│   │   │   └── AuthLayout.tsx
+│   │   ├── shared/
+│   │   │   ├── Button.tsx
+│   │   │   ├── Modal.tsx
+│   │   │   └── InputField.tsx
+│   │   └── notifications/
+│   │       └── BudgetAlert.tsx
+│   ├── contexts/              # React context for state management
+│   │   ├── AuthContext.tsx
+│   │   └── BudgetContext.tsx
+│   ├── hooks/                 # Custom hooks for reusable logic
+│   │   ├── useAuth.tsx
+│   │   ├── useTransactions.tsx
+│   │   └── useBudgets.tsx
+│   ├── pages/                 # Next.js pages and routes
+│   │   ├── api/               # Next.js API routes (if any are used)
+│   │   ├── auth/              # Authentication-related pages
+│   │   │   ├── login.tsx
+│   │   │   └── register.tsx
+│   │   ├── dashboard/         # Dashboard pages
+│   │   │   ├── index.tsx
+│   │   │   └── reports.tsx
+│   │   ├── goals/             # Financial goals pages
+│   │   │   ├── create.tsx
+│   │   │   └── index.tsx
+│   │   ├── transactions/      # Transactions-related pages
+│   │   │   ├── add.tsx
+│   │   │   └── index.tsx
+│   │   ├── budgets/           # Budgeting pages
+│   │   │   ├── create.tsx
+│   │   │   └── index.tsx
+│   │   ├── index.tsx          # Landing or home page
+│   │   └── _app.tsx           # Custom App component (for global settings)
+│   ├── services/              # Services for API requests and other logic
+│   │   ├── authService.ts     # Auth-related API calls
+│   │   ├── transactionService.ts # API calls for transactions
+│   │   ├── budgetService.ts   # API calls for budgets
+│   │   └── reportService.ts   # API calls for reports
+│   ├── store/                 # State management (if using Redux or Zustand)
+│   │   ├── index.ts           # Configure store
+│   │   ├── authSlice.ts       # Auth state slice
+│   │   └── budgetSlice.ts     # Budget state slice
+│   ├── styles/                # Global styles (CSS or Tailwind)
+│   │   ├── globals.css        # Global styles (or Tailwind imports)
+│   │   └── tailwind.config.js # Tailwind configuration (if using)
+│   ├── utils/                 # Utility functions/helpers
+│   │   ├── formatDate.ts      # Helper to format dates
+│   │   ├── validateForm.ts    # Form validation logic
+│   │   └── constants.ts       # App-wide constants (e.g., budget categories)
+│   └── types/                 # TypeScript types/interfaces
+│       ├── transaction.ts     # Types for transactions
+│       ├── budget.ts          # Types for budgets
+│       └── user.ts            # Types for user/auth
+├── .env                       # Environment variables (e.g., API keys)
+├── next.config.js             # Next.js configuration
+├── tailwind.config.js         # Tailwind CSS configuration (if using)
+├── tsconfig.json              # TypeScript configuration
+├── package.json               # Dependencies and scripts
+└── README.md                  # Project documentation
