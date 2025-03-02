@@ -5,9 +5,14 @@ import Link from 'next/link';
 interface AuthLayoutProps {
   children: ReactNode;
   title: string;
+  imageSrc?: string;
 }
 
-const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title }) => {
+const AuthLayout: React.FC<AuthLayoutProps> = ({ 
+  children, 
+  title, 
+  imageSrc = "/png/13.png" // Default image if none provided
+}) => {
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-white">
       {/* Left side - Brand/Logo */}
@@ -15,7 +20,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title }) => {
         <div className="text-center">
           <h1 className="text-gray-800 text-4xl font-bold mb-6">WealthMate</h1>
           <Image 
-            src="/png/13.png" 
+            src={imageSrc}
             alt="WealthMate" 
             width={600} 
             height={600}

@@ -10,9 +10,12 @@ const RegisterPage: React.FC = () => {
         <title>Create Account | WealthMate</title>
         <meta name="description" content="Create a new WealthMate account" />
       </Head>
-      <AuthLayout title="Create Your Account">
-        <RegisterForm />
-      </AuthLayout>
+      <AuthLayout 
+      title="Create Your Account"
+      imageSrc="/png/14.png"
+    >
+      <RegisterForm />
+    </AuthLayout>
     </>
   );
 };

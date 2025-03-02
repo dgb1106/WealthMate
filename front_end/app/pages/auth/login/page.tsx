@@ -9,9 +9,12 @@ const LoginPage: React.FC = () => {
       <Head>
         <meta name="description" content="Sign in to your WealthMate account" />
       </Head>
-      <AuthLayout title="Sign In to WealthMate">
-        <LoginForm />
-      </AuthLayout>
+      <AuthLayout 
+      title="Sign In to WealthMate"
+      imageSrc="/png/13.png"
+    >
+      <LoginForm />
+    </AuthLayout>
     </>
   );
 };
