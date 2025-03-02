@@ -1,7 +1,7 @@
 import React from 'react';
 import Head from 'next/head';
-import AuthLayout from '../../components/layouts/AuthLayout';
-import LoginForm from '../../components/auth/LoginForm';
+import AuthLayout from '../../app/layouts/AuthLayout';
+import LoginForm from '../../app/components/auth/LoginForm';
 
 const LoginPage: React.FC = () => {
   return (

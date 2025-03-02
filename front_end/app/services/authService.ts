@@ -1,4 +1,4 @@
-import { User } from '../../app/types/user';
+import { User } from '../types/user';
 
 interface RegisterData {
   email: string;
