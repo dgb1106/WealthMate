@@ -9,19 +9,19 @@ interface AuthLayoutProps {
 
 const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title }) => {
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
+    <div className="min-h-screen flex flex-col md:flex-row bg-white">
       {/* Left side - Brand/Logo */}
-      <div className="hidden md:flex md:w-1/2 bg-blue-600 flex-col justify-center items-center p-8">
+      <div className="hidden md:flex md:w-1/2 flex-col justify-center items-center p-8 border-r border-gray-200">
         <div className="text-center">
-          <h1 className="text-white text-4xl font-bold mb-6">WealthMate</h1>
+          <h1 className="text-gray-800 text-4xl font-bold mb-6">WealthMate</h1>
           <Image 
-            src="/assets/logo.png" 
+            src="/png/13.png" 
             alt="WealthMate" 
-            width={200} 
-            height={200}
+            width={600} 
+            height={600}
             className="mx-auto" 
           />
-          <p className="text-white text-xl mt-6">
+          <p className="text-gray-700 text-xl mt-6">
             Take control of your financial future
           </p>
         </div>
