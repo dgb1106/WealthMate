@@ -1,6 +1,6 @@
 import React from 'react';
 import Head from 'next/head';
-import AuthLayout from '../../components/layouts/AuthLayout';
+import AuthLayout from '../../../components/layouts/AuthLayout';
 import RegisterForm from '../../components/auth/RegisterForm';
 
 const RegisterPage: React.FC = () => {
