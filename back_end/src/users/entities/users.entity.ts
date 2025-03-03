@@ -1,6 +1,6 @@
 import { PreferredGoal, PreferredMood } from './../../common/enums/enum';
 
-export class Users {
+export class User {
     id: string;
     name: string;
     email: string;
@@ -14,7 +14,7 @@ export class Users {
     createdAt: Date;
     updatedAt: Date;
 
-    constructor(partial: Partial<Users>) {
+    constructor(partial: Partial<User>) {
         Object.assign(this, partial);
     }
 
@@ -153,9 +153,9 @@ export class Users {
         );
     }
 
-    static createNewUser(userData: Omit<Users, 'id' | 'createdAt' | 'updatedAt'>): Users {
+    static createNewUser(userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): User {
         const now = new Date();
-        return new Users({
+        return new User({
             ...userData,
             id: undefined,
             createdAt: now,
