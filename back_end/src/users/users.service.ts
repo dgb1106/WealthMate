@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from '../auth/dto/register.dto';
 import * as bcrypt from 'bcrypt';
 
+
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
