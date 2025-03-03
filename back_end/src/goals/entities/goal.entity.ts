@@ -1,4 +1,4 @@
-import { User } from "../../users/entities/user.entity";
+import { User } from "../../users/entities/users.entity";
 import { Type } from "class-transformer";
 import { GoalStatus } from "../../common/enums/enum";
 
