@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Transcribe Audio</title>
+</head>
+<body>
+  <h1>Tải lên file audio để chuyển đổi thành văn bản</h1>
+  
+  {% if error %}
+    <p style="color: red;">Error: {{ error }}</p>
+  {% endif %}
+  
+  {% if result %}
+    <h2>Kết quả chuyển đổi:</h2>
+    <p>{{ result }}</p>
+  {% endif %}
+  
+  <form method="post" enctype="multipart/form-data">
+    <input type="file" name="audio" accept="audio/*" required>
+    <button type="submit">Tải lên và chuyển đổi</button>
+  </form>
+</body>
+</html>
