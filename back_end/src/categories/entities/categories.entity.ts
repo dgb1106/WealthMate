@@ -1,4 +1,4 @@
-import { Jar } from "../../jars/entities/jar.entity";
+import { Jar } from "../../jars/entities/jars.entity";
 import { Type } from "class-transformer";
 import { TransactionType } from "../../common/enums/enum";
 

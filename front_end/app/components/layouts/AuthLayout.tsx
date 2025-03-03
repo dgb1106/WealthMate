@@ -1,0 +1,48 @@
+import React, { ReactNode } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+
+interface AuthLayoutProps {
+  children: ReactNode;
+  title: string;
+  imageSrc?: string;
+}
+
+const AuthLayout: React.FC<AuthLayoutProps> = ({ 
+  children, 
+  title, 
+  imageSrc = "/png/13.png" // Default image if none provided
+}) => {
+  return (
+    <div className="min-h-screen flex flex-col md:flex-row bg-white">
+      {/* Left side - Brand/Logo */}
+      <div className="hidden md:flex md:w-1/2 flex-col justify-center items-center p-8 border-r border-gray-200">
+        <div className="text-center">
+          <h1 className="text-gray-800 text-4xl font-bold mb-6">WealthMate</h1>
+          <Image 
+            src={imageSrc}
+            alt="WealthMate" 
+            width={600} 
+            height={600}
+            className="mx-auto" 
+          />
+          <p className="text-gray-700 text-xl mt-6">
+            Take control of your financial future
+          </p>
+        </div>
+      </div>
+      
+      {/* Right side - Auth Form */}
+      <div className="w-full md:w-1/2 flex items-center justify-center p-4 md:p-8">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-800">{title}</h2>
+          </div>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AuthLayout;
