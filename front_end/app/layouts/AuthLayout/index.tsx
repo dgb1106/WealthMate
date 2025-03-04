@@ -1,6 +1,5 @@
 import React, { ReactNode } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import styles from './styles.module.css';
 
 interface AuthLayoutProps {
@@ -9,31 +8,29 @@ interface AuthLayoutProps {
   imageSrc?: string;
 }
 
-const AuthLayout: React.FC<AuthLayoutProps> = ({ 
-  children, 
-  title, 
-  imageSrc = "/png/13.png" // Default image if none provided
+const AuthLayout: React.FC<AuthLayoutProps> = ({
+  children,
+  title,
+  imageSrc = '/png/13.png',
 }) => {
   return (
     <div className={styles.container}>
-      {/* Left side - Brand/Logo */}
-      <div className={`${styles.leftSide} hidden md:flex`}>
-        <div className={styles.brandContent}>
+      {/* Left side */}
+      <div className={styles.leftSide}>
+        <div className={styles.textCenter}>
           <h1 className={styles.title}>WealthMate</h1>
-          <Image 
+          <Image
             src={imageSrc}
-            alt="WealthMate" 
-            width={600} 
+            alt="WealthMate"
+            width={600}
             height={600}
-            className={styles.logo} 
+            className={styles.logo}
           />
-          <p className={styles.subtitle}>
-            Take control of your financial future
-          </p>
+          <p className={styles.subtitle}>Take control of your financial future</p>
         </div>
       </div>
-      
-      {/* Right side - Auth Form */}
+
+      {/* Right side */}
       <div className={styles.rightSide}>
         <div className={styles.formContainer}>
           <div className={styles.formTitle}>
