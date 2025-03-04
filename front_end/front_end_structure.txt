@@ -1,79 +1,134 @@
-personal-finance-tracker-frontend/
-├── public/
-│   ├── assets/                # Static assets like images, icons, etc.
-│   │   └── logo.png
-│   └── favicon.ico
-├── app/
-│   ├── components/            # Reusable UI components
+front_end/
+├── app/                      # Source code chính
+│   ├── assets/              # Static assets
+│   │   ├── images/         # Hình ảnh
+│   │   │   ├── logo.png    # Logo của ứng dụng
+│   │   │   └── icons/      # Thư mục chứa các icon
+│   │   └── icons/          # Icons
+│   │       └── index.ts    # Export tất cả icons
+│   │
+│   ├── components/         # Components
+│   │   ├── UI/            # UI components cơ bản
+│   │   │   ├── Button/
+│   │   │   │   ├── index.tsx    # Component chính
+│   │   │   │   └── styles.module.css  # CSS module
+│   │   │   ├── Input/
+│   │   │   │   ├── index.tsx
+│   │   │   │   └── styles.module.css
+│   │   │   ├── Card/
+│   │   │   │   ├── index.tsx
+│   │   │   │   └── styles.module.css
+│   │   │   └── Modal/
+│   │   │       ├── index.tsx
+│   │   │       └── styles.module.css
+│   │   │
+│   │   ├── auth/          # Components xác thực
+│   │   │   ├── LoginForm/
+│   │   │   │   ├── index.tsx
+│   │   │   │   └── styles.module.css
+│   │   │   └── RegisterForm/
+│   │   │       ├── index.tsx
+│   │   │       └── styles.module.css
+│   │   │
+│   │   ├── dashboard/     # Components dashboard
+│   │   │   ├── BudgetOverview/
+│   │   │   │   ├── index.tsx
+│   │   │   │   └── styles.module.css
+│   │   │   ├── ExpenseChart/
+│   │   │   │   ├── index.tsx
+│   │   │   │   └── styles.module.css
+│   │   │   └── TransactionTable/
+│   │   │       ├── index.tsx
+│   │   │       └── styles.module.css
+│   │   │
+│   │   └── shared/        # Components dùng chung
+│   │       ├── Header/
+│   │       │   ├── index.tsx
+│   │       │   └── styles.module.css
+│   │       └── Footer/
+│   │           ├── index.tsx
+│   │           └── styles.module.css
+│   │
+│   ├── hooks/             # Custom hooks
+│   │   ├── useAuth/
+│   │   │   └── index.ts   # Hook xử lý authentication
+│   │   ├── useTransactions/
+│   │   │   └── index.ts   # Hook xử lý transactions
+│   │   └── useBudgets/
+│   │       └── index.ts   # Hook xử lý budgets
+│   │
+│   ├── layouts/           # Layouts
+│   │   ├── AuthLayout/
+│   │   │   ├── index.tsx  # Layout cho trang auth
+│   │   │   └── styles.module.css
+│   │   └── MainLayout/
+│   │       ├── index.tsx  # Layout chính cho dashboard
+│   │       └── styles.module.css
+│   │
+│   ├── pages/            # Pages (Next.js App Router)
+│   │   ├── (auth)/      # Auth routes
+│   │   │   ├── login/
+│   │   │   │   └── page.tsx    # Trang đăng nhập
+│   │   │   └── register/
+│   │   │       └── page.tsx    # Trang đăng ký
+│   │   │
+│   │   ├── (dashboard)/ # Dashboard routes
+│   │   │   ├── budgets/
+│   │   │   │   └── page.tsx    # Trang quản lý ngân sách
+│   │   │   ├── transactions/
+│   │   │   │   └── page.tsx    # Trang quản lý giao dịch
+│   │   │   └── reports/
+│   │   │       └── page.tsx    # Trang báo cáo
+│   │   │
+│   │   └── api/         # API routes
+│   │       └── auth/
+│   │           └── [...nextauth]/
+│   │               └── route.ts  # API route cho authentication
+│   │
+│   ├── services/        # API services
+│   │   ├── authService/
+│   │   │   └── index.ts  # Service xử lý authentication
+│   │   ├── transactionService/
+│   │   │   └── index.ts  # Service xử lý transactions
+│   │   └── budgetService/
+│   │       └── index.ts  # Service xử lý budgets
+│   │
+│   ├── store/          # State management
 │   │   ├── auth/
-│   │   │   ├── LoginForm.tsx
-│   │   │   └── RegisterForm.tsx
-│   │   ├── dashboard/
-│   │   │   ├── BudgetOverview.tsx
-│   │   │   ├── ExpenseChart.tsx
-│   │   │   ├── IncomeChart.tsx
-│   │   │   └── TransactionTable.tsx
-│   │   ├── forms/
-│   │   │   ├── AddTransactionForm.tsx
-│   │   │   └── BudgetForm.tsx
-│   │   ├── layouts/
-│   │   │   ├── MainLayout.tsx
-│   │   │   └── AuthLayout.tsx
-│   │   ├── shared/
-│   │   │   ├── Button.tsx
-│   │   │   ├── Modal.tsx
-│   │   │   └── InputField.tsx
-│   │   └── notifications/
-│   │       └── BudgetAlert.tsx
-│   ├── contexts/              # React context for state management
-│   │   ├── AuthContext.tsx
-│   │   └── BudgetContext.tsx
-│   ├── hooks/                 # Custom hooks for reusable logic
-│   │   ├── useAuth.tsx
-│   │   ├── useTransactions.tsx
-│   │   └── useBudgets.tsx
-│   ├── pages/                 # Next.js pages and routes
-│   │   ├── api/               # Next.js API routes (if any are used)
-│   │   ├── auth/              # Authentication-related pages
-│   │   │   ├── login.tsx
-│   │   │   └── register.tsx
-│   │   ├── dashboard/         # Dashboard pages
-│   │   │   ├── index.tsx
-│   │   │   └── reports.tsx
-│   │   ├── goals/             # Financial goals pages
-│   │   │   ├── create.tsx
-│   │   │   └── index.tsx
-│   │   ├── transactions/      # Transactions-related pages
-│   │   │   ├── add.tsx
-│   │   │   └── index.tsx
-│   │   ├── budgets/           # Budgeting pages
-│   │   │   ├── create.tsx
-│   │   │   └── index.tsx
-│   │   ├── index.tsx          # Landing or home page
-│   │   └── _app.tsx           # Custom App component (for global settings)
-│   ├── services/              # Services for API requests and other logic
-│   │   ├── authService.ts     # Auth-related API calls
-│   │   ├── transactionService.ts # API calls for transactions
-│   │   ├── budgetService.ts   # API calls for budgets
-│   │   └── reportService.ts   # API calls for reports
-│   ├── store/                 # State management (if using Redux or Zustand)
-│   │   ├── index.ts           # Configure store
-│   │   ├── authSlice.ts       # Auth state slice
-│   │   └── budgetSlice.ts     # Budget state slice
-│   ├── styles/                # Global styles (CSS or Tailwind)
-│   │   ├── globals.css        # Global styles (or Tailwind imports)
-│   │   └── tailwind.config.js # Tailwind configuration (if using)
-│   ├── utils/                 # Utility functions/helpers
-│   │   ├── formatDate.ts      # Helper to format dates
-│   │   ├── validateForm.ts    # Form validation logic
-│   │   └── constants.ts       # App-wide constants (e.g., budget categories)
-│   └── types/                 # TypeScript types/interfaces
-│       ├── transaction.ts     # Types for transactions
-│       ├── budget.ts          # Types for budgets
-│       └── user.ts            # Types for user/auth
-├── .env                       # Environment variables (e.g., API keys)
-├── next.config.js             # Next.js configuration
-├── tailwind.config.js         # Tailwind CSS configuration (if using)
-├── tsconfig.json              # TypeScript configuration
-├── package.json               # Dependencies and scripts
-└── README.md                  # Project documentation
+│   │   │   └── index.ts  # Store cho authentication
+│   │   └── budget/
+│   │       └── index.ts  # Store cho budget
+│   │
+│   ├── styles/         # Global styles
+│   │   ├── globals.css  # CSS toàn cục
+│   │   └── themes/
+│   │       ├── light.css  # Theme sáng
+│   │       └── dark.css   # Theme tối
+│   │
+│   ├── types/          # TypeScript types
+│   │   ├── auth.ts     # Types cho authentication
+│   │   ├── budget.ts   # Types cho budget
+│   │   └── transaction.ts  # Types cho transaction
+│   │
+│   └── utils/          # Utility functions
+│       ├── formatters/
+│       │   ├── date.ts    # Format date
+│       │   └── currency.ts  # Format tiền tệ
+│       ├── validators/
+│       │   ├── auth.ts    # Validate form auth
+│       │   └── budget.ts  # Validate form budget
+│       └── constants/
+│           └── index.ts   # Các hằng số
+│
+├── public/             # Public assets
+│   ├── favicon.ico     # Favicon
+│   └── robots.txt      # Robots file
+│
+├── .env               # Environment variables
+├── .env.example      # Example environment variables
+├── .gitignore        # Git ignore file
+├── next.config.js     # Next.js config
+├── tailwind.config.js # Tailwind config
+├── postcss.config.js  # PostCSS config
+├── tsconfig.json      # TypeScript config
+└── package.json       # Dependencies

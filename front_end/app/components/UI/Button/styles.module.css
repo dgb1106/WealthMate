@@ -1,0 +1,31 @@
+.button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  width: 100%;
+  cursor: pointer;
+}
+
+.primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.primary:hover {
+  background-color: #2563eb;
+}
+
+.secondary {
+  background-color: #6b7280;
+  color: white;
+}
+
+.secondary:hover {
+  background-color: #4b5563;
+}
+
+.button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+} 

@@ -1,21 +1,18 @@
 import React from 'react';
-import Head from 'next/head';
-import AuthLayout from '@/app/components/layouts/AuthLayout';
-import LoginForm from '@/app/components/auth/LoginForm';
+import AuthLayout from '@/layouts/AuthLayout/index';
+import { LoginForm } from '@/components/auth/LoginForm';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Sign In | WealthMate',
+  description: 'Sign in to your WealthMate account',
+};
 
 const LoginPage: React.FC = () => {
   return (
-    <>
-      <Head>
-        <meta name="description" content="Sign in to your WealthMate account" />
-      </Head>
-      <AuthLayout 
-      title="Sign In to WealthMate"
-      imageSrc="/png/13.png"
-    >
+    <AuthLayout title="Sign In to WealthMate">
       <LoginForm />
     </AuthLayout>
-    </>
   );
 };
 
