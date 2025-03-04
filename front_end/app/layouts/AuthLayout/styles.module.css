@@ -8,7 +8,7 @@
 
 /* Cột trái: col 1 -> span 2 */
 .leftSide {
-  grid-column: 1 / span 2;
+  grid-column: 1 / span 3;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -24,13 +24,14 @@
   }
 }
 
-/* Cột phải: col 3 -> span 3 */
+/* Cột phải: col 3 -> span 3 với nền xanh */
 .rightSide {
-  grid-column: 3 / span 3;
+  grid-column: 4 / span 2;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem;
+  background-color: #0F1B4C;
 }
 
 /* FormContainer giới hạn độ rộng */
@@ -39,7 +40,7 @@
   max-width: 400px;
 }
 
-/* Một số style ví dụ */
+/* Style cho phần bên trái */
 .title {
   font-size: 2.5rem;
   font-weight: bold;
@@ -58,14 +59,31 @@
   height: auto;
 }
 
+/* Style cho phần form bên phải */
 .formTitle {
   font-size: 1.75rem;
   font-weight: bold;
-  color: #333;
+  color: white;
   margin-bottom: 2rem;
   text-align: center;
 }
 
 .textCenter {
   text-align: center;
+}
+
+/* Style cho logo container bên phải */
+.logoContainer {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logoText {
+  color: white;
+  font-size: 1.25rem;
+  font-weight: bold;
 }
