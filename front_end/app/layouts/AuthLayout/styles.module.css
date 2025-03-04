@@ -1,71 +1,78 @@
 .container {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: white;
+}
+
+.leftSide {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.rightSide {
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.brandContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.subtitle {
+  font-size: 1.25rem;
+  color: #666;
+  margin-top: 1.5rem;
+}
+
+.logo {
+  max-width: 100%;
+  height: auto;
+}
+
+.formContainer {
+  width: 100%;
+  max-width: 400px;
+}
+
+.formTitle {
+  font-size: 1.75rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+/* Side by side layout for desktop */
+@media (min-width: 768px) {
+  .container {
+    flex-direction: row;
   }
   
   .leftSide {
-    display: none;
-    background-color: #3b82f6;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 2rem;
-    color: white;
-  }
-  
-  .brandContent {
-    text-align: center;
-  }
-  
-  .title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 1.5rem;
-  }
-  
-  .subtitle {
-    font-size: 1.25rem;
-    opacity: 0.9;
-  }
-  
-  .logo {
-    margin: 2rem 0;
+    width: 50%;
+    border-right: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
   }
   
   .rightSide {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
+    width: 50%;
   }
-  
-  .formContainer {
-    width: 100%;
-    max-width: 400px;
-  }
-  
-  .formTitle {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #1f2937;
-    margin-bottom: 1.5rem;
-    text-align: center;
-  }
-  
-  @media (min-width: 768px) {
-    .container {
-      flex-direction: row;
-    }
-  
-    .leftSide {
-      display: flex;
-      width: 50%;
-    }
-  
-    .rightSide {
-      width: 50%;
-      padding: 2rem;
-    }
-  }
+}
