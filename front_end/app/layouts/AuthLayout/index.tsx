@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import Image from 'next/image';
 import styles from './styles.module.css';
+import Link from 'next/link';
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -42,5 +43,5 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
     </div>
   );
 };
-
 export default AuthLayout;
+
