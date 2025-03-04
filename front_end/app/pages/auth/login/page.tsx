@@ -1,5 +1,5 @@
 import React from 'react';
-import AuthLayout from '@/layouts/AuthLayout';
+import AuthLayout from '@/layouts/AuthLayout/index';
 import { LoginForm } from '@/components/auth/LoginForm';
 import type { Metadata } from 'next';
 

@@ -1,32 +1,45 @@
+/* Chia 5 cột, min-height full màn hình */
 .container {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
   min-height: 100vh;
-  background-color: white;
+  background-color: #fff;
 }
 
+/* Cột trái: col 1 -> span 2 */
 .leftSide {
-  padding: 2rem;
+  grid-column: 1 / span 2;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  text-align: center;
+  border-right: 1px solid #e2e8f0;
+  padding: 2rem;
 }
 
+/* Ẩn cột trái trên mobile (max-width: 767px) */
+@media (max-width: 767px) {
+  .leftSide {
+    display: none;
+  }
+}
+
+/* Cột phải: col 3 -> span 3 */
 .rightSide {
-  padding: 2rem;
+  grid-column: 3 / span 3;
   display: flex;
+  align-items: center;
   justify-content: center;
-  align-items: center;
+  padding: 2rem;
 }
 
-.brandContent {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+/* FormContainer giới hạn độ rộng */
+.formContainer {
+  width: 100%;
+  max-width: 400px;
 }
 
+/* Một số style ví dụ */
 .title {
   font-size: 2.5rem;
   font-weight: bold;
@@ -37,17 +50,12 @@
 .subtitle {
   font-size: 1.25rem;
   color: #666;
-  margin-top: 1.5rem;
+  margin-top: 1rem;
 }
 
 .logo {
   max-width: 100%;
   height: auto;
-}
-
-.formContainer {
-  width: 100%;
-  max-width: 400px;
 }
 
 .formTitle {
@@ -58,21 +66,6 @@
   text-align: center;
 }
 
-/* Side by side layout for desktop */
-@media (min-width: 768px) {
-  .container {
-    flex-direction: row;
-  }
-  
-  .leftSide {
-    width: 50%;
-    border-right: 1px solid #e2e8f0;
-    position: sticky;
-    top: 0;
-    height: 100vh;
-  }
-  
-  .rightSide {
-    width: 50%;
-  }
+.textCenter {
+  text-align: center;
 }

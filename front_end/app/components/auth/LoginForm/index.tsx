@@ -6,6 +6,7 @@ import { Button } from '../../UI/Button';
 import { Input } from '../../UI/Input';
 import { useAuth } from '../../../hooks/useAuth';
 import type { LoginFormData } from '../../../types/auth';
+import styles from './styles.module.css';
 
 export const LoginForm: React.FC = () => {
   const { login } = useAuth();
@@ -26,7 +27,7 @@ export const LoginForm: React.FC = () => {
 
   return (
     <div className="w-full">
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className={styles.form}>
         <Input
           type="email"
           name="email"

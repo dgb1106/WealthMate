@@ -14,3 +14,15 @@
   margin-bottom: 1.5rem;
   text-align: center;
 } 
+
+.nameFields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .nameFields {
+    grid-template-columns: 1fr;
+  }
+} 
