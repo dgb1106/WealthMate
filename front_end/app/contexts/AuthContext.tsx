@@ -1,31 +1,11 @@
 import React, { createContext, useReducer, useEffect, ReactNode } from 'react';
 import { authService } from '../services/authService';
+import type { User, AuthState, AuthAction, LoginFormData, RegisterFormData } from '../types/auth';
 
-interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-}
-
-interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
-}
-
-interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<void>;
-  register: (userData: RegisterData) => Promise<void>;
+export interface AuthContextType extends AuthState {
+  login: (data: LoginFormData) => Promise<void>;
+  register: (data: RegisterFormData) => Promise<void>;
   logout: () => void;
-}
-
-interface RegisterData {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
 }
 
 const initialState: AuthState = {
@@ -34,14 +14,6 @@ const initialState: AuthState = {
   isLoading: true,
   error: null,
 };
-
-type AuthAction =
-  | { type: 'LOGIN_SUCCESS'; payload: User }
-  | { type: 'LOGIN_FAILURE'; payload: string }
-  | { type: 'REGISTER_SUCCESS'; payload: User }
-  | { type: 'REGISTER_FAILURE'; payload: string }
-  | { type: 'LOGOUT' }
-  | { type: 'AUTH_CHECKED' };
 
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
@@ -108,9 +80,9 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
     checkAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (data: LoginFormData) => {
     try {
-      const user = await authService.login(email, password);
+      const user = await authService.login(data.email, data.password);
       dispatch({ type: 'LOGIN_SUCCESS', payload: user });
     } catch (error: any) {
       dispatch({ type: 'LOGIN_FAILURE', payload: error.message });
@@ -118,9 +90,9 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
     }
   };
 
-  const register = async (userData: RegisterData) => {
+  const register = async (data: RegisterFormData) => {
     try {
-      const user = await authService.register(userData);
+      const user = await authService.register(data);
       dispatch({ type: 'REGISTER_SUCCESS', payload: user });
     } catch (error: any) {
       dispatch({ type: 'REGISTER_FAILURE', payload: error.message });

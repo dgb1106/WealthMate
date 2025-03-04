@@ -1,0 +1,89 @@
+/* Chia 5 cột, min-height full màn hình */
+.container {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  min-height: 100vh;
+  background-color: #fff;
+}
+
+/* Cột trái: col 1 -> span 2 */
+.leftSide {
+  grid-column: 1 / span 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-right: 1px solid #e2e8f0;
+  padding: 2rem;
+}
+
+/* Ẩn cột trái trên mobile (max-width: 767px) */
+@media (max-width: 767px) {
+  .leftSide {
+    display: none;
+  }
+}
+
+/* Cột phải: col 3 -> span 3 với nền xanh */
+.rightSide {
+  grid-column: 4 / span 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: #0F1B4C;
+}
+
+/* FormContainer giới hạn độ rộng */
+.formContainer {
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Style cho phần bên trái */
+.title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.subtitle {
+  font-size: 1.25rem;
+  color: #666;
+  margin-top: 1rem;
+}
+
+.logo {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Style cho phần form bên phải */
+.formTitle {
+  font-size: 1.75rem;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.textCenter {
+  text-align: center;
+}
+
+/* Style cho logo container bên phải */
+.logoContainer {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logoText {
+  color: white;
+  font-size: 1.25rem;
+  font-weight: bold;
+}
