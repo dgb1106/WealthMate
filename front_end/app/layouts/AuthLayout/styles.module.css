@@ -1,0 +1,71 @@
+.container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .leftSide {
+    display: none;
+    background-color: #3b82f6;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    color: white;
+  }
+  
+  .brandContent {
+    text-align: center;
+  }
+  
+  .title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+  }
+  
+  .subtitle {
+    font-size: 1.25rem;
+    opacity: 0.9;
+  }
+  
+  .logo {
+    margin: 2rem 0;
+  }
+  
+  .rightSide {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  
+  .formContainer {
+    width: 100%;
+    max-width: 400px;
+  }
+  
+  .formTitle {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  
+  @media (min-width: 768px) {
+    .container {
+      flex-direction: row;
+    }
+  
+    .leftSide {
+      display: flex;
+      width: 50%;
+    }
+  
+    .rightSide {
+      width: 50%;
+      padding: 2rem;
+    }
+  }
