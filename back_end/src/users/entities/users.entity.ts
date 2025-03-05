@@ -1,4 +1,9 @@
+import { Loan } from './../../loans/entities/loans.entity';
+import { Budget } from './../../budgets/entities/budget.entity';
+import { RecurringTransaction } from './../../recurring-transactions/entities/recurring-transactions.entity';
+import { Transaction } from './../../transactions/entities/transaction.entity';
 import { PreferredGoal, PreferredMood } from './../../common/enums/enum';
+import { Goals } from '@prisma/client';
 
 export class User {
     id: string;
@@ -13,6 +18,12 @@ export class User {
     currentBalance: number;
     createdAt: Date;
     updatedAt: Date;
+
+    transactions: Transaction[];
+    recurringTransactions: RecurringTransaction[];
+    budgets: Budget[];
+    goals: Goals[];
+    loans: Loan[];
 
     constructor(partial: Partial<User>) {
         Object.assign(this, partial);
@@ -125,15 +136,8 @@ export class User {
         if (amount < 0) {
             throw new Error('Amount must be positive');
         }
-        if (this.canAffordTransaction(amount) === false) {
-            throw new Error('Insufficient balance');
-        }
         this.currentBalance -= amount;
         this.updatedAt = new Date();
-    }
-
-    canAffordTransaction(amount: number): boolean {
-        return this.currentBalance >= amount;
     }
 
     updateLastActivity(): void {
