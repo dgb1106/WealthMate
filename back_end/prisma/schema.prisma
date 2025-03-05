@@ -47,16 +47,6 @@ enum LoanStatus {
   DEFAULTED
 }
 
-enum JarType {
-  NECESSARY
-  FNIANCIAL_FREEDOM
-  PLAY
-  LONG_TERM_SAVING
-  EDUCATION
-  GIVING
-  INVESTMENT
-}
-
 model Users {
   id              String         @id @default(uuid())
   name            String         @db.VarChar(255)
@@ -91,8 +81,8 @@ model Transactions {
   created_at  DateTime       @db.Date
   description String         @db.VarChar(255)
 
-  user        Users          @relation(fields: [userId], references: [id], onUpdate: Cascade)
-  category    Categories     @relation(fields: [categoryId], references: [id], onUpdate: Cascade)
+  user        Users          @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  category    Categories     @relation(fields: [categoryId], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
   @@index([userId])
   @@index([categoryId])
@@ -110,8 +100,8 @@ model RecurringTransactions {
   next_occurence DateTime       @db.Date
   description    String         @db.VarChar(255)
 
-  user           Users          @relation(fields: [userId], references: [id], onUpdate: Cascade)
-  category       Categories     @relation(fields: [categoryId], references: [id], onUpdate: Cascade)
+  user           Users          @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  category       Categories     @relation(fields: [categoryId], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
   @@index([userId])
   @@index([categoryId])
@@ -121,16 +111,13 @@ model RecurringTransactions {
 
 model Categories {
   id     BigInt         @id @default(autoincrement())
-  jarId  BigInt
   name   String         @db.VarChar(255)
   type   TransactionType
 
-  jar    Jars          @relation(fields: [jarId], references: [id], onUpdate: Cascade)
   transactions         Transactions[]
   recurringTransactions RecurringTransactions[]
   budgets              Budgets[]   
    
-  @@index([jarId])
   @@map("Categories")
 }
 
@@ -143,8 +130,8 @@ model Budgets {
   end_date    DateTime       @db.Date
   spent_amount Decimal       @db.Decimal(8, 2)
 
-  user        Users         @relation(fields: [userId], references: [id], onUpdate: Cascade)
-  category    Categories    @relation(fields: [categoryId], references: [id], onUpdate: Cascade)
+  user        Users         @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  category    Categories    @relation(fields: [categoryId], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
   @@index([userId])
   @@index([categoryId])
@@ -169,19 +156,6 @@ model Goals {
   @@map("Goals")
 }
 
-model Jars {
-  id                   BigInt         @id @default(autoincrement())
-  name                 String         @db.VarChar(255)
-  limit_amount         Decimal        @db.Decimal(8, 2)
-  type                 JarType
-  allocation_percentage Decimal       @db.Decimal(8, 2)
-
-  categories           Categories[]
-
-  @@index([name])
-  @@map("Jars")
-}
-
 model Loans {
   id              BigInt         @id @default(autoincrement())
   userId          String
@@ -195,7 +169,7 @@ model Loans {
   monthly_payment Decimal        @db.Decimal(8, 2)
   description     String         @db.VarChar(255)
 
-  user           Users          @relation(fields: [userId], references: [id], onUpdate: Cascade)
+  user           Users          @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
   @@index([userId])
   @@map("Loans")
@@ -208,7 +182,7 @@ model JWT {
   expires_at  DateTime       @db.Date
   created_at  DateTime       @db.Date
 
-  user        Users         @relation(fields: [userId], references: [id], onUpdate: Cascade)
+  user        Users         @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
   @@index([userId])
   @@map("JWT")
@@ -221,7 +195,7 @@ model AIRecommendations {
   recommendation_type RecommendationType
   created_at          DateTime       @db.Date
 
-  user                Users         @relation(fields: [userId], references: [id], onUpdate: Cascade)
+  user                Users         @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
   @@index([userId])
   @@index([recommendation_type])
