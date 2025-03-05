@@ -1,15 +1,115 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from '../auth/dto/register.dto';
+import { User } from './entities/users.entity';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { PreferredMood, PreferredGoal } from 'src/common/enums/enum';
+import { GlobalVariables } from 'src/GlobalVariables';
 import * as bcrypt from 'bcrypt';
 
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, id: string) {}
 
   async getAllUsers() {
     return this.prisma.users.findMany();
+  }
+
+  async getUserById(id: string) {
+    const user = await this.prisma.users.findUnique({
+      where: { id: id },
+    });
+    if (!user) {
+      throw new ConflictException('User not found');
+    }
+    return user;
+  }
+
+  async getUserByEmail(email: string) {
+    const user = await this.prisma.users.findUnique({
+      where: { email: email },
+    });
+    if (!user) {
+      throw new ConflictException('User not found');
+    }
+    return user;
+  }
+
+  async validateUserCredentials(email: string, password: string) {
+    const user = await this.getUserByEmail(email);
+
+    const isValidPassword = await bcrypt.compare(password, user.hash_password);
+
+    if (!isValidPassword) {
+      throw new ConflictException('Invalid password');
+    }
+
+    const { hash_password, ...result } = user;
+
+    GlobalVariables.currentUser = new User(result);
+    
+    return result;
+  }
+
+  async updateBalance(id: string, amount: number) {
+    return this.prisma.users.update({
+      where: { id },
+      data: {
+        current_balance: GlobalVariables.currentUser.getCurrentBalance() + amount,
+        updated_at: new Date(),
+      }
+    });
+  }
+
+  async updateUser(id: string, updateUserDto: UpdateUserDto) {
+    // If email is being updated, check if it's already in use
+    if (updateUserDto.email && updateUserDto.email !== GlobalVariables.currentUser.getEmail()) {
+      const existingEmail = await this.prisma.users.findUnique({
+        where: { email: updateUserDto.email },
+      });
+  
+      if (existingEmail) {
+        throw new ConflictException('Email already in use');
+      }
+    }
+  
+    // If phone is being updated, check if it's already in use
+    if (updateUserDto.phone && updateUserDto.phone !== GlobalVariables.currentUser.getPhone()) {
+      const existingPhone = await this.prisma.users.findUnique({
+        where: { phone: updateUserDto.phone },
+      });
+  
+      if (existingPhone) {
+        throw new ConflictException('Phone number already in use');
+      }
+    }
+  
+    // Prepare data object for update
+    const updateData: any = {};
+    
+    // Map fields from DTO to database field names
+    if (updateUserDto.name !== undefined) updateData.name = updateUserDto.name;
+    if (updateUserDto.email !== undefined) updateData.email = updateUserDto.email;
+    if (updateUserDto.phone !== undefined) updateData.phone = updateUserDto.phone;
+    if (updateUserDto.city !== undefined) updateData.city = updateUserDto.city;
+    if (updateUserDto.district !== undefined) updateData.district = updateUserDto.district;
+    if (updateUserDto.job !== undefined) updateData.job = updateUserDto.job;
+    if (updateUserDto.preferredMood !== undefined) updateData.preferred_mood = updateUserDto.preferredMood;
+    if (updateUserDto.preferredGoal !== undefined) updateData.preferred_goal = updateUserDto.preferredGoal;
+    
+    // Always update the updatedAt timestamp
+    updateData.updated_at = new Date();
+  
+    // Update the user
+    const updatedUser = await this.prisma.users.update({
+      where: { id },
+      data: updateData,
+    });
+  
+    // Don't return the hashed password
+    const { ...result } = updatedUser;
+    return result;
   }
   
   async createUser(registerDto: RegisterDto) {
@@ -56,5 +156,11 @@ export class UsersService {
     // Return user without password
     const { hash_password, ...result } = newUser;
     return result;
+  }
+
+  async deleteUser(id: string) {
+    return this.prisma.users.delete({
+      where: { id },
+    });
   }
 }
