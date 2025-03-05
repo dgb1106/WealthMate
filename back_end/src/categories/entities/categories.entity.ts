@@ -1,14 +1,8 @@
-import { Jar } from "../../jars/entities/jars.entity";
 import { Type } from "class-transformer";
 import { TransactionType } from "../../common/enums/enum";
 
 export class Category {
   id: string;
-  
-  jarId: string;
-  
-  @Type(() => Jar)
-  jar?: Jar;
   
   name: string;
   

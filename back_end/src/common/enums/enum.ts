@@ -38,12 +38,3 @@ export enum PreferredMood {
     DEFAULTED = "DEFAULTED"
   }
   
-  export enum JarType {
-    NECESSARY = "NECESSARY",
-    FINANCIAL_FREEDOM = "FINANCIAL_FREEDOM", // Corrected typo
-    PLAY = "PLAY",
-    LONG_TERM_SAVING = "LONG_TERM_SAVING",
-    EDUCATION = "EDUCATION",
-    GIVING = "GIVING",
-    INVESTMENT = "INVESTMENT"
-  }
