@@ -1,4 +1,5 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { RecurringTransaction } from './../recurring-transactions/entities/recurring-transactions.entity';
+import { ConflictException, Global, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from '../auth/dto/register.dto';
 import { User } from './entities/users.entity';
@@ -6,6 +7,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { PreferredMood, PreferredGoal } from 'src/common/enums/enum';
 import { GlobalVariables } from 'src/GlobalVariables';
 import * as bcrypt from 'bcrypt';
+import { Transaction } from 'src/transactions/entities/transaction.entity';
+import { Decimal } from '@prisma/client/runtime/library';
 
 
 @Injectable()
@@ -60,6 +63,85 @@ export class UsersService {
         updated_at: new Date(),
       }
     });
+  }
+
+  async updateLoansBalance(loanId: string, amount: number) {
+    let convertedLoanId = BigInt(loanId);
+
+    const loan = await this.prisma.loans.findUnique({
+      where: { id: convertedLoanId },
+    });
+
+    if (!loan) {
+      throw new ConflictException('Loan not found');
+    }
+
+    loan.total_amount.add(amount);
+
+    return this.prisma.loans.update({
+      where: { id: convertedLoanId },
+      data: {
+        total_amount: loan.total_amount,
+      }
+    });
+  }
+
+  async getUserTransactions(id: string) {
+    const transactions = await this.prisma.transactions.findMany({
+      where: { userId: id },
+      include: { category: true },
+    });
+
+    GlobalVariables.currentUser.setTransactions(transactions);
+
+    return transactions;
+  }
+
+  async getCurrentTransactionsList() {
+    return GlobalVariables.currentUser.getTransactions();
+  }
+
+  async getUserRecurringTransactions(id: string) {
+    const recurringTransactions = await this.prisma.recurringTransactions.findMany({
+      where: { userId: id },
+      include: { category: true },
+    });
+
+    GlobalVariables.currentUser.setRecurringTransactions(recurringTransactions);
+
+    return recurringTransactions;
+  }
+
+  async getCurrentRecurringTransactionsList() {
+    return GlobalVariables.currentUser.getRecurringTransactions();
+  }
+
+  async getUserBudgets(id: string) {
+    const budgets = await this.prisma.budgets.findMany({
+      where: { userId: id },
+    });
+
+    GlobalVariables.currentUser.setBudgets(budgets);
+
+    return budgets;
+  }
+
+  async getCurrentBudgetsList() {
+    return GlobalVariables.currentUser.getBudgets();
+  }
+
+  async getUserGoals(id: string) {
+    const goals = await this.prisma.goals.findMany({
+      where: { userId: id },
+    });
+
+    GlobalVariables.currentUser.setGoals(goals);
+
+    return goals;
+  }
+
+  async getCurrentGoalsList() {
+    return GlobalVariables.currentUser.getGoals();
   }
 
   async updateUser(id: string, updateUserDto: UpdateUserDto) {
