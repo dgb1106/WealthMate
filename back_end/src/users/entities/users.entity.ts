@@ -3,7 +3,7 @@ import { Budget } from './../../budgets/entities/budget.entity';
 import { RecurringTransaction } from './../../recurring-transactions/entities/recurring-transactions.entity';
 import { Transaction } from './../../transactions/entities/transaction.entity';
 import { PreferredGoal, PreferredMood } from './../../common/enums/enum';
-import { Goals } from '@prisma/client';
+import { Goals, Prisma } from '@prisma/client';
 
 export class User {
     id: string;
@@ -19,11 +19,11 @@ export class User {
     createdAt: Date;
     updatedAt: Date;
 
-    transactions: Transaction[];
-    recurringTransactions: RecurringTransaction[];
-    budgets: Budget[];
-    goals: Goals[];
-    loans: Loan[];
+    transactions: Prisma.TransactionsGetPayload<{ include: {category: true} }>;
+    recurringTransactions: Prisma.RecurringTransactionsGetPayload<{ include: {category: true} }>;
+    budgets: Prisma.BudgetsGetPayload<{ include: {category: true} }>;
+    goals: Prisma.GoalsGetPayload<{}>;
+    loans: Prisma.LoansGetPayload<{}>;
 
     constructor(partial: Partial<User>) {
         Object.assign(this, partial);
@@ -81,6 +81,26 @@ export class User {
         return this.updatedAt;
     }
 
+    getTransactions(): any {
+        return this.transactions;
+    }
+
+    getRecurringTransactions(): any {
+        return this.recurringTransactions;
+    }
+
+    getBudgets(): any {
+        return this.budgets;
+    }
+
+    getGoals(): any {
+        return this.goals;
+    }
+
+    getLoans(): any {
+        return this.loans;
+    }
+
     setName(name: string): void {
         this.name = name;
         this.updatedAt = new Date();
@@ -124,19 +144,28 @@ export class User {
         this.updatedAt = new Date();
     }
 
-    addBalance(amount: number): void {
-        if (amount < 0) {
-            throw new Error('Amount must be positive');
-        }
-        this.currentBalance += amount;
-        this.updatedAt = new Date();
+    setTransactions(transactions: any): void {
+        this.transactions = transactions;
     }
 
-    subtractBalance(amount: number): void {
-        if (amount < 0) {
-            throw new Error('Amount must be positive');
-        }
-        this.currentBalance -= amount;
+    setRecurringTransactions(recurringTransactions: any): void {
+        this.recurringTransactions = recurringTransactions;
+    }
+
+    setBudgets(budgets: any): void {
+        this.budgets = budgets;
+    }
+
+    setGoals(goals: any): void {
+        this.goals = goals;
+    }
+
+    setLoans(loans: any): void {
+        this.loans = loans;
+    }
+
+    updateBalance(amount: number): void {
+        this.currentBalance += amount;
         this.updatedAt = new Date();
     }
 
