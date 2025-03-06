@@ -1,11 +1,10 @@
 import React from 'react';
-import MainLayout from '@/layouts/MainLayout';
+import MainLayout from '@/layouts/MainLayout/index';
 
 const DashBoardPage: React.FC = () => {
   return (
     <MainLayout>
-      <h1>Welcome to the Dashboard</h1>
-      <p>This is the content area.</p>
+      <h1>Hello World</h1>
     </MainLayout>
   );
 };
