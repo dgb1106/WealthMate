@@ -1,6 +1,5 @@
 import { PreferredGoal, PreferredMood } from "src/common/enums/enum";
 
-
 export class RegisterDto {
     email: string;
     password: string;
