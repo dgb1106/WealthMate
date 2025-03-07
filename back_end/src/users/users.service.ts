@@ -13,7 +13,7 @@ import { Decimal } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService, id: string) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async getAllUsers() {
     return this.prisma.users.findMany();
