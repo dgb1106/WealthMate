@@ -1,248 +1,252 @@
-import { RecurringTransaction } from './../recurring-transactions/entities/recurring-transactions.entity';
-import { ConflictException, Global, Injectable } from '@nestjs/common';
+import { ConflictException, Global, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from '../auth/dto/register.dto';
 import { User } from './entities/users.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { PreferredMood, PreferredGoal } from 'src/common/enums/enum';
-import { GlobalVariables } from 'src/GlobalVariables';
 import * as bcrypt from 'bcrypt';
-import { Transaction } from 'src/transactions/entities/transaction.entity';
 import { Decimal } from '@prisma/client/runtime/library';
-
 
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getAllUsers() {
-    return this.prisma.users.findMany();
-  }
+  async createUser(registerDto: RegisterDto): Promise<User> {
+    const { email, password, ...rest } = registerDto;
 
-  async getUserById(id: string) {
-    const user = await this.prisma.users.findUnique({
-      where: { id: id },
-    });
-    if (!user) {
-      throw new ConflictException('User not found');
-    }
-    return user;
-  }
-
-  async getUserByEmail(email: string) {
-    const user = await this.prisma.users.findUnique({
-      where: { email: email },
-    });
-    if (!user) {
-      throw new ConflictException('User not found');
-    }
-    return user;
-  }
-
-  async validateUserCredentials(email: string, password: string) {
-    const user = await this.getUserByEmail(email);
-
-    const isValidPassword = await bcrypt.compare(password, user.hash_password);
-
-    if (!isValidPassword) {
-      throw new ConflictException('Invalid password');
-    }
-
-    const { hash_password, ...result } = user;
-
-    GlobalVariables.currentUser = new User(result);
-    
-    return result;
-  }
-
-  async updateBalance(id: string, amount: number) {
-    return this.prisma.users.update({
-      where: { id },
-      data: {
-        current_balance: GlobalVariables.currentUser.getCurrentBalance() + amount,
-        updated_at: new Date(),
-      }
-    });
-  }
-
-  async updateLoansBalance(loanId: string, amount: number) {
-    let convertedLoanId = BigInt(loanId);
-
-    const loan = await this.prisma.loans.findUnique({
-      where: { id: convertedLoanId },
-    });
-
-    if (!loan) {
-      throw new ConflictException('Loan not found');
-    }
-
-    loan.total_amount.add(amount);
-
-    return this.prisma.loans.update({
-      where: { id: convertedLoanId },
-      data: {
-        total_amount: loan.total_amount,
-      }
-    });
-  }
-
-  async getUserTransactions(id: string) {
-    const transactions = await this.prisma.transactions.findMany({
-      where: { userId: id },
-      include: { category: true },
-    });
-
-    GlobalVariables.currentUser.setTransactions(transactions);
-
-    return transactions;
-  }
-
-  async getCurrentTransactionsList() {
-    return GlobalVariables.currentUser.getTransactions();
-  }
-
-  async getUserRecurringTransactions(id: string) {
-    const recurringTransactions = await this.prisma.recurringTransactions.findMany({
-      where: { userId: id },
-      include: { category: true },
-    });
-
-    GlobalVariables.currentUser.setRecurringTransactions(recurringTransactions);
-
-    return recurringTransactions;
-  }
-
-  async getCurrentRecurringTransactionsList() {
-    return GlobalVariables.currentUser.getRecurringTransactions();
-  }
-
-  async getUserBudgets(id: string) {
-    const budgets = await this.prisma.budgets.findMany({
-      where: { userId: id },
-    });
-
-    GlobalVariables.currentUser.setBudgets(budgets);
-
-    return budgets;
-  }
-
-  async getCurrentBudgetsList() {
-    return GlobalVariables.currentUser.getBudgets();
-  }
-
-  async getUserGoals(id: string) {
-    const goals = await this.prisma.goals.findMany({
-      where: { userId: id },
-    });
-
-    GlobalVariables.currentUser.setGoals(goals);
-
-    return goals;
-  }
-
-  async getCurrentGoalsList() {
-    return GlobalVariables.currentUser.getGoals();
-  }
-
-  async updateUser(id: string, updateUserDto: UpdateUserDto) {
-    // If email is being updated, check if it's already in use
-    if (updateUserDto.email && updateUserDto.email !== GlobalVariables.currentUser.getEmail()) {
-      const existingEmail = await this.prisma.users.findUnique({
-        where: { email: updateUserDto.email },
-      });
-  
-      if (existingEmail) {
-        throw new ConflictException('Email already in use');
-      }
-    }
-  
-    // If phone is being updated, check if it's already in use
-    if (updateUserDto.phone && updateUserDto.phone !== GlobalVariables.currentUser.getPhone()) {
-      const existingPhone = await this.prisma.users.findUnique({
-        where: { phone: updateUserDto.phone },
-      });
-  
-      if (existingPhone) {
-        throw new ConflictException('Phone number already in use');
-      }
-    }
-  
-    // Prepare data object for update
-    const updateData: any = {};
-    
-    // Map fields from DTO to database field names
-    if (updateUserDto.name !== undefined) updateData.name = updateUserDto.name;
-    if (updateUserDto.email !== undefined) updateData.email = updateUserDto.email;
-    if (updateUserDto.phone !== undefined) updateData.phone = updateUserDto.phone;
-    if (updateUserDto.city !== undefined) updateData.city = updateUserDto.city;
-    if (updateUserDto.district !== undefined) updateData.district = updateUserDto.district;
-    if (updateUserDto.job !== undefined) updateData.job = updateUserDto.job;
-    if (updateUserDto.preferredMood !== undefined) updateData.preferred_mood = updateUserDto.preferredMood;
-    if (updateUserDto.preferredGoal !== undefined) updateData.preferred_goal = updateUserDto.preferredGoal;
-    
-    // Always update the updatedAt timestamp
-    updateData.updated_at = new Date();
-  
-    // Update the user
-    const updatedUser = await this.prisma.users.update({
-      where: { id },
-      data: updateData,
-    });
-  
-    // Don't return the hashed password
-    const { ...result } = updatedUser;
-    return result;
-  }
-  
-  async createUser(registerDto: RegisterDto) {
-    // Check if email already exists
-    const existingUser = await this.prisma.users.findUnique({
-      where: { email: registerDto.email },
-    });
-
+    // Kiểm tra xem email đã tồn tại chưa
+    const existingUser = await this.prisma.users.findUnique({ where: { email } });
     if (existingUser) {
       throw new ConflictException('Email already in use');
     }
 
-    // Check if phone already exists
-    const existingPhone = await this.prisma.users.findUnique({
-      where: { phone: registerDto.phone },
-    });
+    // Mã hóa mật khẩu
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    if (existingPhone) {
-      throw new ConflictException('Phone number already in use');
-    }
-
-    // Hash password
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(registerDto.password, saltRounds);
-
-    // Create new user
-    const newUser = await this.prisma.users.create({
+    // Tạo người dùng mới
+    const user = await this.prisma.users.create({
       data: {
-        name: registerDto.name,
-        email: registerDto.email,
-        phone: registerDto.phone,
-        city: registerDto.city,
-        district: registerDto.district,
-        job: registerDto.job,
-        preferred_mood: registerDto.preferred_mood,
-        preferred_goal: registerDto.preferred_goal,
+        ...rest,
+        email,
         hash_password: hashedPassword,
-        current_balance: 0,
+        current_balance: new Decimal(0),
         create_at: new Date(),
         updated_at: new Date(),
       },
     });
 
-    // Return user without password
-    const { hash_password, ...result } = newUser;
-    return result;
+    return new User(user);
   }
 
-  async deleteUser(id: string) {
-    return this.prisma.users.delete({
+  async getUserById(id: string): Promise<User> {
+    const user = await this.prisma.users.findUnique({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    return new User(user);
+  }
+
+  async getUserByEmail(email: string): Promise<User> {
+    const user = await this.prisma.users.findUnique({ where: { email } });
+    if (!user) {
+      throw new NotFoundException(`User with email ${email} not found`);
+    }
+    return new User(user);
+  }
+
+  async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    const user = await this.getUserById(id);
+
+    // Cập nhật thông tin người dùng
+    const updatedUser = await this.prisma.users.update({
       where: { id },
+      data: {
+        ...updateUserDto,
+        updated_at: new Date(),
+      },
     });
+
+    return new User(updatedUser);
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    const user = await this.getUserById(id);
+    await this.prisma.users.delete({ where: { id } });
+  }
+
+  async updateBalance(id: string, amount: number): Promise<User> {
+    const user = await this.getUserById(id);
+
+    // Cập nhật số dư
+    const updatedUser = await this.prisma.users.update({
+      where: { id },
+      data: {
+        current_balance: amount,
+        updated_at: new Date(),
+      },
+    });
+
+    return new User(updatedUser);
+  }
+
+  async getUserFinancialProfile(userId: string) {
+    const user = await this.prisma.users.findUnique({
+      where: { id: userId },
+      include: {
+        _count: {
+          select: {
+            transactions: true,
+            goals: true,
+            budgets: true
+          }
+        }
+      }
+    });
+    
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+    
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      currentBalance: user.current_balance,
+      preferredMood: user.preferred_mood,
+      preferredGoal: user.preferred_goal,
+      transactionCount: user._count.transactions,
+      goalCount: user._count.goals,
+      budgetCount: user._count.budgets
+    };
+  }
+
+  async getFinancialSummary(userId: string) {
+    const today = new Date();
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    const [
+      monthlyTransactions,
+      activeGoals,
+      budgets,
+      recurringTransactions
+    ] = await Promise.all([
+      this.prisma.transactions.findMany({
+        where: {
+          userId,
+          created_at: { gte: firstDayOfMonth }
+        },
+        include: { category: true }
+      }),
+      this.prisma.goals.findMany({
+        where: {
+          userId,
+          status: 'PENDING'
+        }
+      }),
+      this.prisma.budgets.findMany({
+        where: {
+          userId,
+          end_date: { gte: today }
+        },
+        include: { category: true }
+      }),
+      this.prisma.recurringTransactions.findMany({
+        where: { userId },
+        include: { category: true }
+      })
+    ]);
+    
+    const totalIncome = monthlyTransactions
+      .filter(t => Number(t.amount) > 0)
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+      
+    const totalExpenses = monthlyTransactions
+      .filter(t => Number(t.amount) < 0)
+      .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0);
+    
+    const savingsRate = totalIncome > 0 ? 
+      ((totalIncome - totalExpenses) / totalIncome) * 100 : 0;
+      
+    return {
+      currentBalance: (await this.getUserById(userId)).getCurrentBalance(),
+      monthlyIncome: totalIncome,
+      monthlyExpenses: totalExpenses,
+      savingsRate,
+      activeGoalsCount: activeGoals.length,
+      activeBudgetsCount: budgets.length,
+      upcomingRecurring: recurringTransactions.length,
+      budgetHealth: this.calculateBudgetHealth(budgets),
+      topSpendingCategories: this.getTopSpendingCategories(monthlyTransactions)
+    };
+  }
+  
+  private calculateBudgetHealth(budgets: any[]): string {
+    // Calculate overall budget health based on spent vs limit amounts
+    const totalSpent = budgets.reduce((sum, b) => sum + Number(b.spent_amount), 0);
+    const totalLimit = budgets.reduce((sum, b) => sum + Number(b.limit_amount), 0);
+    
+    if (totalLimit === 0) return 'NO_BUDGET';
+    
+    const ratio = totalSpent / totalLimit;
+    if (ratio < 0.5) return 'EXCELLENT';
+    if (ratio < 0.75) return 'GOOD';
+    if (ratio < 1) return 'FAIR';
+    return 'OVER_BUDGET';
+  }
+  
+  private getTopSpendingCategories(transactions: any[], limit: number = 3) {
+    const expensesByCategory = {};
+    
+    transactions.forEach(tx => {
+      if (tx.amount < 0) {
+        const categoryId = String(tx.categoryId);
+        expensesByCategory[categoryId] = expensesByCategory[categoryId] || {
+          categoryName: tx.category?.name || 'Unknown',
+          amount: 0
+        };
+        expensesByCategory[categoryId].amount += Math.abs(Number(tx.amount));
+      }
+    });
+    
+    return Object.values(expensesByCategory)
+      .sort((a: any, b: any) => b.amount - a.amount)
+      .slice(0, limit);
+  }
+
+  async updatePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await this.prisma.users.findUnique({
+      where: { id: userId },
+      select: { hash_password: true }
+    });
+    
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+    
+    const passwordValid = await bcrypt.compare(currentPassword, user.hash_password);
+    if (!passwordValid) {
+      throw new BadRequestException('Current password is incorrect');
+    }
+    
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    
+    await this.prisma.users.update({
+      where: { id: userId },
+      data: {
+        hash_password: hashedNewPassword,
+        updated_at: new Date()
+      }
+    });
+    
+    // Invalidate all existing tokens
+    await this.prisma.jWT.deleteMany({
+      where: { userId }
+    });
+    
+    return { success: true };
+  }
+  
+  async getAllUsers(): Promise<User[]> {
+    const users = await this.prisma.users.findMany();
+    return users.map(user => new User(user));
   }
 }
