@@ -31,10 +31,7 @@ export class GoalsService {
         }
       });
 
-      return {
-        ...goal,
-        id: String(goal.id)
-      };
+      return this.calculateGoalCompletion(goal);
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
@@ -47,11 +44,8 @@ export class GoalsService {
     const goals = await this.prisma.goals.findMany({
       where: { userId }
     });
-
-    return goals.map(goal => ({
-      ...goal,
-      id: String(goal.id)
-    }));
+  
+    return goals.map(goal => this.calculateGoalCompletion(goal));
   }
 
   async findOne(id: string, userId: string) {
@@ -61,15 +55,12 @@ export class GoalsService {
         userId
       }
     });
-
+  
     if (!goal) {
       throw new NotFoundException(`Không tìm thấy mục tiêu với ID ${id}`);
     }
-
-    return {
-      ...goal,
-      id: String(goal.id)
-    };
+  
+    return this.calculateGoalCompletion(goal);
   }
 
   async update(id: string, userId: string, updateGoalDto: UpdateGoalDto) {
@@ -132,10 +123,7 @@ export class GoalsService {
       data: updateData
     });
 
-    return {
-      ...updatedGoal,
-      id: String(updatedGoal.id)
-    };
+    return this.calculateGoalCompletion(updatedGoal);
   }
 
   async remove(id: string, userId: string) {
@@ -192,10 +180,7 @@ export class GoalsService {
       }
     });
 
-    return {
-      ...updatedGoal,
-      id: String(updatedGoal.id)
-    };
+    return this.calculateGoalCompletion(updatedGoal);
   }
 
   async addFundsToGoal(id: string, userId: string, amount: number) {
@@ -246,9 +231,19 @@ export class GoalsService {
       }
     });
 
+    return this.calculateGoalCompletion(updatedGoal);
+  }
+
+  private calculateGoalCompletion(goal: any) {
+    // Handle division by zero case
+    const percentageCompleted = goal.target_amount.toNumber() > 0 
+      ? (goal.saved_amount.toNumber() / goal.target_amount.toNumber()) * 100
+      : 0;
+      
     return {
-      ...updatedGoal,
-      id: String(updatedGoal.id)
+      ...goal,
+      id: String(goal.id),
+      percentageCompleted: Math.min(Math.round(percentageCompleted * 10) / 10, 100) // Round to 1 decimal place, max 100%
     };
   }
 }
