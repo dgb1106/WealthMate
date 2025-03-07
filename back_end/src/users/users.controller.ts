@@ -40,12 +40,6 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get()
-  getAllUsers() {
-    return this.usersService.getAllUsers();
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Patch(':id/balance')
   updateBalance(@Param('id') id: string, @Body('amount') amount: number) {
     return this.usersService.updateBalance(id, amount);
