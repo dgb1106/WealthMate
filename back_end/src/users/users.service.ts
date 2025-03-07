@@ -249,4 +249,19 @@ export class UsersService {
     const users = await this.prisma.users.findMany();
     return users.map(user => new User(user));
   }
+
+  async getBudgetsWithUsage(userId: string) {
+    const budgets = await this.prisma.budgets.findMany({
+      where: { userId },
+      include: { category: true }
+    });
+
+    return budgets.map(budget => {
+      const usagePercentage = Number(budget.limit_amount) > 0 ? (Number(budget.spent_amount) / Number(budget.limit_amount)) * 100 : 0;
+      return {
+        ...budget,
+        usagePercentage: usagePercentage.toFixed(2) // Giữ hai chữ số thập phân
+      };
+    });
+  }
 }

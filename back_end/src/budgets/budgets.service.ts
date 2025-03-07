@@ -61,12 +61,18 @@ export class BudgetsService {
         category: true
       }
     });
-
-    return budgets.map(budget => ({
-      ...budget,
-      id: String(budget.id),
-      categoryId: String(budget.categoryId)
-    }));
+  
+    return budgets.map(budget => {
+      // Calculate percentage used
+      const percentageUsed = Number(budget.spent_amount) / Number(budget.limit_amount) * 100;
+      
+      return {
+        ...budget,
+        id: String(budget.id),
+        categoryId: String(budget.categoryId),
+        percentageUsed: Math.min(Math.round(percentageUsed * 10) / 10, 100) // Round to 1 decimal place, max 100%
+      };
+    });
   }
 
   async findOne(id: string, userId: string) {
@@ -84,10 +90,13 @@ export class BudgetsService {
       throw new NotFoundException(`Budget with ID ${id} not found`);
     }
 
+    const percentageUsed = Number(budget.spent_amount) / Number(budget.limit_amount) * 100;
+      
     return {
       ...budget,
       id: String(budget.id),
-      categoryId: String(budget.categoryId)
+      categoryId: String(budget.categoryId),
+      percentageUsed: Math.min(Math.round(percentageUsed * 10) / 10, 100)
     };
   }
 
@@ -210,11 +219,16 @@ export class BudgetsService {
       }
     });
 
-    return budgets.map(budget => ({
-      ...budget,
-      id: String(budget.id),
-      categoryId: String(budget.categoryId)
-    }));
+    return budgets.map(budget => {
+      const percentageUsed = Number(budget.spent_amount) / Number(budget.limit_amount) * 100;
+      
+      return {
+        ...budget,
+        id: String(budget.id),
+        categoryId: String(budget.categoryId),
+        percentageUsed: Math.min(Math.round(percentageUsed * 10) / 10, 100)
+      };
+    });
   }
 
   async getCurrentBudgets(userId: string) {
@@ -235,11 +249,16 @@ export class BudgetsService {
       }
     });
 
-    return budgets.map(budget => ({
-      ...budget,
-      id: String(budget.id),
-      categoryId: String(budget.categoryId)
-    }));
+    return budgets.map(budget => {
+      const percentageUsed = Number(budget.spent_amount) / Number(budget.limit_amount) * 100;
+      
+      return {
+        ...budget,
+        id: String(budget.id),
+        categoryId: String(budget.categoryId),
+        percentageUsed: Math.min(Math.round(percentageUsed * 10) / 10, 100)
+      };
+    });
   }
 
   async updateSpentAmount(id: string, userId: string, amount: number) {
@@ -317,11 +336,16 @@ export class BudgetsService {
         category: true
       }
     });
-
-    return budgets.map(budget => ({
-      ...budget,
-      id: String(budget.id),
-      categoryId: String(budget.categoryId)
-    }));
+    
+    return budgets.map(budget => {
+      const percentageUsed = Number(budget.spent_amount) / Number(budget.limit_amount) * 100;
+      
+      return {
+        ...budget,
+        id: String(budget.id),
+        categoryId: String(budget.categoryId),
+        percentageUsed: Math.min(Math.round(percentageUsed * 10) / 10, 100)
+      };
+    });
   }
 }
