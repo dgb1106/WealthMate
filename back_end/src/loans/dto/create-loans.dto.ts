@@ -1,87 +1,56 @@
-import { IsEnum, IsNotEmpty, IsNumber, IsString, MaxLength, IsDateString, Min } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsOptional, IsDateString, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { LoanStatus } from '../../common/enums/enum';
 
 export class CreateLoanDto {
   @ApiProperty({
-    description: 'Name of the loan',
-    example: 'Home Mortgage',
-    maxLength: 255
+    description: 'Tên khoản nợ',
+    example: 'Vay mua nhà',
   })
-  @IsNotEmpty()
-  @IsString()
-  @MaxLength(255)
+  @IsNotEmpty({ message: 'Tên khoản nợ không được để trống' })
+  @IsString({ message: 'Tên khoản nợ phải là chuỗi' })
   name: string;
 
   @ApiProperty({
-    description: 'Due date for the loan (YYYY-MM-DD)',
-    example: '2035-06-15'
+    description: 'Ngày đến hạn của khoản nợ',
+    example: '2025-12-31',
   })
-  @IsNotEmpty()
-  @IsDateString()
+  @IsNotEmpty({ message: 'Ngày đến hạn không được để trống' })
+  @IsDateString({}, { message: 'Ngày đến hạn phải đúng định dạng ngày' })
   due_date: string;
 
   @ApiProperty({
-    description: 'Total loan amount',
-    example: 250000.00,
-    minimum: 0
+    description: 'Tổng số tiền của khoản nợ',
+    example: 500000000,
   })
-  @IsNotEmpty()
-  @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
-  @Type(() => Number)
+  @IsNotEmpty({ message: 'Tổng số tiền không được để trống' })
+  @IsNumber({}, { message: 'Tổng số tiền phải là số' })
+  @Min(0, { message: 'Tổng số tiền phải lớn hơn hoặc bằng 0' })
   total_amount: number;
 
   @ApiProperty({
-    description: 'Remaining amount to be paid',
-    example: 240000.00,
-    minimum: 0
+    description: 'Lãi suất hàng năm (%)',
+    example: 7.5,
   })
-  @IsNotEmpty()
-  @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
-  @Type(() => Number)
-  remaining_amount: number;
-
-  @ApiProperty({
-    description: 'Status of the loan',
-    enum: LoanStatus,
-    example: 'ACTIVE'
-  })
-  @IsNotEmpty()
-  @IsEnum(LoanStatus)
-  status: LoanStatus;
-
-  @ApiProperty({
-    description: 'Annual interest rate percentage',
-    example: 3.25,
-    minimum: 0
-  })
-  @IsNotEmpty()
-  @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
-  @Type(() => Number)
+  @IsNotEmpty({ message: 'Lãi suất không được để trống' })
+  @IsNumber({}, { message: 'Lãi suất phải là số' })
+  @Min(0, { message: 'Lãi suất phải lớn hơn hoặc bằng 0' })
   interest_rate: number;
 
   @ApiProperty({
-    description: 'Monthly payment amount',
-    example: 1250.00,
-    minimum: 0
+    description: 'Số tiền thanh toán hàng tháng',
+    example: 10000000,
   })
-  @IsNotEmpty()
-  @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
-  @Type(() => Number)
+  @IsNotEmpty({ message: 'Số tiền thanh toán hàng tháng không được để trống' })
+  @IsNumber({}, { message: 'Số tiền thanh toán hàng tháng phải là số' })
+  @Min(0, { message: 'Số tiền thanh toán hàng tháng phải lớn hơn hoặc bằng 0' })
   monthly_payment: number;
 
   @ApiProperty({
-    description: 'Description of the loan',
-    example: 'Primary residence mortgage with First National Bank',
-    maxLength: 255
+    description: 'Mô tả khoản nợ',
+    example: 'Khoản vay mua nhà tại ngân hàng ABC',
+    required: false,
   })
-  @IsNotEmpty()
-  @IsString()
-  @MaxLength(255)
-  description: string;
-}
+  @IsOptional()
+  @IsString({ message: 'Mô tả phải là chuỗi' })
+  description?: string;
+} 

@@ -28,8 +28,33 @@ export class Loan {
   
   description: string;
   
-  constructor(partial: Partial<Loan>) {
-    Object.assign(this, partial);
+  percentagePaid?: number; // Add this new property
+
+  constructor(partial: any) {
+    // Convert BigInt ID to string if present
+    if (partial?.id) {
+      this.id = String(partial.id);
+    }
+    
+    if (partial?.total_amount && partial?.remaining_amount) {
+      // Calculate percentage paid
+      const totalAmount = Number(partial.total_amount);
+      const remainingAmount = Number(partial.remaining_amount);
+      this.percentagePaid = totalAmount > 0 
+        ? Math.round(((totalAmount - remainingAmount) / totalAmount) * 100 * 10) / 10 
+        : 0;
+    }
+    
+    // Copy other properties
+    Object.assign(this, {
+      ...partial,
+      id: this.id, // Use the converted ID
+      // Convert other BigInt values to numbers if needed
+      total_amount: partial?.total_amount ? Number(partial.total_amount) : undefined,
+      remaining_amount: partial?.remaining_amount ? Number(partial.remaining_amount) : undefined,
+      interest_rate: partial?.interest_rate ? Number(partial.interest_rate) : undefined,
+      monthly_payment: partial?.monthly_payment ? Number(partial.monthly_payment) : undefined
+    });
   }
   
   /**
