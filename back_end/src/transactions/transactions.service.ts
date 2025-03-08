@@ -1,5 +1,4 @@
 import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { Cache } from 'cache-manager';
@@ -7,33 +6,26 @@ import { Inject } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { TransactionType } from '../common/enums/enum';
 import { Decimal } from '@prisma/client/runtime/library';
+import { PrismaService } from '../prisma/prisma.service';
+import { TransactionRepository } from './repositories/transaction-repository.interface';
+import { TransactionDomainService } from './services/transaction-domain.service';
 
 @Injectable()
 export class TransactionsService {
   private readonly cacheManager: Cache;
   
   constructor(
-    private prisma: PrismaService,
-    @Inject(CACHE_MANAGER) cacheManager: Cache
+    private readonly prisma: PrismaService,
+    @Inject(CACHE_MANAGER) cacheManager: Cache,
+    private readonly transactionRepository: TransactionRepository,
+    private readonly transactionDomainService: TransactionDomainService
   ) {
     this.cacheManager = cacheManager;
   }
 
-  private validateDateRange(startDate: Date, endDate: Date) {
-    if (startDate > endDate) {
-      throw new BadRequestException('Start date must be before end date');
-    }
-  }
-  private validateAmount(amount: number | Decimal) {
-    const numericAmount = typeof amount === 'number' ? amount : Number(amount);
-    if (isNaN(numericAmount)) {
-      throw new BadRequestException('Amount must be a valid number');
-    }
-  }
-
   // Updated create method with more robust error handling
   async create(userId: string, createTransactionDto: CreateTransactionDto) {
-    this.validateAmount(createTransactionDto.amount);
+    this.transactionDomainService.validateAmount(createTransactionDto.amount);
     
     return this.prisma.$transaction(async (prisma) => {
       try {
@@ -47,19 +39,16 @@ export class TransactionsService {
         }
 
         // Apply the correct sign based on category type
-        let balanceAdjustment = createTransactionDto.amount;
-        if (category.type === TransactionType.EXPENSE) {
-          // Ensure expenses are always negative
-          balanceAdjustment = -Math.abs(createTransactionDto.amount);
-        } else if (category.type === TransactionType.INCOME) {
-          // Ensure income is always positive
-          balanceAdjustment = Math.abs(createTransactionDto.amount);
-        }
+        const balanceAdjustment = this.transactionDomainService.calculateBalanceEffect(
+          createTransactionDto.amount,
+          category.type as TransactionType
+        );
 
         // Determine the final transaction amount based on category type
-        const transactionAmount = category.type === TransactionType.EXPENSE 
-          ? -Math.abs(createTransactionDto.amount) 
-          : Math.abs(createTransactionDto.amount);
+        const transactionAmount = this.transactionDomainService.formatTransactionAmount(
+          createTransactionDto.amount,
+          category.type as TransactionType
+        );
 
         // Create transaction and update user balance in the same transaction
         const [transactionData, updatedUser] = await Promise.all([
@@ -140,14 +129,13 @@ export class TransactionsService {
   
         // Calculate amount change
         let newAmount = updateTransactionDto.amount ?? originalTransaction.amount;
-        this.validateAmount(newAmount);
+        this.transactionDomainService.validateAmount(newAmount);
   
         // Adjust the new amount based on category type
-        if (category.type === TransactionType.EXPENSE) {
-          newAmount = typeof newAmount === 'number' ? -Math.abs(newAmount) : new Decimal(-Math.abs(Number(newAmount)));
-        } else {
-          newAmount = typeof newAmount === 'number' ? Math.abs(newAmount) : new Decimal(Math.abs(Number(newAmount)));
-        }
+        newAmount = this.transactionDomainService.formatTransactionAmount(
+          newAmount,
+          category.type as TransactionType
+        );
   
         // Calculate the balance adjustment
         const balanceAdjustment = Number(newAmount) - Number(originalTransaction.amount);
@@ -268,22 +256,14 @@ export class TransactionsService {
       return cached;
     }
 
-    const transactions = await this.findTransactions({ userId });
+    const transactions = await this.transactionRepository.findAllByUser(userId);
     await this.cacheManager.set(cacheKey, transactions, 60 * 5); // Cache trong 5 phút
     
     return transactions;
   }
 
   async findOne(id: string, userId: string) {
-    const transaction = await this.prisma.transactions.findFirst({
-      where: {
-        id: BigInt(id),
-        userId,
-      },
-      include: {
-        category: true,
-      },
-    });
+    const transaction = await this.transactionRepository.findById(id, userId);
 
     if (!transaction) {
       throw new NotFoundException(`Transaction with ID ${id} not found`);
@@ -293,142 +273,40 @@ export class TransactionsService {
   }
 
   async findAllByUserForCurrentMonth(userId: string) {
-    const { firstDay, lastDay } = this.getCurrentMonthRange();
-    return this.findTransactions({ 
-      userId,
-      created_at: {
-        gte: firstDay,
-        lte: lastDay
-      }
-    });
-  }
-
-  private getCurrentMonthRange() {
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-    return { firstDay, lastDay };
+    const { firstDay, lastDay } = this.transactionDomainService.getCurrentMonthRange();
+    return this.transactionRepository.findAllByUserForDateRange(userId, firstDay, lastDay);
   }
 
   // Get transactions for a specific month/year
   async findAllByUserForMonth(userId: string, month: number, year: number) {
     // Month is 0-indexed (0 = January, 11 = December)
-    const firstDayOfMonth = new Date(year, month, 1);
-    const lastDayOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999);
-    
-    return this.prisma.transactions.findMany({
-      where: { 
-        userId,
-        created_at: {
-          gte: firstDayOfMonth,
-          lte: lastDayOfMonth
-        }
-      },
-      include: {
-        category: true,
-      },
-      orderBy: {
-        created_at: 'desc',
-      },
-    });
+    const { firstDay, lastDay } = this.transactionDomainService.getMonthRange(month, year);
+    return this.transactionRepository.findAllByUserForDateRange(userId, firstDay, lastDay);
   }
 
   async findAllByUserForDateRange(userId: string, startDate: Date, endDate: Date) {
-    this.validateDateRange(startDate, endDate);
-    return this.prisma.transactions.findMany({
-      where: { 
-        userId,
-        created_at: {
-          gte: startDate,
-          lte: endDate
-        }
-      },
-      include: {
-        category: true,
-      },
-      orderBy: {
-        created_at: 'desc',
-      },
-    });
+    this.transactionDomainService.validateDateRange(startDate, endDate);
+    return this.transactionRepository.findAllByUserForDateRange(userId, startDate, endDate);
   }
 
   // Get all income transactions (amount > 0) for a user
   async findAllIncomeByUser(userId: string) {
-    return this.prisma.transactions.findMany({
-      where: { 
-        userId,
-        amount: {
-          gt: 0
-        }
-      },
-      include: {
-        category: true,
-      },
-      orderBy: {
-        created_at: 'desc',
-      },
-    });
+    return this.transactionRepository.findAllIncomeByUser(userId);
   }
 
   // Get all expense transactions (amount < 0)
   async findAllExpensesByUser(userId: string) {
-    return this.prisma.transactions.findMany({
-      where: { 
-        userId,
-        amount: {
-          lt: 0
-        }
-      },
-      include: {
-        category: true,
-      },
-      orderBy: {
-        created_at: 'desc',
-      },
-    });
+    return this.transactionRepository.findAllExpensesByUser(userId);
   }
 
   // Get all transactions for a specific category
   async findAllByUserAndCategory(userId: string, categoryId: string) {
-    return this.prisma.transactions.findMany({
-      where: { 
-        userId,
-        categoryId: BigInt(categoryId)
-      },
-      include: {
-        category: true,
-      },
-      orderBy: {
-        created_at: 'desc',
-      },
-    });
+    return this.transactionRepository.findAllByUserAndCategory(userId, categoryId);
   }
 
   // Get summary of transactions by category for a date range
   async getSummaryByCategory(userId: string, startDate: Date, endDate: Date) {
-    const [transactions, categories] = await Promise.all([
-      this.prisma.transactions.groupBy({
-        by: ['categoryId'],
-        where: {
-          userId,
-          created_at: {
-            gte: startDate,
-            lte: endDate
-          }
-        },
-        _sum: {
-          amount: true
-        }
-      }),
-      this.prisma.categories.findMany() // Lấy tất cả categories một lần
-    ]);
-
-    const categoryMap = new Map(categories.map(c => [c.id.toString(), c]));
-    
-    return transactions.map((t) => ({
-      category: categoryMap.get(t.categoryId.toString()),
-      totalAmount: t._sum.amount
-    }));
+    this.transactionDomainService.validateDateRange(startDate, endDate);
+    return this.transactionRepository.getSummaryByCategory(userId, startDate, endDate);
   }
-
 }
