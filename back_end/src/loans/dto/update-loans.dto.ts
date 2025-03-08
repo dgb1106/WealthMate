@@ -80,4 +80,5 @@ export class UpdateLoanDto {
   @IsString()
   @MaxLength(255)
   description?: string;
+  total_amount: { total_amount: any; };
 }
