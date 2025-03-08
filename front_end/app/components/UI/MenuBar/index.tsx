@@ -1,43 +1,22 @@
 import React from 'react';
 import Link from 'next/link';
-import styles from './MenuBar.module.css';
+import styles from './styles.module.css';
 
 const MenuBar: React.FC = () => {
   return (
-    <nav className ={styles.nav}>
-        <div id={styles.logo}>WealthMate</div>
-        <ul> 
-            <li>
-                <Link href="/dashboard">
-                    <a className={styles.link}>Dashboard</a>
-                </Link>
-            </li>
-            <li>
-                <Link href="/transactions">
-                    <a className={styles.link}>Transactions</a>
-                </Link>
-            </li>
-            <li>
-                <Link href="/budgets">
-                    <a className={styles.link}>Budgets</a>
-                </Link>
-            </li>
-            <li>
-                <Link href="/investments">
-                    <a className={styles.link}>Investments</a>
-                </Link>
-            </li>
-            <li>
-                <Link href="/analytics">
-                    <a className={styles.link}>Analytics</a>
-                </Link>
-            </li>
-            <li>
-                <Link href="/aiassistant">
-                    <a className={styles.link}>AI Assistant</a>
-                </Link>
-            </li>
-        </ul>
+    <nav className ={styles.navContainer}>
+      <div>
+        <h3 id={styles.logo}> WealthMate</h3>
+      </div>
+      <ul className={styles.menuList}>
+        <li className={styles.menuItem}><i className="fi fi-rr-apps"></i><Link href="/pages/dashboard">Dashboard</Link></li>
+        <li className={styles.menuItem}><i className="fi fi-rr-exchange"></i><Link href="/pages/transactions">Transactions</Link></li>
+        <li className={styles.menuItem}><i className="fi fi-rr-piggy-bank-budget"></i><Link href="/pages/budgets">Budgets</Link></li>
+        <li className={styles.menuItem}><i className="fi fi-rr-plant-seed-invest"></i><Link href="/pages/investment">Investment</Link></li>
+        <li className={styles.menuItem}><i className="fi fi-rr-chart-histogram"></i><Link href="/pages/analytics">Analytics</Link></li>
+        <li className={styles.menuItem}><i className="fi fi-rr-message-bot"></i><Link href="/pages/ai_assistant">AI Assistant</Link></li>
+        <li className={`${styles.menuItem} ${styles.logoutItem}`}><Link href="/pages/auth/login">Log out</Link></li>
+      </ul>
     </nav>
   );
 };
