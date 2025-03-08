@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query } from '@nestjs/common';
 import { LoansService } from './loans.service';
-import { CreateLoanDto } from './dto/create-loan.dto';
-import { UpdateLoanDto } from './dto/update-loan.dto';
+import { CreateLoanDto } from './dto/create-loans.dto';
+import { UpdateLoanDto } from './dto/update-loans.dto';
 import { MakePaymentDto } from './dto/make-payment.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
