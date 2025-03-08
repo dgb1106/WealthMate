@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 @import url('https://fonts.cdnfonts.com/css/lufga');
+@import url('https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-rounded/css/uicons-regular-rounded.css');
 
 /* Reset CSS */
 * {

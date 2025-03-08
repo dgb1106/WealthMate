@@ -1,41 +1,25 @@
 .container {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: 200px repeat(4, 1fr);
   grid-template-rows: repeat(5, 1fr);
-  gap: 8px;
+  gap: 0px;
   height: 100vh;
   width: 100%;
 }
 
 .leftContainer {
   grid-row: span 5 / span 5;
-  background-color: #f0f0f0;
+  background-color: #ffffff;
+  align-items: center;
   padding: 20px;
+  height: 100vh;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .rightContainer {
   grid-column: span 4 / span 4;
   grid-row: span 5 / span 5;
-  background-color: #ffffff;
+  background-color: #f4f6fc;
   padding: 20px;
   overflow-y: auto;
-}
-
-.menuItem {
-  padding: 12px 16px;
-  margin-bottom: 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
-}
-
-.menuItem:hover {
-  background-color: #e0e0e0;
-}
-
-.logoutItem {
-  margin-top: 40px;
-  color: #d32f2f;
 }

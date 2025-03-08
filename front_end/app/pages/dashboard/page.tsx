@@ -4,7 +4,7 @@ import MainLayout from '@/layouts/MainLayout/index';
 const DashBoardPage: React.FC = () => {
   return (
     <MainLayout>
-      <h1>Hello World</h1>
+      <h1>This is Dashboard</h1>
     </MainLayout>
   );
 };

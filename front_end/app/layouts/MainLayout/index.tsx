@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
 import styles from './styles.module.css';
+import MenuBar from '@/components/UI/MenuBar';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -11,12 +12,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, leftContent }) => {
     <div className={styles.container}>
       <div className={styles.leftContainer}>
         {leftContent || (
-          <div>
-            <h3>Navigation</h3>
-            <div className={styles.menuItem}>Menu</div>
-            <div className={styles.menuItem}>Profile</div>
-            <div className={`${styles.menuItem} ${styles.logoutItem}`}>Log out</div>
-          </div>
+          <MenuBar />
         )}
       </div>
       <div className={styles.rightContainer}>
