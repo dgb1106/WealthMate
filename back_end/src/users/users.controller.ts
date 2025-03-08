@@ -62,10 +62,4 @@ export class UsersController {
   updatePassword(@Param('id') id: string, @Body('currentPassword') currentPassword: string, @Body('newPassword') newPassword: string) {
     return this.usersService.updatePassword(id, currentPassword, newPassword);
   }
-
-  @UseGuards(JwtAuthGuard)
-  @Get(':id/budgets')
-  getBudgetsWithUsage(@Param('id') id: string) {
-    return this.usersService.getBudgetsWithUsage(id);
-  }
 }
