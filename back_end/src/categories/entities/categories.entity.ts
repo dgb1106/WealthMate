@@ -35,4 +35,29 @@ export class Category {
   isExpenseCategory(): boolean {
     return this.type === TransactionType.EXPENSE;
   }
+
+  /**
+   * Converts the category to a response format
+   * @returns Category in response format
+   */
+  toResponseFormat(): any {
+    return {
+      id: this.id,
+      name: this.name,
+      type: this.type
+    };
+  }
+  
+  /**
+   * Converts a Prisma category to a Category entity
+   * @param primaCategory Prisma category object
+   * @returns Category entity
+   */
+  static fromPrisma(primaCategory: any): Category {
+    return new Category({
+      id: primaCategory.id,
+      name: primaCategory.name,
+      type: primaCategory.type
+    });
+  }
 }
