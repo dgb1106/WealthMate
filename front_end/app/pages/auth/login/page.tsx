@@ -8,7 +8,29 @@ export const metadata: Metadata = {
   description: 'Sign in to your WealthMate account',
 };
 
+// Define the type for credentials
+interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
 const LoginPage: React.FC = () => {
+  const handleLogin = async (credentials: LoginCredentials) => {
+    const response = await fetch('/api/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+    } else {
+      // Show error message
+    }
+  };
+
   return (
     <AuthLayout title="Sign In to WealthMate">
       <LoginForm />

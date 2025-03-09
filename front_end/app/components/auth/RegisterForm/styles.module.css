@@ -1,20 +1,57 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 15px;
   width: 100%;
-  max-width: 400px;
+  max-width: 500px;
   margin: 0 auto;
 }
 
-.nameFields {
+.fieldGroup {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: 15px;
 }
 
+.formSection {
+  margin-top: 15px;
+  padding-top: 15px;
+  margin-bottom: 15px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.sectionTitle {
+  font-size: 5px;
+  font-weight: 600;
+  color: #0F1B4C;
+  margin-bottom: 15px;
+}
+
+.selectField {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  background-color: #EEF1FF;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  color: #4B5563;
+}
+
+.selectField:focus {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+/* MỚI: label + select trên cùng một dòng */
+.inlineField {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* khoảng cách giữa label và select */
+}
+
+/* Responsive */
 @media (max-width: 640px) {
-  .nameFields {
+  .fieldGroup {
     grid-template-columns: 1fr;
   }
-} 
+}
