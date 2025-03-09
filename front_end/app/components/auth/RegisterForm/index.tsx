@@ -45,7 +45,7 @@ export const RegisterForm: React.FC = () => {
 
     try {
       await register(data);
-      router.push('/auth/login');
+      router.push('/pages/auth/login');
     } catch (error: any) {
       setError(error.message || 'Registration failed. Please try again.');
       console.error('Registration failed:', error);
