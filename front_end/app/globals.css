@@ -2,11 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.cdnfonts.com/css/lufga');
+@import url('https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-rounded/css/uicons-regular-rounded.css');
+
 /* Reset CSS */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: var(--font-family-primary);
 }
 
 html,
@@ -17,6 +21,7 @@ body {
   padding: 0;
   overflow-x: hidden;
   background-color: white;
+  font-family: var(--font-family-primary);
 }
 
 #__next {
@@ -27,6 +32,7 @@ body {
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --font-family-primary: 'Lufga', sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -39,5 +45,4 @@ body {
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
 }
