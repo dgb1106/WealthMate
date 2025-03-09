@@ -1,6 +1,9 @@
+'use client';
+
+import { useEffect } from 'react';
 import { redirect } from 'next/navigation';
 
 export default function Home() {
-  redirect('/pages/dashboard');
-  // redirect('/pages/auth/login');
+  redirect('/pages/auth/login');
+  return null;
 }

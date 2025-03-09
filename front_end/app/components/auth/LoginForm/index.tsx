@@ -1,7 +1,8 @@
 'use client'
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '../../UI/Button';
 import { Input } from '../../UI/Input';
 import { useAuth } from '../../../hooks/useAuth';
@@ -9,24 +10,41 @@ import type { LoginFormData } from '../../../types/auth';
 import styles from './styles.module.css';
 
 export const LoginForm: React.FC = () => {
+  const router = useRouter();
   const { login } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+    
     const formData = new FormData(e.currentTarget);
     const data: LoginFormData = {
       email: formData.get('email') as string,
       password: formData.get('password') as string,
     };
+    
     try {
       await login(data);
-    } catch (error) {
+      router.push('/pages/dashboard');
+    } catch (error: any) {
+      setError(error.message || 'Login failed. Please try again.');
       console.error('Login failed:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="w-full">
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
+          {error}
+        </div>
+      )}
+      
       <form onSubmit={handleSubmit} className={styles.form}>
         <Input
           type="email"
@@ -44,15 +62,16 @@ export const LoginForm: React.FC = () => {
         />
         <Button 
           type="submit"
+          disabled={isLoading}
           className="w-full py-3 bg-[#0F1B4C] hover:bg-blue-700 text-white font-medium rounded-lg"
         >
-          Sign In
+          {isLoading ? 'Signing In...' : 'Sign In'}
         </Button>
       </form>
       
       <p className="mt-6 text-center text-gray-600">
         Don't have an account?{' '}
-        <Link href="/pages/auth/register" className="text-[#0F1B4C] font-medium hover:underline">
+        <Link href="/auth/register" className="text-[#0F1B4C] font-medium hover:underline">
           Sign Up
         </Link>
       </p>
