@@ -1,4 +1,107 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query } from '@nestjs/common';
+import { LoansService } from './loans.service';
+import { CreateLoanDto } from './dto/create-loans.dto';
+import { UpdateLoanDto } from './dto/update-loans.dto';
+import { MakePaymentDto } from './dto/make-payment.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 
+@ApiTags('loans')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('loans')
-export class LoansController {}
+export class LoansController {
+  constructor(private readonly loansService: LoansService) {}
+
+  @Post()
+  @ApiOperation({ summary: 'Tạo khoản nợ mới' })
+  @ApiResponse({ status: 201, description: 'Khoản nợ đã được tạo thành công.' })
+  @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ.' })
+  @ApiResponse({ status: 401, description: 'Không có quyền truy cập.' })
+  createLoan(@Request() req, @Body() createLoanDto: CreateLoanDto) {
+    return this.loansService.createLoan(req.user.userId, createLoanDto);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'Lấy tất cả khoản nợ của người dùng' })
+  @ApiResponse({ status: 200, description: 'Lấy danh sách khoản nợ thành công.' })
+  @ApiResponse({ status: 401, description: 'Không có quyền truy cập.' })
+  getLoans(@Request() req) {
+    return this.loansService.getLoans(req.user.userId);
+  }
+
+  @Get('active')
+  @ApiOperation({ summary: 'Lấy các khoản nợ đang hoạt động của người dùng' })
+  @ApiResponse({ status: 200, description: 'Lấy danh sách khoản nợ đang hoạt động thành công.' })
+  @ApiResponse({ status: 401, description: 'Không có quyền truy cập.' })
+  getActiveLoans(@Request() req) {
+    return this.loansService.getActiveLoans(req.user.userId);
+  }
+
+  @Get('upcoming')
+  @ApiOperation({ summary: 'Lấy các khoản nợ sắp đến hạn' })
+  @ApiResponse({ status: 200, description: 'Lấy danh sách khoản nợ sắp đến hạn thành công.' })
+  @ApiResponse({ status: 401, description: 'Không có quyền truy cập.' })
+  @ApiQuery({ name: 'days', required: false, description: 'Số ngày tới (mặc định là 30 ngày)' })
+  getUpcomingDueLoans(@Request() req, @Query('days') days: number = 30) {
+    return this.loansService.getUpcomingDueLoans(req.user.userId, Number(days));
+  }
+
+  @Get('overdue')
+  @ApiOperation({ summary: 'Lấy các khoản nợ quá hạn' })
+  @ApiResponse({ status: 200, description: 'Lấy danh sách khoản nợ quá hạn thành công.' })
+  @ApiResponse({ status: 401, description: 'Không có quyền truy cập.' })
+  getOverdueLoans(@Request() req) {
+    return this.loansService.getOverdueLoans(req.user.userId);
+  }
+
+  @Get('summary')
+  @ApiOperation({ summary: 'Lấy tóm tắt về khoản nợ của người dùng' })
+  @ApiResponse({ status: 200, description: 'Lấy tóm tắt khoản nợ thành công.' })
+  @ApiResponse({ status: 401, description: 'Không có quyền truy cập.' })
+  getLoanSummary(@Request() req) {
+    return this.loansService.getLoanSummary(req.user.userId);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Lấy thông tin chi tiết của một khoản nợ' })
+  @ApiResponse({ status: 200, description: 'Lấy thông tin chi tiết khoản nợ thành công.' })
+  @ApiResponse({ status: 401, description: 'Không có quyền truy cập.' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy khoản nợ.' })
+  @ApiParam({ name: 'id', description: 'ID của khoản nợ' })
+  getLoanById(@Request() req, @Param('id') id: string) {
+    return this.loansService.getLoanById(req.user.userId, id);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Cập nhật thông tin khoản nợ' })
+  @ApiResponse({ status: 200, description: 'Cập nhật khoản nợ thành công.' })
+  @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ.' })
+  @ApiResponse({ status: 401, description: 'Không có quyền truy cập.' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy khoản nợ.' })
+  @ApiParam({ name: 'id', description: 'ID của khoản nợ' })
+  updateLoan(@Request() req, @Param('id') id: string, @Body() updateLoanDto: UpdateLoanDto) {
+    return this.loansService.updateLoan(req.user.userId, id, updateLoanDto);
+  }
+
+  @Patch(':id/payment')
+  @ApiOperation({ summary: 'Thanh toán khoản nợ' })
+  @ApiResponse({ status: 200, description: 'Thanh toán khoản nợ thành công.' })
+  @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ hoặc khoản nợ đã được trả hết.' })
+  @ApiResponse({ status: 401, description: 'Không có quyền truy cập.' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy khoản nợ.' })
+  @ApiParam({ name: 'id', description: 'ID của khoản nợ' })
+  makePayment(@Request() req, @Param('id') id: string, @Body() makePaymentDto: MakePaymentDto) {
+    return this.loansService.makePayment(req.user.userId, id, makePaymentDto.amount);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Xóa khoản nợ' })
+  @ApiResponse({ status: 200, description: 'Xóa khoản nợ thành công.' })
+  @ApiResponse({ status: 401, description: 'Không có quyền truy cập.' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy khoản nợ.' })
+  @ApiParam({ name: 'id', description: 'ID của khoản nợ' })
+  deleteLoan(@Request() req, @Param('id') id: string) {
+    return this.loansService.deleteLoan(req.user.userId, id);
+  }
+}
