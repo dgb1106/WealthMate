@@ -44,10 +44,24 @@ export const RegisterForm: React.FC = () => {
     };
 
     try {
-      await register(data);
-      router.push('/pages/auth/login');
-    } catch (error: any) {
-      setError(error.message || 'Registration failed. Please try again.');
+      const response = await fetch('http://localhost:3001/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+        credentials: 'include'
+      });
+
+      const responseData = await response.json();
+      
+      if (response.ok) {
+        router.push('/pages/auth/login');
+      } else {
+        setError(responseData.message || 'Registration failed. Please try again.');
+      }
+    } catch (error) {
+      setError('Cannot connect to server. Please try again later.');
       console.error('Registration failed:', error);
     } finally {
       setIsLoading(false);
