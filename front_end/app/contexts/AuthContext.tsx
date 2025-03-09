@@ -19,6 +19,7 @@ type AuthAction =
   | { type: 'LOGIN_REQUEST' }
   | { type: 'LOGIN_SUCCESS'; payload: User }
   | { type: 'LOGIN_FAILURE'; payload: string }
+  | { type: 'REGISTER_REQUEST' }
   | { type: 'REGISTER_SUCCESS'; payload: User }
   | { type: 'REGISTER_FAILURE'; payload: string }
   | { type: 'LOGOUT' }
@@ -27,6 +28,7 @@ type AuthAction =
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
     case 'LOGIN_REQUEST':
+    case 'REGISTER_REQUEST':
       return {
         ...state,
         isLoading: true,
@@ -113,12 +115,12 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
       const response = await authService.login(data);
       console.log('Login successful, response:', response);
       
-      // Create user object from response or available data
-      const user: User = {
-        id: response.user?.id || 'unknown-id',
-        email: response.user?.email || data.email,
-        name: response.user?.name || 'User',
-      };
+      // After successful login, get the current user info
+      const user = await authService.getCurrentUser();
+      
+      if (!user) {
+        throw new Error('Failed to get user after login');
+      }
       
       dispatch({ type: 'LOGIN_SUCCESS', payload: user });
       return user;
@@ -134,10 +136,26 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
 
   const register = async (data: RegisterFormData) => {
     try {
-      const user = await authService.register(data);
+      dispatch({ type: 'REGISTER_REQUEST' });
+      
+      // Call register API
+      const result = await authService.register(data);
+      console.log('Registration successful:', result);
+      
+      // Get user data after registration
+      const user = await authService.getCurrentUser();
+      
+      if (!user) {
+        throw new Error('Failed to get user after registration');
+      }
+      
       dispatch({ type: 'REGISTER_SUCCESS', payload: user });
     } catch (error: any) {
-      dispatch({ type: 'REGISTER_FAILURE', payload: error.message });
+      console.error('Registration error in context:', error);
+      dispatch({ 
+        type: 'REGISTER_FAILURE', 
+        payload: error.message || 'Registration failed. Please try again.' 
+      });
       throw error;
     }
   };
@@ -148,6 +166,8 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
       dispatch({ type: 'LOGOUT' });
     } catch (error) {
       console.error('Logout failed', error);
+      // Still dispatch LOGOUT even if API call fails to ensure UI is updated
+      dispatch({ type: 'LOGOUT' });
     }
   };
 
