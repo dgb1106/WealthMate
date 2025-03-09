@@ -1,9 +1,9 @@
 import React, { createContext, useReducer, useEffect, ReactNode } from 'react';
 import { authService } from '../services/authService';
-import type { User, AuthState, AuthAction, LoginFormData, RegisterFormData } from '../types/auth';
+import type { User, AuthState, LoginFormData, RegisterFormData } from '../types/auth';
 
 export interface AuthContextType extends AuthState {
-  login: (data: LoginFormData) => Promise<void>;
+  login: (data: LoginFormData) => Promise<User>;
   register: (data: RegisterFormData) => Promise<void>;
   logout: () => void;
 }
@@ -15,8 +15,23 @@ const initialState: AuthState = {
   error: null,
 };
 
+type AuthAction =
+  | { type: 'LOGIN_REQUEST' }
+  | { type: 'LOGIN_SUCCESS'; payload: User }
+  | { type: 'LOGIN_FAILURE'; payload: string }
+  | { type: 'REGISTER_SUCCESS'; payload: User }
+  | { type: 'REGISTER_FAILURE'; payload: string }
+  | { type: 'LOGOUT' }
+  | { type: 'AUTH_CHECKED' };
+
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
+    case 'LOGIN_REQUEST':
+      return {
+        ...state,
+        isLoading: true,
+        error: null
+      };
     case 'LOGIN_SUCCESS':
     case 'REGISTER_SUCCESS':
       return {
@@ -55,7 +70,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
 
 export const AuthContext = createContext<AuthContextType>({
   ...initialState,
-  login: async () => {},
+  login: async () => { return {} as User },
   register: async () => {},
   logout: () => {},
 });
@@ -82,10 +97,37 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
 
   const login = async (data: LoginFormData) => {
     try {
-      const user = await authService.login(data.email, data.password);
+      dispatch({ type: 'LOGIN_REQUEST' });
+      
+      if (!data.email || !data.password) {
+        dispatch({ 
+          type: 'LOGIN_FAILURE', 
+          payload: 'Email and password are required' 
+        });
+        throw new Error('Email and password are required');
+      }
+      
+      console.log('Logging in with:', data.email);
+      
+      // Get login response with token
+      const response = await authService.login(data);
+      console.log('Login successful, response:', response);
+      
+      // Create user object from response or available data
+      const user: User = {
+        id: response.user?.id || 'unknown-id',
+        email: response.user?.email || data.email,
+        name: response.user?.name || 'User',
+      };
+      
       dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+      return user;
     } catch (error: any) {
-      dispatch({ type: 'LOGIN_FAILURE', payload: error.message });
+      console.error('Login error in context:', error);
+      dispatch({ 
+        type: 'LOGIN_FAILURE', 
+        payload: error.message || 'Login failed. Please try again.' 
+      });
       throw error;
     }
   };

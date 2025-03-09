@@ -9,7 +9,7 @@ const MenuBar: React.FC = () => {
         <h3 id={styles.logo}> WealthMate</h3>
       </div>
       <ul className={styles.menuList}>
-        <li className={styles.menuItem}><i className="fi fi-rr-apps"></i><Link href="/pages/dashboard">Dashboard</Link></li>
+        <li className={styles.menuItem}><i className="fi fi-rr-apps"></i><Link href="/dashboard">Dashboard</Link></li>
         <li className={styles.menuItem}><i className="fi fi-rr-exchange"></i><Link href="/pages/transactions">Transactions</Link></li>
         <li className={styles.menuItem}><i className="fi fi-rr-piggy-bank-budget"></i><Link href="/pages/budgets">Budgets</Link></li>
         <li className={styles.menuItem}><i className="fi fi-rr-plant-seed-invest"></i><Link href="/pages/investment">Investment</Link></li>
