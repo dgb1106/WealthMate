@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import MainLayout from '@/layouts/MainLayout/index';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthCheck } from '@/hooks/useAuthCheck';
@@ -10,20 +10,25 @@ const DashBoardPage: React.FC = () => {
   const { user } = useAuth();
   const { isAuthenticated, isLoading } = useAuthCheck();
   const router = useRouter();
+  const [debugInfo, setDebugInfo] = useState<string>('');
+  
+  useEffect(() => {
+    console.log("Dashboard auth state:", { isAuthenticated, isLoading, user });
+    setDebugInfo(`Auth: ${isAuthenticated ? 'Yes' : 'No'}, Loading: ${isLoading ? 'Yes' : 'No'}`);
+  }, [isAuthenticated, isLoading, user]);
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex flex-col items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+        <p className="mb-4">Loading authentication status...</p>
+        <div className="p-3 bg-yellow-100 text-yellow-800 rounded">
+          <p>Debug info: Auth: {isAuthenticated === null ? 'Checking' : (isAuthenticated ? 'Yes' : 'No')}</p>
+        </div>
       </div>
     );
   }
 
-  if (!isAuthenticated && !isLoading) {
-    router.push('/pages/auth/login');
-    return null;
-  }
-  
   return (
     <MainLayout>
       <div className="p-6">

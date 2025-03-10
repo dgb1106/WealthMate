@@ -21,15 +21,15 @@ export const LoginForm: React.FC = () => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
-
+  
     const formData = new FormData(e.currentTarget);
     const credentials: LoginCredentials = {
       email: formData.get('email') as string,
       password: formData.get('password') as string,
     };
-
+  
     try {
-      const response = await fetch('http://localhost:3001/auth/login', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -37,10 +37,13 @@ export const LoginForm: React.FC = () => {
         body: JSON.stringify(credentials),
         credentials: 'include' 
       });
-
+  
       const data = await response.json();
-      
+        
       if (response.ok) {
+        if (data.token) {
+          localStorage.setItem('authToken', data.token);
+        }
         router.push('/pages/dashboard');
       } else {
         setError(data.message || 'Sai email hoặc mật khẩu');
