@@ -1,4 +1,4 @@
-import type { LoginFormData, RegisterFormData } from '@/app/types/auth';
+import type { LoginFormData, RegisterFormData } from '@/types/auth';
 
 export const validateLoginForm = (data: LoginFormData): string[] => {
   const errors: string[] = [];
@@ -21,16 +21,34 @@ export const validateLoginForm = (data: LoginFormData): string[] => {
 export const validateRegisterForm = (data: RegisterFormData): string[] => {
   const errors: string[] = [];
 
-  if (!data.firstName) {
-    errors.push('First name is required');
+  if (!data.name) {
+    errors.push('Full name is required');
   }
 
-  if (!data.lastName) {
-    errors.push('Last name is required');
+  if (!data.phone) {
+    errors.push('Phone number is required');
   }
 
-  const loginErrors = validateLoginForm(data);
+  if (!data.city) {
+    errors.push('City is required');
+  }
+
+  if (!data.district) {
+    errors.push('District is required');
+  }
+
+  if (!data.job) {
+    errors.push('Job is required');
+  }
+
+  // Check login-related fields (email, password)
+  const loginData: LoginFormData = {
+    email: data.email,
+    password: data.password
+  };
+  
+  const loginErrors = validateLoginForm(loginData);
   errors.push(...loginErrors);
 
   return errors;
-}; 
+};
