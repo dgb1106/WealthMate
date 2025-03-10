@@ -189,4 +189,19 @@ export class PrismaTransactionRepository implements TransactionRepository {
       totalAmount: t._sum.amount
     }));
   }
+
+  async getTotalAmountByCategoryForUser(userId: string, categoryId: string): Promise<number> {
+    const result = await this.prisma.transactions.aggregate({
+      where: {
+        userId,
+        categoryId: BigInt(categoryId)
+      },
+      _sum: {
+        amount: true
+      }
+    });
+
+    // Handle case when no transactions found (sum would be null)
+    return result._sum.amount ? Number(result._sum.amount) : 0;
+  }
 }

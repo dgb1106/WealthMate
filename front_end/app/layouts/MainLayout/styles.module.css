@@ -1,0 +1,25 @@
+.container {
+  display: grid;
+  grid-template-columns: 200px repeat(4, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 0px;
+  height: 100vh;
+  width: 100%;
+}
+
+.leftContainer {
+  grid-row: span 5 / span 5;
+  background-color: #ffffff;
+  align-items: center;
+  padding: 20px;
+  height: 100vh;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.rightContainer {
+  grid-column: span 4 / span 4;
+  grid-row: span 5 / span 5;
+  background-color: #f4f6fc;
+  padding: 20px;
+  overflow-y: auto;
+}

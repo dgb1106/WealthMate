@@ -1,22 +1,9 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
-
-const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'WealthMate',
   description: 'Take control of your financial future',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1
-  },
-  icons: {
-    icon: '/assets/icon/avaicon.png',
-    apple: '/apple-icon.png',
-    shortcut: '/favicon.ico'
-  }
 }
 
 export default function RootLayout({
@@ -26,9 +13,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} min-h-screen w-full m-0 p-0`}>
-        {children}
-      </body>
+      <head>
+        <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-rounded/css/uicons-regular-rounded.css' />
+        <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/lufga" />
+      </head>
+      <body className="font-lufga">{children}</body>
     </html>
   )
 }

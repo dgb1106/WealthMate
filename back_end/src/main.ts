@@ -9,10 +9,16 @@ async function bootstrap() {
   app.use(cookieParser());
 
   app.enableCors({
-    origin: 'http://localhost:3001', // Địa chỉ của frontend
+    origin: [
+      'http://localhost:3000', 
+      'http://localhost:8080',
+      'https://wealthmate.onrender.com', 
+      'https://wealth-mate-eight.vercel.app'
+    ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 80);
 }
 bootstrap();
