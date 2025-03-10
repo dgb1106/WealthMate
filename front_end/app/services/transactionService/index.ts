@@ -3,7 +3,9 @@ import type { Transaction, TransactionFormData } from '@/types/transaction';
 
 export const transactionService = {
   getAll: async (): Promise<Transaction[]> => {
-    const response = await fetch(`${API_URL}/transactions`);
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transactions`, {
+      credentials: 'include'
+    });
     if (!response.ok) {
       throw new Error('Failed to fetch transactions');
     }
@@ -11,10 +13,11 @@ export const transactionService = {
   },
 
   create: async (data: TransactionFormData): Promise<Transaction> => {
-    const response = await fetch(`${API_URL}/transactions`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transactions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
+      credentials: 'include'
     });
     if (!response.ok) {
       throw new Error('Failed to create transaction');
@@ -23,10 +26,11 @@ export const transactionService = {
   },
 
   update: async (id: string, data: TransactionFormData): Promise<Transaction> => {
-    const response = await fetch(`${API_URL}/transactions/${id}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transactions/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
+      credentials: 'include'
     });
     if (!response.ok) {
       throw new Error('Failed to update transaction');
@@ -35,11 +39,12 @@ export const transactionService = {
   },
 
   delete: async (id: string): Promise<void> => {
-    const response = await fetch(`${API_URL}/transactions/${id}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transactions/${id}`, {
       method: 'DELETE',
+      credentials: 'include'
     });
     if (!response.ok) {
       throw new Error('Failed to delete transaction');
     }
   },
-}; 
+};
