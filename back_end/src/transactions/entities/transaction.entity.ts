@@ -1,6 +1,7 @@
 import { User } from "../../users/entities/users.entity";
 import { Category } from "../../categories/entities/categories.entity";
 import { Type } from "class-transformer";
+import { TransactionType } from "../../common/enums/enum";
 
 export class Transaction {
   id: string;
@@ -53,7 +54,7 @@ export class Transaction {
    * Formats the transaction date to a readable string
    * @returns Formatted date string
    */
-  getFormattedDate(locale: string = 'en-US'): string {
+  getFormattedDate(locale: string = 'vi-VN'): string {
     return new Date(this.created_at).toLocaleDateString(locale);
   }
 
@@ -105,6 +106,36 @@ export class Transaction {
   getTransactionType(): 'income' | 'expense' {
     return this.amount >= 0 ? 'income' : 'expense';
   }
+
+  /**
+   * Create a Transaction entity when the amount needs formatting based on category type
+   * @param userId User ID
+   * @param categoryId Category ID
+   * @param amount Raw amount value
+   * @param categoryType Transaction category type
+   * @param description Transaction description
+   * @returns A properly formatted Transaction object
+   */
+  static createWithCategoryType(
+    userId: string,
+    categoryId: string,
+    amount: number,
+    categoryType: TransactionType,
+    description: string
+  ): Transaction {
+    // Format amount based on category type
+    const formattedAmount = categoryType === TransactionType.EXPENSE 
+      ? -Math.abs(amount)
+      : Math.abs(amount);
+      
+    return new Transaction({
+      userId,
+      categoryId,
+      amount: formattedAmount,
+      description,
+      created_at: new Date()
+    });
+  }
   
   /**
    * Format the transaction for API responses
@@ -122,5 +153,19 @@ export class Transaction {
       date: this.getFormattedDate(),
       createdAt: this.created_at.toISOString(),
     };
+  }
+
+  static fromPrisma(prismaTransaction: any): Transaction {
+    return new Transaction({
+      id: String(prismaTransaction.id),
+      userId: prismaTransaction.userId,
+      categoryId: String(prismaTransaction.categoryId),
+      amount: Number(prismaTransaction.amount),
+      description: prismaTransaction.description,
+      created_at: prismaTransaction.created_at,
+      category: prismaTransaction.category 
+        ? Category.fromPrisma(prismaTransaction.category) 
+        : undefined
+    });
   }
 }
