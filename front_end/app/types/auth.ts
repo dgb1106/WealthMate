@@ -25,7 +25,7 @@ export interface LoginFormData {
   password: string;
 }
 
-export interface RegisterFormData {
+export interface RegisterFormData extends LoginFormData{
   email: string;
   password: string;
   name: string;
