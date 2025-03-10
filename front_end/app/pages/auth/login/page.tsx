@@ -16,7 +16,7 @@ interface LoginCredentials {
 
 const LoginPage: React.FC = () => {
   const handleLogin = async (credentials: LoginCredentials) => {
-    const response = await fetch('/api/login', {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
       method: 'POST',
       body: JSON.stringify(credentials),
       headers: {
