@@ -10,7 +10,7 @@ import {
   ParseIntPipe,
   BadRequestException 
 } from '@nestjs/common';
-import { TransactionsService } from './transactions.service';
+import { TransactionService } from './services/transaction.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
@@ -20,7 +20,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@ne
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class TransactionsController {
-  constructor(private readonly transactionsService: TransactionsService) {}
+  constructor(private readonly transactionsService: TransactionService) {}
 
   @Post()
   @ApiOperation({ summary: 'Tạo giao dịch mới' })
