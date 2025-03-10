@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 import pandas as pd
-from Expense_Forcasting import get_input_data, forecast_expense, model_fit, df
+from ai_services.expense_forecast.Expense_Forecasting import get_input_data, forecast_expense, model_fit, df
 
 app = Flask(__name__)
 
