@@ -1,4 +1,3 @@
-import { API_URL } from '@/utils/constants';
 import type { LoginFormData, RegisterFormData, User } from '@/types/auth';
 
 interface LoginResponse {
@@ -21,11 +20,11 @@ interface AuthCheckResponse {
 
 export const authService = {
   login: async (data: LoginFormData): Promise<LoginResponse> => {
-    console.log('Login request to:', `${API_URL}/auth/login`);
+    console.log('Login request to:', `${process.env.NEXT_PUBLIC_API_URL}/auth/login`);
     console.log('Login data:', JSON.stringify(data));
     
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -61,7 +60,7 @@ export const authService = {
 
   register: async (data: RegisterFormData): Promise<{user: User, token: string, message: string}> => {
     try {
-      const response = await fetch(`${API_URL}/auth/register`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -93,7 +92,7 @@ export const authService = {
 
   logout: async (): Promise<void> => {
     try {
-      const response = await fetch(`${API_URL}/auth/logout`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
         method: 'POST',
         credentials: 'include',
       });
@@ -114,7 +113,7 @@ export const authService = {
   getCurrentUser: async (): Promise<User | null> => {
     try {
       console.log('Checking current user auth status');
-      const response = await fetch(`${API_URL}/auth/check`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/check`, {
         method: 'GET',
         credentials: 'include',
       });
