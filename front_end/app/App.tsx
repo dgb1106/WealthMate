@@ -13,7 +13,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (!isAuthenticated) {
-    return <Navigate to="/auth/login" />;
+    return <Navigate to="/pages/auth/login" />;
   }
   
   return <>{children}</>;
@@ -27,17 +27,17 @@ const App: React.FC = () => {
       <Routes>
         {/* Public Routes */}
         <Route 
-          path="/auth/login" 
-          element={isAuthenticated ? <Navigate to="/dashboard" /> : <LoginPage />} 
+          path="/pages/auth/login" 
+          element={isAuthenticated ? <Navigate to="/pages/dashboard" /> : <LoginPage />} 
         />
         <Route 
-          path="/auth/register" 
-          element={isAuthenticated ? <Navigate to="/dashboard" /> : <RegisterPage />} 
+          path="/pages/auth/register" 
+          element={isAuthenticated ? <Navigate to="/pages/dashboard" /> : <RegisterPage />} 
         />
         
         {/* Protected Routes */}
         <Route 
-          path="/dashboard" 
+          path="/pages/dashboard" 
           element={
             <ProtectedRoute>
               <DashboardPage />
@@ -50,8 +50,8 @@ const App: React.FC = () => {
           path="/" 
           element={
             isAuthenticated ? 
-            <Navigate to="/dashboard" /> : 
-            <Navigate to="/auth/login" />
+            <Navigate to="/pages/dashboard" /> : 
+            <Navigate to="/pages/auth/login" />
           } 
         />
         
