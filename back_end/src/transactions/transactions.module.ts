@@ -5,6 +5,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { TransactionRepository} from './repositories/transaction-repository.interface';
 import { PrismaTransactionRepository } from './repositories/prisma-transaction.repository';
 import { TransactionDomainService } from './services/transaction-domain.service';
+import { TransactionService } from './services/transaction.service';
 
 @Module({
   imports: [PrismaModule],
@@ -12,8 +13,12 @@ import { TransactionDomainService } from './services/transaction-domain.service'
   providers: [
     TransactionsService,
     TransactionDomainService,
+    TransactionService,
   ],
-  exports: [TransactionsService, 
-    TransactionDomainService]
+  exports: [
+    TransactionsService, 
+    TransactionDomainService,
+    TransactionService
+  ]
 })
 export class TransactionsModule {}
