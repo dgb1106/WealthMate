@@ -19,7 +19,7 @@ export class TransactionService {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-    private readonly transactionRepository: TransactionRepository,
+    @Inject('TRANSACTION_REPOSITORY') private readonly transactionRepository: TransactionRepository, // <-- String token
     private readonly transactionDomainService: TransactionDomainService,
   ) {}
 
