@@ -13,12 +13,11 @@ import { TransactionDomainService } from './services/transaction-domain.service'
   providers: [
     TransactionService,
     TransactionDomainService,
-    TransactionService,
+    
   ],
   exports: [
     TransactionService, 
     TransactionDomainService,
-    TransactionService
   ]
 })
 export class TransactionsModule {}
