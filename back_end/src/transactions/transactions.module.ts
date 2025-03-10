@@ -13,7 +13,6 @@ import { TransactionDomainService } from './services/transaction-domain.service'
   providers: [
     TransactionService,
     TransactionDomainService,
-    
   ],
   exports: [
     TransactionService, 
