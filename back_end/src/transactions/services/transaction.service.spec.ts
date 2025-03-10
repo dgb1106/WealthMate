@@ -1,26 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TransactionsService } from './transactions.service';
-import { PrismaService } from '../prisma/prisma.service';
+import { TransactionService } from './transaction.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import { NotFoundException, InternalServerErrorException } from '@nestjs/common';
-import { TransactionType } from '../common/enums/enum';
-import { CreateTransactionDto } from './dto/create-transaction.dto';
-
-// Mock class cho Decimal vì @prisma/client/runtime/library có thể không được import đúng cách trong môi trường test
-class MockDecimal {
-  constructor(public value: number) {}
-  
-  toString() {
-    return this.value.toString();
-  }
-  
-  toNumber() {
-    return this.value;
-  }
-}
+import { TransactionType } from '../../common/enums/enum';
+import { CreateTransactionDto } from '../dto/create-transaction.dto';
+import { Decimal } from '@prisma/client/runtime/library';
+import { TransactionDomainService } from './transaction-domain.service';
+import { TransactionRepository } from '../repositories/transaction-repository.interface';
 
 // Mock PrismaService
 const mockPrismaService = {
-  $transaction: jest.fn((callback) => Promise.resolve(callback(mockPrismaService))),
+  $transaction: jest.fn().mockImplementation(callback => callback(mockPrismaService)),
   categories: {
     findUnique: jest.fn(),
   },
@@ -35,22 +25,173 @@ const mockPrismaService = {
   }
 };
 
-describe('TransactionsService', () => {
-  let service: TransactionsService;
+// Add this mock
+const mockCacheManager = {
+  get: jest.fn(),
+  set: jest.fn(),
+  del: jest.fn(),
+  reset: jest.fn(),
+};
+
+const mockTransactionDomainService = {
+  validateDateRange: jest.fn(),
+  calculateTransactionAmount: jest.fn(),
+  // Add any other methods from this service that are used
+};
+
+
+const mockTransactionRepository = {
+  create: jest.fn().mockImplementation((userId, categoryId, amount, description) => {
+    return {
+      id: '123',
+      userId,
+      categoryId,
+      amount,
+      description,
+      createdAt: new Date()
+    };
+  }),
+  
+  findById: jest.fn().mockImplementation((id, userId) => {
+    return {
+      id,
+      userId,
+      categoryId: '456',
+      amount: 100,
+      description: 'Mock transaction',
+      createdAt: new Date()
+    };
+  }),
+  
+  findAllByUser: jest.fn().mockResolvedValue([
+    {
+      id: '1',
+      userId: '123',
+      categoryId: '456',
+      amount: 100,
+      description: 'Mock transaction 1',
+      createdAt: new Date()
+    },
+    {
+      id: '2',
+      userId: '123',
+      categoryId: '457',
+      amount: -50,
+      description: 'Mock transaction 2',
+      createdAt: new Date()
+    }
+  ]),
+  
+  findAllByUserForDateRange: jest.fn().mockImplementation((userId, startDate, endDate) => {
+    return [
+      {
+        id: '1',
+        userId,
+        categoryId: '456',
+        amount: 100,
+        description: 'Mock transaction in date range',
+        createdAt: new Date()
+      }
+    ];
+  }),
+  
+  findAllByUserAndCategory: jest.fn().mockImplementation((userId, categoryId) => {
+    return [
+      {
+        id: '1',
+        userId,
+        categoryId,
+        amount: 100,
+        description: 'Mock transaction for category',
+        createdAt: new Date()
+      }
+    ];
+  }),
+  
+  findAllIncomeByUser: jest.fn().mockImplementation((userId) => {
+    return [
+      {
+        id: '1',
+        userId,
+        categoryId: '456',
+        amount: 100,
+        description: 'Mock income transaction',
+        createdAt: new Date()
+      }
+    ];
+  }),
+  
+  findAllExpensesByUser: jest.fn().mockImplementation((userId) => {
+    return [
+      {
+        id: '2',
+        userId,
+        categoryId: '457',
+        amount: -50,
+        description: 'Mock expense transaction',
+        createdAt: new Date()
+      }
+    ];
+  }),
+  
+  update: jest.fn().mockImplementation((id, userId, data) => {
+    return {
+      id,
+      userId,
+      categoryId: data.categoryId || '456',
+      amount: data.amount || 100,
+      description: data.description || 'Updated mock transaction',
+      createdAt: new Date()
+    };
+  }),
+  
+  delete: jest.fn().mockResolvedValue(true),
+  
+  getSummaryByCategory: jest.fn().mockImplementation((userId, startDate, endDate) => {
+    return [
+      {
+        category: { id: '456', name: 'Category 1', type: 'INCOME' },
+        totalAmount: 500
+      },
+      {
+        category: { id: '457', name: 'Category 2', type: 'EXPENSE' },
+        totalAmount: -300
+      }
+    ];
+  }),
+  
+  getTotalAmountByCategoryForUser: jest.fn().mockImplementation((userId, categoryId) => {
+    return categoryId === '456' ? 500 : -300;
+  })
+};
+
+describe('TransactionService', () => {
+  let service: TransactionService;
   let prisma: PrismaService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        TransactionsService,
+        TransactionService,
         {
           provide: PrismaService,
           useValue: mockPrismaService,
         },
+        {
+          provide: 'CACHE_MANAGER', // Make sure this is the exact token name used
+          useValue: mockCacheManager,
+        },
+        {
+          provide: 'TRANSACTION_REPOSITORY', // Replace with actual token if different
+          useValue: mockTransactionRepository,
+        },
+        {
+          provide: TransactionDomainService,
+          useValue: mockTransactionDomainService,
+        },
       ],
     }).compile();
-
-    service = module.get<TransactionsService>(TransactionsService);
+    service = module.get<TransactionService>(TransactionService);
     prisma = module.get<PrismaService>(PrismaService);
 
     // Reset all mocks before each test
@@ -78,7 +219,7 @@ describe('TransactionsService', () => {
         id: BigInt(789),
         userId: BigInt(123),
         categoryId: BigInt(456),
-        amount: new MockDecimal(100),
+        amount: new Decimal(100),
         description: 'Test expense',
         created_at: new Date()
       };
@@ -88,7 +229,7 @@ describe('TransactionsService', () => {
       mockPrismaService.users.update.mockResolvedValue({});
 
       // Act
-      const result = await service.create(userId, createTransactionDto);
+      const result = await service.createTransaction(userId, createTransactionDto);
 
       // Assert
       expect(mockPrismaService.categories.findUnique).toHaveBeenCalledWith({
@@ -112,10 +253,11 @@ describe('TransactionsService', () => {
           updated_at: expect.any(Date),
         },
       });
-      expect(result).toEqual(expect.objectContaining({
+      expect(result).toEqual({
+        ...mockTransaction,
         id: String(mockTransaction.id),
         categoryId: String(mockTransaction.categoryId)
-      }));
+      });
     });
 
     it('should create a transaction for income category and increase user balance', async () => {
@@ -138,7 +280,7 @@ describe('TransactionsService', () => {
         id: BigInt(789),
         userId: BigInt(123),
         categoryId: BigInt(456),
-        amount: new MockDecimal(200),
+        amount: new Decimal(200),
         description: 'Test income',
         created_at: new Date()
       };
@@ -148,7 +290,7 @@ describe('TransactionsService', () => {
       mockPrismaService.users.update.mockResolvedValue({});
 
       // Act
-      const result = await service.create(userId, createTransactionDto);
+      const result = await service.createTransaction(userId, createTransactionDto);
 
       // Assert
       expect(mockPrismaService.categories.findUnique).toHaveBeenCalledWith({
@@ -172,10 +314,11 @@ describe('TransactionsService', () => {
           updated_at: expect.any(Date),
         },
       });
-      expect(result).toEqual(expect.objectContaining({
+      expect(result).toEqual({
+        ...mockTransaction,
         id: String(mockTransaction.id),
         categoryId: String(mockTransaction.categoryId)
-      }));
+      });
     });
 
     it('should throw NotFoundException when category does not exist', async () => {
@@ -190,7 +333,7 @@ describe('TransactionsService', () => {
       mockPrismaService.categories.findUnique.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.create(userId, createTransactionDto)).rejects.toThrow(
+      await expect(service.createTransaction(userId, createTransactionDto)).rejects.toThrow(
         new NotFoundException(`Category with ID ${createTransactionDto.categoryId} not found`),
       );
       expect(mockPrismaService.transactions.create).not.toHaveBeenCalled();
@@ -212,14 +355,14 @@ describe('TransactionsService', () => {
         id: BigInt(789),
         userId,
         categoryId: BigInt(456),
-        amount: new MockDecimal(100),
+        amount: new Decimal(100),
         description: 'Original description',
         created_at: new Date()
       };
 
       const updatedTransaction = {
         ...originalTransaction,
-        amount: new MockDecimal(150),
+        amount: new Decimal(150),
         description: 'Updated description'
       };
 
@@ -252,12 +395,20 @@ describe('TransactionsService', () => {
         where: { id: BigInt(transactionId) },
         data: updateTransactionDto,
       });
-      // Kiểm tra balance được cập nhật đúng
-      expect(mockPrismaService.users.update).toHaveBeenCalled();
-      expect(result).toEqual(expect.objectContaining({
+      expect(mockPrismaService.users.update).toHaveBeenCalledWith({
+        where: { id: userId },
+        data: {
+          current_balance: {
+            increment: -50, // Additional expense decreases balance (150-100=-50)
+          },
+          updated_at: expect.any(Date),
+        },
+      });
+      expect(result).toEqual({
+        ...updatedTransaction,
         id: String(updatedTransaction.id),
         categoryId: String(updatedTransaction.categoryId)
-      }));
+      });
     });
 
     it('should throw NotFoundException when transaction does not exist', async () => {
@@ -289,7 +440,7 @@ describe('TransactionsService', () => {
           id: BigInt(789),
           userId,
           categoryId: BigInt(456),
-          amount: new MockDecimal(100),
+          amount: new Decimal(100),
           description: 'Transaction 1',
           created_at: new Date(),
           category: {
@@ -302,7 +453,7 @@ describe('TransactionsService', () => {
           id: BigInt(790),
           userId,
           categoryId: BigInt(457),
-          amount: new MockDecimal(200),
+          amount: new Decimal(200),
           description: 'Transaction 2',
           created_at: new Date(),
           category: {
@@ -316,7 +467,7 @@ describe('TransactionsService', () => {
       mockPrismaService.transactions.findMany.mockResolvedValue(mockTransactions);
 
       // Act
-      const result = await service.findAllByUser(userId);
+      const result = await service.getAllTransactions(userId);
 
       // Assert
       expect(mockPrismaService.transactions.findMany).toHaveBeenCalledWith({
@@ -324,14 +475,16 @@ describe('TransactionsService', () => {
         include: { category: true },
         orderBy: { created_at: 'desc' },
       });
-      
-      // Sử dụng objectContaining thay vì so sánh chính xác để tránh lỗi khi chuyển đổi kiểu
-      expect(result.length).toBe(mockTransactions.length);
-      expect(result[0]).toEqual(expect.objectContaining({
-        id: String(mockTransactions[0].id),
-        categoryId: String(mockTransactions[0].categoryId),
-        description: mockTransactions[0].description,
-      }));
+      expect(result).toEqual(mockTransactions.map(transaction => ({
+        ...transaction,
+        id: String(transaction.id),
+        categoryId: String(transaction.categoryId),
+        amount: Number(transaction.amount),
+        category: {
+          ...transaction.category,
+          id: String(transaction.category.id)
+        }
+      })));
     });
   });
 
@@ -344,7 +497,7 @@ describe('TransactionsService', () => {
         id: BigInt(789),
         userId,
         categoryId: BigInt(456),
-        amount: new MockDecimal(100),
+        amount: new Decimal(100),
         description: 'Test transaction',
         created_at: new Date(),
         category: {
@@ -357,7 +510,7 @@ describe('TransactionsService', () => {
       mockPrismaService.transactions.findFirst.mockResolvedValue(mockTransaction);
 
       // Act
-      const result = await service.findOne(userId, transactionId);
+      const result = await service.getTransactionById(userId, transactionId);
 
       // Assert
       expect(mockPrismaService.transactions.findFirst).toHaveBeenCalledWith({
@@ -367,11 +520,16 @@ describe('TransactionsService', () => {
         },
         include: { category: true },
       });
-      expect(result).toEqual(expect.objectContaining({
+      expect(result).toEqual({
+        ...mockTransaction,
         id: String(mockTransaction.id),
         categoryId: String(mockTransaction.categoryId),
-        description: mockTransaction.description,
-      }));
+        amount: Number(mockTransaction.amount),
+        category: {
+          ...mockTransaction.category,
+          id: String(mockTransaction.category.id)
+        }
+      });
     });
 
     it('should throw NotFoundException when transaction does not exist', async () => {
@@ -382,9 +540,9 @@ describe('TransactionsService', () => {
       mockPrismaService.transactions.findFirst.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.findOne(userId, transactionId)).rejects.toThrow(
+      await expect(service.getTransactionById(userId, transactionId)).rejects.toThrow(
         new NotFoundException(`Transaction with ID ${transactionId} not found`),
       );
     });
   });
-}); 
+});
