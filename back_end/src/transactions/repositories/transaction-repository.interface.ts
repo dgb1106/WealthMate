@@ -26,4 +26,5 @@ export interface TransactionRepository {
   
   getSummaryByCategory(userId: string, startDate: Date, endDate: Date): Promise<any[]>;
 
+  getTotalAmountByCategoryForUser(userId: string, categoryId: string): Promise<number>;
 }

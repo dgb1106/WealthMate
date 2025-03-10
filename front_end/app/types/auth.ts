@@ -1,10 +1,23 @@
+export enum PreferredMood {
+  IRRITATION = "IRRITATION",
+  ENCOURAGEMENT = "ENCOURAGEMENT"
+}
+
+export enum PreferredGoal {
+  SAVING = "SAVING",
+  INVESTMENT = "INVESTMENT"
+}
+
 export interface User {
   id: string;
   email: string;
-  firstName: string;
-  lastName: string;
-  createdAt: string;
-  updatedAt: string;
+  name: string;
+  phone?: string;
+  city?: string;
+  district?: string;
+  job?: string;
+  preferred_mood?: PreferredMood;
+  preferred_goal?: PreferredGoal;
 }
 
 export interface LoginFormData {
@@ -12,9 +25,16 @@ export interface LoginFormData {
   password: string;
 }
 
-export interface RegisterFormData extends LoginFormData {
-  firstName: string;
-  lastName: string;
+export interface RegisterFormData extends LoginFormData{
+  email: string;
+  password: string;
+  name: string;
+  phone: string;
+  city: string;
+  district: string;
+  job: string;
+  preferred_mood: PreferredMood;
+  preferred_goal: PreferredGoal;
 }
 
 export interface AuthState {

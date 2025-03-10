@@ -51,7 +51,7 @@ export class TransactionService {
     return this.prisma.$transaction(async (prisma) => {
       try {
         // Find the category
-        const category = await prisma.categories.findUnique({
+        const category = await this.prisma.categories.findUnique({
           where: { id: BigInt(createDto.categoryId) },
         });
 
@@ -192,9 +192,7 @@ export class TransactionService {
    */
   async getTransactionsForMonth(userId: string, month: number, year: number): Promise<Transaction[]> {
     // Validate month
-    if (month < 0 || month > 11) {
-      throw new BadRequestException('Month must be between 0 and 11');
-    }
+    this.transactionDomainService.validateMonth(month);
     
     const cacheKey = this.getCacheKey(userId, `month-${year}-${month}`);
     
@@ -491,5 +489,18 @@ export class TransactionService {
     await this.cacheManager.set(cacheKey, summary, this.CACHE_TTL);
     
     return summary;
+  }
+
+  async getCategoryTotal(userId: string, categoryId: string): Promise<number> {
+
+    const category = await this.prisma.categories.findUnique({
+      where: { id: BigInt(categoryId) },
+    });
+    if (!category) {
+      throw new NotFoundException(`Category with ID ${categoryId} not found`);
+    }
+    
+    const totalAmount = await this.transactionRepository.getTotalAmountByCategoryForUser(userId, categoryId);
+    return totalAmount;
   }
 }

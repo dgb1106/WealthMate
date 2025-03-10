@@ -10,7 +10,6 @@ function MyApp({ Component, pageProps }: AppProps) {
       <Head>
         <title>WealthMate</title>
         <link rel="icon" href="/avaicon.png" />
-        <link rel="icon" href="/avaicon.png?v=2" />
       </Head>
       <Component {...pageProps} />
     </AuthProvider>
