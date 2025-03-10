@@ -6,35 +6,45 @@ import { useRouter } from 'next/navigation';
 export const useAuthCheck = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
-
+  
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('/auth/check', {
+        const token = localStorage.getItem('authToken');
+        
+        if (!token) {
+          setIsAuthenticated(false);
+          setIsLoading(false);
+          return;
+        }
+        
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/check`, {
           method: 'GET',
-          credentials: 'include', 
+          credentials: 'include',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Cache-Control': 'no-cache',
+          }
         });
 
-        const data = await response.json();
-        
-        if (response.ok && data.isAuthenticated) {
-          setIsAuthenticated(true);
+        if (response.ok) {
+          const data = await response.json();
+          setIsAuthenticated(data.isAuthenticated);
         } else {
+          console.error('Auth check failed:', response.status, response.statusText);
+          localStorage.removeItem('authToken');
           setIsAuthenticated(false);
-          router.push('/pages/auth/login');
         }
       } catch (error) {
-        console.error('Auth check failed:', error);
+        console.error('Auth check error:', error);
         setIsAuthenticated(false);
-        router.push('/pages/auth/login');
       } finally {
         setIsLoading(false);
       }
     };
 
     checkAuth();
-  }, [router]);
+  }, []);
 
   return { isAuthenticated, isLoading };
-}; 
+};
