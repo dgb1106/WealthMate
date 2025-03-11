@@ -20,7 +20,8 @@
   "dependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-router-dom": "^6.30.0"
+    "react-router-dom": "^6.30.0",
+    "wealthmate": "file:"
   },
   "devDependencies": {
     "@types/react-router-dom": "^5.3.3"
