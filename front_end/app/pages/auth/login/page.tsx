@@ -8,7 +8,6 @@ export const metadata: Metadata = {
   description: 'Sign in to your WealthMate account',
 };
 
-// Define the type for credentials
 interface LoginCredentials {
   email: string;
   password: string;
