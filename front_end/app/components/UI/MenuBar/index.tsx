@@ -46,6 +46,12 @@ const MenuBar: React.FC = () => {
           </Link>
         </li>
         <li>
+          <Link href="/pages/profile" className={styles.menuItem}>
+            <i className="fi fi-rr-user"></i>
+            <span>Profile</span>
+          </Link>
+        </li>
+        <li>
           <Link href="/pages/auth/login" className={`${styles.menuItem} ${styles.logoutItem}`}>
             <span>Log out</span>
           </Link>
