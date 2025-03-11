@@ -257,11 +257,16 @@ describe('TransactionsController', () => {
         amount: 75,
         description: 'Updated groceries',
       };
-      const updatedTransaction = {
-        ...mockTransaction,
+      
+      const updatedTransaction = new Transaction({
+        id: mockTransaction.id,
+        userId: mockTransaction.userId,
+        categoryId: mockTransaction.categoryId,
+        created_at: mockTransaction.created_at,
         amount: -75,
         description: 'Updated groceries'
-      };
+      });
+      
       transactionService.updateTransaction.mockResolvedValue(updatedTransaction);
 
       // Act
