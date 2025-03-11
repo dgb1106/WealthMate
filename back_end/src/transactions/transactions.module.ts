@@ -13,11 +13,14 @@ import { TransactionDomainService } from './services/transaction-domain.service'
   providers: [
     TransactionService,
     TransactionDomainService,
+    {
+      provide: 'TRANSACTION_REPOSITORY',
+      useClass: PrismaTransactionRepository,
+    }
     
   ],
   exports: [
-    TransactionService, 
-    TransactionDomainService,
+    TransactionService,
   ]
 })
 export class TransactionsModule {}
