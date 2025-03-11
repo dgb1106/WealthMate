@@ -14,7 +14,6 @@ import {
 } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { useTransactions } from '@/hooks/useTransactions';
 
 interface Transaction {
   id: string;
@@ -58,24 +57,53 @@ const predefinedCategories: Category[] = [
 ];
 
 const TransactionsPage: React.FC = () => {
-  const { transactions, loading, error, setTransactions } = useTransactions();
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [form] = Form.useForm();
 
+  const fetchTransactions = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token'); // Lấy token từ localStorage
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transactions`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch transactions');
+      }
+      const data = await response.json();
+      setTransactions(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Failed to fetch transactions:', error);
+      message.error('Failed to load transactions');
+      setTransactions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTransactions();
+  }, []);
+
   const handleAddTransaction = async (values: any) => {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('token'); // Sử dụng token cho request thêm giao dịch
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transactions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        credentials: 'include',
         body: JSON.stringify({
           ...values,
           date: values.date.format('DD-MM-YYYY'),
           categoryId: values.categoryId,
+          amount: parseFloat(values.amount), // Ensure amount is a number
         }),
       });
       
@@ -86,7 +114,7 @@ const TransactionsPage: React.FC = () => {
       message.success('Transaction added successfully');
       setModalVisible(false);
       form.resetFields();
-      setTransactions(prev => [...prev, { ...values, id: new Date().toISOString() }]);
+      fetchTransactions();
     } catch (error) {
       console.error('Failed to add transaction:', error);
       message.error('Failed to add transaction');
@@ -144,7 +172,11 @@ const TransactionsPage: React.FC = () => {
       </div>
 
       <div style={{ backgroundColor: '#f5f7ff', padding: '16px', borderRadius: '8px' }}>
-        {error && <div style={{ color: 'red' }}>{error}</div>}
+        <div style={{ marginBottom: '16px', display: 'flex', gap: '8px' }}>
+          <Button type="default" style={{ borderRadius: '20px' }}>All</Button>
+          <Button type="default" style={{ borderRadius: '20px' }}>2025</Button>
+        </div>
+
         <Table 
           dataSource={transactions} 
           columns={columns} 
@@ -171,42 +203,31 @@ const TransactionsPage: React.FC = () => {
           onFinish={handleAddTransaction}
         >
           <Form.Item
-            name="name"
-            label="Name"
-            rules={[{ required: true, message: 'Please enter transaction name' }]}
+            name="description"
+            label="Description"
+            rules={[
+              { required: true, message: 'Please enter transaction description' },
+              { max: 255, message: 'Description cannot exceed 255 characters' }
+            ]}
           >
-            <Input placeholder="Transaction name" />
-          </Form.Item>
-
-          <Form.Item
-            name="date"
-            label="Date"
-            rules={[{ required: true, message: 'Please select date' }]}
-          >
-            <DatePicker style={{ width: '100%' }} />
+            <Input placeholder="Transaction description" />
           </Form.Item>
 
           <Form.Item
             name="amount"
             label="Amount"
-            rules={[{ required: true, message: 'Please enter amount' }]}
+            rules={[
+              { required: true, message: 'Please enter amount' },
+              { type: 'number', message: 'Amount must be a number' },
+              { validator: (_, value) => 
+                  value && value.toString().split('.')[1]?.length > 2 
+                  ? Promise.reject('Amount must have at most 2 decimal places') 
+                  : Promise.resolve()
+              }
+            ]}
             help="Use negative value for expenses, positive for income"
           >
             <Input type="number" placeholder="Amount" />
-          </Form.Item>
-
-          <Form.Item
-            name="method"
-            label="Method"
-            rules={[{ required: true, message: 'Please select payment method' }]}
-          >
-            <Select placeholder="Select payment method">
-              {paymentMethods.map(method => (
-                <Select.Option key={method} value={method}>
-                  {method}
-                </Select.Option>
-              ))}
-            </Select>
           </Form.Item>
 
           <Form.Item
