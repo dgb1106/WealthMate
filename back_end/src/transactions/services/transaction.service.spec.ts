@@ -391,7 +391,8 @@ describe('TransactionService', () => {
         transactionId,
         userId,
         {
-          amount: -150
+          amount: -150,
+          description: 'Updated description'
         }
       );
       expect(mockPrismaService.users.update).toHaveBeenCalled();
