@@ -1,261 +1,180 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { RecurringTransaction } from './entities/recurring-transactions.entity';
-import { CreateRecurringTransactionDto } from './dto/create-recurring-transactions.dto';
-import { UpdateRecurringTransactionDto } from './dto/update-recurring-transactions.dto';
-import { Frequency, TransactionType } from '../common/enums/enum';
-import { Category } from '../categories/entities/categories.entity';
+import { RecurringTransactionRepository } from './repositories/recurring-transaction-repository.interface';
+import { RecurringTransactionDomainService } from './services/recurring-transaction-domain.service';
+import { CreateRecurringTransactionDto } from './dto/create-recurring-transaction.dto';
+import { UpdateRecurringTransactionDto } from './dto/update-recurring-transaction.dto';
+import { Frequency } from './../common/enums/enum';
 
 @Injectable()
-export class RecurringTransactionsService {
-  constructor(private readonly prisma: PrismaService) {}
+export class RecurringTransactionService {
+  constructor(
+    private readonly recurringTxRepository: RecurringTransactionRepository,
+    private readonly recurringTxDomainService: RecurringTransactionDomainService
+  ) {}
 
-  async create(userId: string, createDto: CreateRecurringTransactionDto): Promise<RecurringTransaction> {
+  /**
+   * Creates a new recurring transaction
+   */
+  async create(userId: string, createDto: CreateRecurringTransactionDto) {
     try {
-      // Kiểm tra danh mục tồn tại
-      const category = await this.prisma.categories.findUnique({
-        where: { id: BigInt(createDto.categoryId) },
-      });
+      // Validate the recurring transaction data
+      this.recurringTxDomainService.validateRecurringTransactionData(createDto);
 
-      if (!category) {
-        throw new NotFoundException(`Danh mục với ID ${createDto.categoryId} không tồn tại`);
+      // Create via repository
+      const transaction = await this.recurringTxRepository.create(userId, createDto);
+      
+      // Return formatted result
+      return transaction.toResponseFormat();
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
       }
+      throw new BadRequestException(`Failed to create recurring transaction: ${error.message}`);
+    }
+  }
 
-      // Tạo giao dịch định kỳ mới
-      const recurringTransaction = await this.prisma.recurringTransactions.create({
-        data: {
-          userId,
-          categoryId: BigInt(createDto.categoryId),
-          amount: createDto.amount,
-          frequency: createDto.frequency,
-          next_occurence: new Date(createDto.next_occurence),
-          created_at: new Date(),
-          description: createDto.description,
-        },
-        include: {
-          category: true,
-        },
-      });
+  /**
+   * Find all recurring transactions for a user
+   */
+  async findAll(userId: string) {
+    const transactions = await this.recurringTxRepository.findAll(userId);
+    return transactions.map(tx => tx.toResponseFormat());
+  }
 
-      return this.mapToRecurringTransaction(recurringTransaction);
+  /**
+   * Find a specific recurring transaction by ID
+   */
+  async findOne(id: string, userId: string) {
+    const transaction = await this.recurringTxRepository.findById(id, userId);
+    
+    if (!transaction) {
+      throw new NotFoundException(`Recurring transaction with ID ${id} not found`);
+    }
+    
+    return transaction.toResponseFormat();
+  }
+
+  /**
+   * Update a recurring transaction
+   */
+  async update(id: string, userId: string, updateDto: UpdateRecurringTransactionDto) {
+    try {
+      // If next_occurence date is provided, validate it's in the future
+      if (updateDto.next_occurence) {
+        const nextOccurence = new Date(updateDto.next_occurence);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (nextOccurence < today) {
+          throw new BadRequestException('Next occurrence date must be in the future');
+        }
+      }
+      
+      // Update via repository
+      const transaction = await this.recurringTxRepository.update(id, userId, updateDto);
+      
+      return transaction.toResponseFormat();
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException(`Failed to update recurring transaction: ${error.message}`);
+    }
+  }
+
+  /**
+   * Delete a recurring transaction
+   */
+  async remove(id: string, userId: string) {
+    try {
+      const result = await this.recurringTxRepository.delete(id, userId);
+      return { success: result, message: 'Recurring transaction successfully deleted' };
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      throw new BadRequestException('Không thể tạo giao dịch định kỳ');
+      throw new BadRequestException(`Failed to delete recurring transaction: ${error.message}`);
     }
   }
 
-  async findAll(userId: string): Promise<RecurringTransaction[]> {
-    const transactions = await this.prisma.recurringTransactions.findMany({
-      where: { userId },
-      include: {
-        category: true,
-      },
-    });
-
-    return transactions.map(transaction => this.mapToRecurringTransaction(transaction));
+  /**
+   * Find recurring transactions by frequency
+   */
+  async findByFrequency(userId: string, frequency: Frequency) {
+    const transactions = await this.recurringTxRepository.findByFrequency(userId, frequency);
+    return transactions.map(tx => tx.toResponseFormat());
   }
 
-  async findOne(userId: string, id: string): Promise<RecurringTransaction> {
-    const transaction = await this.prisma.recurringTransactions.findFirst({
-      where: {
-        id: BigInt(id),
-        userId,
-      },
-      include: {
-        category: true,
-      },
-    });
+  /**
+   * Find recurring transactions by category
+   */
+  async findByCategory(userId: string, categoryId: string) {
+    const transactions = await this.recurringTxRepository.findByCategory(userId, categoryId);
+    return transactions.map(tx => tx.toResponseFormat());
+  }
 
+  /**
+   * Get upcoming transactions within a specified number of days
+   */
+  async getUpcomingTransactions(userId: string, days: number = 30) {
+    const transactions = await this.recurringTxRepository.getUpcomingTransactions(userId, days);
+    return transactions.map(tx => tx.toResponseFormat());
+  }
+
+  /**
+   * Process all due recurring transactions
+   */
+  async processDueTransactions() {
+    return this.recurringTxDomainService.processDueTransactions();
+  }
+
+  /**
+   * Process a specific recurring transaction
+   */
+  async processTransaction(id: string, userId: string) {
+    const transaction = await this.recurringTxRepository.findById(id, userId);
+    
     if (!transaction) {
-      throw new NotFoundException(`Giao dịch định kỳ với ID ${id} không tồn tại`);
+      throw new NotFoundException(`Recurring transaction with ID ${id} not found`);
     }
-
-    return this.mapToRecurringTransaction(transaction);
+    
+    return this.recurringTxDomainService.processTransaction(transaction);
   }
 
-  async findUpcoming(userId: string, days: number = 7): Promise<RecurringTransaction[]> {
-    const today = new Date();
-    const endDate = new Date();
-    endDate.setDate(today.getDate() + days);
-
-    const transactions = await this.prisma.recurringTransactions.findMany({
-      where: {
-        userId,
-        next_occurence: {
-          gte: today,
-          lte: endDate,
-        },
-      },
-      include: {
-        category: true,
-      },
-      orderBy: {
-        next_occurence: 'asc',
-      },
-    });
-
-    return transactions.map(transaction => this.mapToRecurringTransaction(transaction));
+  /**
+   * Generate forecast of upcoming transactions over a period
+   */
+  async generateTransactionForecast(userId: string, days: number = 30) {
+    return this.recurringTxDomainService.generateUpcomingTransactions(userId, days);
   }
 
-  async update(userId: string, id: string, updateDto: UpdateRecurringTransactionDto): Promise<RecurringTransaction> {
-    // Kiểm tra giao dịch định kỳ tồn tại
-    const transaction = await this.prisma.recurringTransactions.findFirst({
-      where: {
-        id: BigInt(id),
-        userId,
-      },
-    });
+  /**
+   * Get statistics about recurring transactions
+   */
+  async getRecurringTransactionStats(userId: string) {
+    return this.recurringTxDomainService.getRecurringTransactionsStats(userId);
+  }
 
+  /**
+   * Skip the next occurrence of a recurring transaction
+   */
+  async skipNextOccurrence(id: string, userId: string) {
+    const transaction = await this.recurringTxRepository.findById(id, userId);
+    
     if (!transaction) {
-      throw new NotFoundException(`Giao dịch định kỳ với ID ${id} không tồn tại`);
-    }
-
-    // Kiểm tra danh mục tồn tại nếu được cung cấp
-    if (updateDto.categoryId) {
-      const category = await this.prisma.categories.findUnique({
-        where: { id: BigInt(updateDto.categoryId) },
-      });
-
-      if (!category) {
-        throw new NotFoundException(`Danh mục với ID ${updateDto.categoryId} không tồn tại`);
-      }
-    }
-
-    // Cập nhật giao dịch định kỳ
-    const updatedTransaction = await this.prisma.recurringTransactions.update({
-      where: { id: BigInt(id) },
-      data: {
-        ...(updateDto.categoryId && { categoryId: BigInt(updateDto.categoryId) }),
-        ...(updateDto.amount !== undefined && { amount: updateDto.amount }),
-        ...(updateDto.frequency && { frequency: updateDto.frequency }),
-        ...(updateDto.next_occurence && { next_occurence: new Date(updateDto.next_occurence) }),
-        ...(updateDto.description !== undefined && { description: updateDto.description }),
-      },
-      include: {
-        category: true,
-      },
-    });
-
-    return this.mapToRecurringTransaction(updatedTransaction);
-  }
-
-  async remove(userId: string, id: string): Promise<void> {
-    // Kiểm tra giao dịch định kỳ tồn tại
-    const transaction = await this.prisma.recurringTransactions.findFirst({
-      where: {
-        id: BigInt(id),
-        userId,
-      },
-    });
-
-    if (!transaction) {
-      throw new NotFoundException(`Giao dịch định kỳ với ID ${id} không tồn tại`);
-    }
-
-    // Xóa giao dịch định kỳ
-    await this.prisma.recurringTransactions.delete({
-      where: { id: BigInt(id) },
-    });
-  }
-
-  async processRecurringTransactions(userId?: string): Promise<number> {
-    const today = new Date();
-    
-    // Lấy tất cả các giao dịch định kỳ đến hạn
-    const query = {
-      where: {
-        next_occurence: {
-          lte: today,
-        },
-        ...(userId && { userId }),
-      },
-      include: {
-        category: true,
-      },
-    };
-    
-    const dueTransactions = await this.prisma.recurringTransactions.findMany(query);
-    
-    // Không có giao dịch nào cần xử lý
-    if (dueTransactions.length === 0) {
-      return 0;
+      throw new NotFoundException(`Recurring transaction with ID ${id} not found`);
     }
     
-    let processedCount = 0;
+    // Calculate the next occurrence date after the current next_occurence
+    const nextOccurence = transaction.calculateNextOccurrence();
     
-    // Xử lý từng giao dịch định kỳ
-    for (const transaction of dueTransactions) {
-      try {
-        // Tạo giao dịch thực tế
-        await this.prisma.transactions.create({
-          data: {
-            userId: transaction.userId,
-            categoryId: transaction.categoryId,
-            amount: Number(transaction.amount),
-            description: `${transaction.description} (Tự động từ giao dịch định kỳ)`,
-            created_at: new Date(),
-          },
-        });
-        
-        // Cập nhật ngày xảy ra tiếp theo
-        const nextOccurrence = this.calculateNextOccurrence(transaction.frequency as Frequency, new Date(transaction.next_occurence));
-        
-        await this.prisma.recurringTransactions.update({
-          where: { id: transaction.id },
-          data: {
-            next_occurence: nextOccurrence,
-          },
-        });
-        
-        processedCount++;
-      } catch (error) {
-        console.error(`Lỗi khi xử lý giao dịch định kỳ ${transaction.id}:`, error);
-      }
-    }
+    // Update in repository
+    const updatedTransaction = await this.recurringTxRepository.updateNextOccurrence(
+      id,
+      userId,
+      nextOccurence
+    );
     
-    return processedCount;
-  }
-
-  private calculateNextOccurrence(frequency: Frequency, currentDate: Date): Date {
-    const nextDate = new Date(currentDate);
-    
-    switch (frequency) {
-      case Frequency.DAILY:
-        nextDate.setDate(nextDate.getDate() + 1);
-        break;
-      case Frequency.WEEKLY:
-        nextDate.setDate(nextDate.getDate() + 7);
-        break;
-      case Frequency.MONTHLY:
-        nextDate.setMonth(nextDate.getMonth() + 1);
-        break;
-      case Frequency.YEARLY:
-        nextDate.setFullYear(nextDate.getFullYear() + 1);
-        break;
-    }
-    
-    return nextDate;
-  }
-
-  private mapToRecurringTransaction(transaction: any): RecurringTransaction {
-    return new RecurringTransaction({
-      id: String(transaction.id),
-      categoryId: String(transaction.categoryId),
-      userId: String(transaction.userId),
-      amount: Number(transaction.amount),
-      frequency: transaction.frequency as Frequency,
-      created_at: transaction.created_at,
-      next_occurence: transaction.next_occurence,
-      description: transaction.description,
-      category: transaction.category 
-        ? new Category({
-            id: String(transaction.category.id),
-            name: transaction.category.name,
-            type: transaction.category.type as TransactionType
-          })
-        : undefined,
-    });
+    return updatedTransaction.toResponseFormat();
   }
 }
