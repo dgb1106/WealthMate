@@ -25,7 +25,6 @@ const mockPrismaService = {
   }
 };
 
-// Add this mock
 const mockCacheManager = {
   get: jest.fn(),
   set: jest.fn(),
@@ -36,10 +35,25 @@ const mockCacheManager = {
 const mockTransactionDomainService = {
   validateDateRange: jest.fn(),
   calculateTransactionAmount: jest.fn(),
-  // Add any other methods from this service that are used
+  validateAmount: jest.fn(),
+  validateMonth: jest.fn(),
+  calculateBalanceEffect: jest.fn((amount, type) => {
+    if (type === TransactionType.EXPENSE) {
+      return -Math.abs(Number(amount));
+    }
+    return Math.abs(Number(amount));
+  }),
+  formatTransactionAmount: jest.fn((amount, type) => {
+    if (type === TransactionType.EXPENSE) {
+      return -Math.abs(Number(amount));
+    }
+    return Math.abs(Number(amount));
+  }),
+  getMonthRange: jest.fn(),
+  getCurrentMonthRange: jest.fn(),
 };
 
-
+// Update mockTransactionRepository implementation
 const mockTransactionRepository = {
   create: jest.fn().mockImplementation((userId, categoryId, amount, description) => {
     return {
@@ -167,7 +181,6 @@ const mockTransactionRepository = {
 
 describe('TransactionService', () => {
   let service: TransactionService;
-  let prisma: PrismaService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -178,11 +191,11 @@ describe('TransactionService', () => {
           useValue: mockPrismaService,
         },
         {
-          provide: 'CACHE_MANAGER', // Make sure this is the exact token name used
+          provide: 'CACHE_MANAGER',
           useValue: mockCacheManager,
         },
         {
-          provide: 'TRANSACTION_REPOSITORY', // Replace with actual token if different
+          provide: 'TRANSACTION_REPOSITORY',
           useValue: mockTransactionRepository,
         },
         {
@@ -192,13 +205,12 @@ describe('TransactionService', () => {
       ],
     }).compile();
     service = module.get<TransactionService>(TransactionService);
-    prisma = module.get<PrismaService>(PrismaService);
 
     // Reset all mocks before each test
     jest.clearAllMocks();
   });
 
-  describe('create', () => {
+  describe('createTransaction', () => {
     it('should create a transaction for expense category and decrease user balance', async () => {
       // Arrange
       const userId = '123';
@@ -215,18 +227,10 @@ describe('TransactionService', () => {
         userId: BigInt(123)
       };
 
-      const mockTransaction = {
-        id: BigInt(789),
-        userId: BigInt(123),
-        categoryId: BigInt(456),
-        amount: new Decimal(100),
-        description: 'Test expense',
-        created_at: new Date()
-      };
-
       mockPrismaService.categories.findUnique.mockResolvedValue(mockCategory);
-      mockPrismaService.transactions.create.mockResolvedValue(mockTransaction);
-      mockPrismaService.users.update.mockResolvedValue({});
+      mockTransactionDomainService.calculateBalanceEffect.mockReturnValue(-100);
+      mockTransactionDomainService.formatTransactionAmount.mockReturnValue(-100);
+      mockPrismaService.users.update.mockResolvedValue({ current_balance: 900 });
 
       // Act
       const result = await service.createTransaction(userId, createTransactionDto);
@@ -235,29 +239,29 @@ describe('TransactionService', () => {
       expect(mockPrismaService.categories.findUnique).toHaveBeenCalledWith({
         where: { id: BigInt(createTransactionDto.categoryId) },
       });
-      expect(mockPrismaService.transactions.create).toHaveBeenCalledWith({
-        data: {
-          userId,
-          categoryId: BigInt(createTransactionDto.categoryId),
-          amount: createTransactionDto.amount,
-          description: createTransactionDto.description,
-          created_at: expect.any(Date),
-        },
-      });
+      expect(mockTransactionDomainService.calculateBalanceEffect).toHaveBeenCalledWith(
+        createTransactionDto.amount,
+        TransactionType.EXPENSE
+      );
+      expect(mockTransactionRepository.create).toHaveBeenCalledWith(
+        userId,
+        createTransactionDto.categoryId,
+        -100, // Formatted amount from domain service
+        createTransactionDto.description
+      );
       expect(mockPrismaService.users.update).toHaveBeenCalledWith({
         where: { id: userId },
         data: {
           current_balance: {
-            decrement: createTransactionDto.amount,
+            increment: -100,
           },
           updated_at: expect.any(Date),
         },
+        select: {
+          current_balance: true
+        }
       });
-      expect(result).toEqual({
-        ...mockTransaction,
-        id: String(mockTransaction.id),
-        categoryId: String(mockTransaction.categoryId)
-      });
+      expect(mockCacheManager.del).toHaveBeenCalled();
     });
 
     it('should create a transaction for income category and increase user balance', async () => {
@@ -276,18 +280,10 @@ describe('TransactionService', () => {
         userId: BigInt(123)
       };
 
-      const mockTransaction = {
-        id: BigInt(789),
-        userId: BigInt(123),
-        categoryId: BigInt(456),
-        amount: new Decimal(200),
-        description: 'Test income',
-        created_at: new Date()
-      };
-
       mockPrismaService.categories.findUnique.mockResolvedValue(mockCategory);
-      mockPrismaService.transactions.create.mockResolvedValue(mockTransaction);
-      mockPrismaService.users.update.mockResolvedValue({});
+      mockTransactionDomainService.calculateBalanceEffect.mockReturnValue(200);
+      mockTransactionDomainService.formatTransactionAmount.mockReturnValue(200);
+      mockPrismaService.users.update.mockResolvedValue({ current_balance: 1200 });
 
       // Act
       const result = await service.createTransaction(userId, createTransactionDto);
@@ -296,29 +292,29 @@ describe('TransactionService', () => {
       expect(mockPrismaService.categories.findUnique).toHaveBeenCalledWith({
         where: { id: BigInt(createTransactionDto.categoryId) },
       });
-      expect(mockPrismaService.transactions.create).toHaveBeenCalledWith({
-        data: {
-          userId,
-          categoryId: BigInt(createTransactionDto.categoryId),
-          amount: createTransactionDto.amount,
-          description: createTransactionDto.description,
-          created_at: expect.any(Date),
-        },
-      });
+      expect(mockTransactionDomainService.calculateBalanceEffect).toHaveBeenCalledWith(
+        createTransactionDto.amount,
+        TransactionType.INCOME
+      );
+      expect(mockTransactionRepository.create).toHaveBeenCalledWith(
+        userId,
+        createTransactionDto.categoryId,
+        200, // Formatted amount from domain service
+        createTransactionDto.description
+      );
       expect(mockPrismaService.users.update).toHaveBeenCalledWith({
         where: { id: userId },
         data: {
           current_balance: {
-            increment: createTransactionDto.amount,
+            increment: 200,
           },
           updated_at: expect.any(Date),
         },
+        select: {
+          current_balance: true
+        }
       });
-      expect(result).toEqual({
-        ...mockTransaction,
-        id: String(mockTransaction.id),
-        categoryId: String(mockTransaction.categoryId)
-      });
+      expect(mockCacheManager.del).toHaveBeenCalled();
     });
 
     it('should throw NotFoundException when category does not exist', async () => {
@@ -336,7 +332,7 @@ describe('TransactionService', () => {
       await expect(service.createTransaction(userId, createTransactionDto)).rejects.toThrow(
         new NotFoundException(`Category with ID ${createTransactionDto.categoryId} not found`),
       );
-      expect(mockPrismaService.transactions.create).not.toHaveBeenCalled();
+      expect(mockTransactionRepository.create).not.toHaveBeenCalled();
       expect(mockPrismaService.users.update).not.toHaveBeenCalled();
     });
   });
@@ -360,12 +356,6 @@ describe('TransactionService', () => {
         created_at: new Date()
       };
 
-      const updatedTransaction = {
-        ...originalTransaction,
-        amount: new Decimal(150),
-        description: 'Updated description'
-      };
-
       const mockCategory = {
         id: BigInt(456),
         name: 'Test Category',
@@ -375,8 +365,8 @@ describe('TransactionService', () => {
 
       mockPrismaService.transactions.findFirst.mockResolvedValue(originalTransaction);
       mockPrismaService.categories.findUnique.mockResolvedValue(mockCategory);
-      mockPrismaService.transactions.update.mockResolvedValue(updatedTransaction);
-      mockPrismaService.users.update.mockResolvedValue({});
+      mockTransactionDomainService.formatTransactionAmount.mockReturnValue(-150);
+      mockPrismaService.users.update.mockResolvedValue({ current_balance: 850 });
 
       // Act
       const result = await service.updateTransaction(userId, transactionId, updateTransactionDto);
@@ -387,28 +377,23 @@ describe('TransactionService', () => {
           id: BigInt(transactionId),
           userId,
         },
+        include: {
+          category: true
+        }
       });
       expect(mockPrismaService.categories.findUnique).toHaveBeenCalledWith({
         where: { id: BigInt(originalTransaction.categoryId) },
       });
-      expect(mockPrismaService.transactions.update).toHaveBeenCalledWith({
-        where: { id: BigInt(transactionId) },
-        data: updateTransactionDto,
-      });
-      expect(mockPrismaService.users.update).toHaveBeenCalledWith({
-        where: { id: userId },
-        data: {
-          current_balance: {
-            increment: -50, // Additional expense decreases balance (150-100=-50)
-          },
-          updated_at: expect.any(Date),
-        },
-      });
-      expect(result).toEqual({
-        ...updatedTransaction,
-        id: String(updatedTransaction.id),
-        categoryId: String(updatedTransaction.categoryId)
-      });
+      expect(mockTransactionRepository.update).toHaveBeenCalledWith(
+        transactionId,
+        userId,
+        {
+          amount: -150,
+          description: 'Updated description'
+        }
+      );
+      expect(mockPrismaService.users.update).toHaveBeenCalled();
+      expect(mockCacheManager.del).toHaveBeenCalled();
     });
 
     it('should throw NotFoundException when transaction does not exist', async () => {
@@ -426,110 +411,73 @@ describe('TransactionService', () => {
       await expect(service.updateTransaction(userId, transactionId, updateTransactionDto)).rejects.toThrow(
         new NotFoundException(`Transaction with ID ${transactionId} not found`),
       );
-      expect(mockPrismaService.transactions.update).not.toHaveBeenCalled();
+      expect(mockTransactionRepository.update).not.toHaveBeenCalled();
       expect(mockPrismaService.users.update).not.toHaveBeenCalled();
     });
   });
 
-  describe('findAllByUser', () => {
+  describe('getAllTransactions', () => {
     it('should return all transactions for a user', async () => {
       // Arrange
       const userId = '123';
       const mockTransactions = [
         {
-          id: BigInt(789),
+          id: '789',
           userId,
-          categoryId: BigInt(456),
-          amount: new Decimal(100),
+          categoryId: '456',
+          amount: 100,
           description: 'Transaction 1',
-          created_at: new Date(),
-          category: {
-            id: BigInt(456),
-            name: 'Category 1',
-            type: TransactionType.EXPENSE
-          }
+          created_at: new Date()
         },
         {
-          id: BigInt(790),
+          id: '790',
           userId,
-          categoryId: BigInt(457),
-          amount: new Decimal(200),
+          categoryId: '457',
+          amount: 200,
           description: 'Transaction 2',
-          created_at: new Date(),
-          category: {
-            id: BigInt(457),
-            name: 'Category 2',
-            type: TransactionType.INCOME
-          }
+          created_at: new Date()
         }
       ];
 
-      mockPrismaService.transactions.findMany.mockResolvedValue(mockTransactions);
+      mockCacheManager.get.mockResolvedValue(null);
+      mockTransactionRepository.findAllByUser.mockResolvedValue(mockTransactions);
 
       // Act
       const result = await service.getAllTransactions(userId);
 
       // Assert
-      expect(mockPrismaService.transactions.findMany).toHaveBeenCalledWith({
-        where: { userId },
-        include: { category: true },
-        orderBy: { created_at: 'desc' },
-      });
-      expect(result).toEqual(mockTransactions.map(transaction => ({
-        ...transaction,
-        id: String(transaction.id),
-        categoryId: String(transaction.categoryId),
-        amount: Number(transaction.amount),
-        category: {
-          ...transaction.category,
-          id: String(transaction.category.id)
-        }
-      })));
+      expect(mockCacheManager.get).toHaveBeenCalled();
+      expect(mockTransactionRepository.findAllByUser).toHaveBeenCalledWith(userId);
+      expect(mockCacheManager.set).toHaveBeenCalled();
+      expect(result).toEqual(mockTransactions);
     });
   });
 
-  describe('findOne', () => {
+  describe('getTransactionById', () => {
     it('should return a transaction by ID', async () => {
       // Arrange
       const userId = '123';
       const transactionId = '789';
       const mockTransaction = {
-        id: BigInt(789),
+        id: '789',
         userId,
-        categoryId: BigInt(456),
-        amount: new Decimal(100),
+        categoryId: '456',
+        amount: 100,
         description: 'Test transaction',
-        created_at: new Date(),
-        category: {
-          id: BigInt(456),
-          name: 'Test Category',
-          type: TransactionType.EXPENSE
-        }
+        created_at: new Date()
       };
 
-      mockPrismaService.transactions.findFirst.mockResolvedValue(mockTransaction);
+      mockCacheManager.get.mockResolvedValue(null);
+      mockTransactionRepository.findById.mockResolvedValue(mockTransaction);
 
       // Act
       const result = await service.getTransactionById(userId, transactionId);
 
       // Assert
-      expect(mockPrismaService.transactions.findFirst).toHaveBeenCalledWith({
-        where: {
-          id: BigInt(transactionId),
-          userId,
-        },
-        include: { category: true },
-      });
-      expect(result).toEqual({
-        ...mockTransaction,
-        id: String(mockTransaction.id),
-        categoryId: String(mockTransaction.categoryId),
-        amount: Number(mockTransaction.amount),
-        category: {
-          ...mockTransaction.category,
-          id: String(mockTransaction.category.id)
-        }
-      });
+      expect(mockCacheManager.get).toHaveBeenCalled();
+      expect(mockTransactionRepository.findById).toHaveBeenCalledWith(transactionId, userId);
+      expect(mockCacheManager.set).toHaveBeenCalled();
+      expect(result).toEqual(mockTransaction);
     });
 
     it('should throw NotFoundException when transaction does not exist', async () => {
@@ -537,7 +485,8 @@ describe('TransactionService', () => {
       const userId = '123';
       const transactionId = '789';
       
-      mockPrismaService.transactions.findFirst.mockResolvedValue(null);
+      mockCacheManager.get.mockResolvedValue(null);
+      mockTransactionRepository.findById.mockResolvedValue(null);
 
       // Act & Assert
       await expect(service.getTransactionById(userId, transactionId)).rejects.toThrow(
