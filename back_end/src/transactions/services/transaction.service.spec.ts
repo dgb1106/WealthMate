@@ -25,7 +25,6 @@ const mockPrismaService = {
   }
 };
 
-// Add this mock
 const mockCacheManager = {
   get: jest.fn(),
   set: jest.fn(),
@@ -182,7 +181,6 @@ const mockTransactionRepository = {
 
 describe('TransactionService', () => {
   let service: TransactionService;
-  let prisma: PrismaService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -207,7 +205,6 @@ describe('TransactionService', () => {
       ],
     }).compile();
     service = module.get<TransactionService>(TransactionService);
-    prisma = module.get<PrismaService>(PrismaService);
 
     // Reset all mocks before each test
     jest.clearAllMocks();
@@ -391,7 +388,8 @@ describe('TransactionService', () => {
         transactionId,
         userId,
         {
-          amount: -150
+          amount: -150,
+          description: 'Updated description'
         }
       );
       expect(mockPrismaService.users.update).toHaveBeenCalled();
