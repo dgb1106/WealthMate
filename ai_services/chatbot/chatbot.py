@@ -87,7 +87,8 @@ chat_model = genai.GenerativeModel(
 
 def chat(mood, prompt):
     llm_prompt = (
-        f'Bạn có trách nhiệm trò chuyện cùng người dùng, bạn phải tỏ ra {mood} '
+        f'Bạn có trách nhiệm trò chuyện cùng người dùng, bạn phải tỏ ra {mood} về việc chi tiêu của họ. '
+        'Người dùng nói: ' + prompt + ' '
         'Bạn chỉ đưa ra phản hồi, không hỏi thêm gì từ người dùng.'
     )
     try:
