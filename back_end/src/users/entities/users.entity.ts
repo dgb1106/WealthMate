@@ -29,150 +29,6 @@ export class User {
         Object.assign(this, partial);
     }
 
-    getId(): string {
-        return this.id;
-    }
-
-    getName(): string {
-        return this.name;
-    }
-
-    getEmail(): string {
-        return this.email;
-    }
-
-    getPhone(): string {
-        return this.phone;
-    }
-
-    getCity(): string {
-        return this.city;
-    }
-
-    getDistrict(): string {
-        return this.district;
-    }
-
-    getFullAddress(): string {
-        return `${this.city}, ${this.district}`;
-    }
-
-    getJob(): string {
-        return this.job;
-    }
-
-    getPreferredMood(): PreferredMood {
-        return this.preferredMood;
-    }
-
-    getPreferredGoal(): PreferredGoal {
-        return this.preferredGoal;
-    }
-
-    getCurrentBalance(): number {
-        return this.currentBalance;
-    }
-
-    getCreatedDate(): Date {
-        return this.createdAt;
-    }
-
-    getUpdatedDate(): Date {
-        return this.updatedAt;
-    }
-
-    getTransactions(): any {
-        return this.transactions;
-    }
-
-    getRecurringTransactions(): any {
-        return this.recurringTransactions;
-    }
-
-    getBudgets(): any {
-        return this.budgets;
-    }
-
-    getGoals(): any {
-        return this.goals;
-    }
-
-    getLoans(): any {
-        return this.loans;
-    }
-
-    setName(name: string): void {
-        this.name = name;
-        this.updatedAt = new Date();
-    }
-
-    setEmail(email: string): void {
-        if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-            throw new Error('Invalid email format');
-        }
-        this.email = email;
-        this.updatedAt = new Date();
-    }
-
-    setPhone(phone: string): void {
-        this.phone = phone;
-        this.updatedAt = new Date();
-    }
-
-    setCity(city: string): void {
-        this.city = city;
-        this.updatedAt = new Date();
-    }
-
-    setDistrict(district: string): void {
-        this.district = district;
-        this.updatedAt = new Date();
-    }
-
-    setJob(job: string): void {
-        this.job = job;
-        this.updatedAt = new Date();
-    }
-
-    setPreferredMood(preferredMood: PreferredMood): void {
-        this.preferredMood = preferredMood;
-        this.updatedAt = new Date();
-    }
-
-    setPreferredGoal(preferredGoal: PreferredGoal): void {
-        this.preferredGoal = preferredGoal;
-        this.updatedAt = new Date();
-    }
-
-    setTransactions(transactions: any): void {
-        this.transactions = transactions;
-    }
-
-    setRecurringTransactions(recurringTransactions: any): void {
-        this.recurringTransactions = recurringTransactions;
-    }
-
-    setBudgets(budgets: any): void {
-        this.budgets = budgets;
-    }
-
-    setGoals(goals: any): void {
-        this.goals = goals;
-    }
-
-    setLoans(loans: any): void {
-        this.loans = loans;
-    }
-
-    updateBalance(amount: number): void {
-        this.currentBalance += amount;
-        this.updatedAt = new Date();
-    }
-
-    updateLastActivity(): void {
-        this.updatedAt = new Date();
-    }
-
     isProfileComplete(): boolean {
         return (
             this.name !== '' &&
@@ -186,6 +42,10 @@ export class User {
         );
     }
 
+    getFullAddress(): string {
+        return `${this.city}, ${this.district}`;
+    }
+
     static createNewUser(userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): User {
         const now = new Date();
         return new User({
@@ -193,6 +53,55 @@ export class User {
             id: undefined,
             createdAt: now,
             updatedAt: now,
+        });
+    }
+
+    /**
+     * Format the user for API responses
+     * @returns Formatted user object matching frontend expectations
+     */
+    toResponseFormat(): any {
+        return {
+            id: this.id,
+            name: this.name,
+            email: this.email,
+            phone: this.phone,
+            city: this.city,
+            district: this.district,
+            job: this.job,
+            preferredMood: this.preferredMood,
+            preferredGoal: this.preferredGoal,
+            currentBalance: this.currentBalance,
+            createdAt: this.createdAt.toISOString(),
+            updatedAt: this.updatedAt.toISOString(),
+            profileComplete: this.isProfileComplete()
+        };
+    }
+
+    /**
+     * Convert a Prisma user object to a User entity
+     * @param prismaUser Prisma user object from database
+     * @returns User entity
+     */
+    static fromPrisma(prismaUser: any): User {
+        return new User({
+            id: String(prismaUser.id),
+            name: prismaUser.name,
+            email: prismaUser.email,
+            phone: prismaUser.phone || '',
+            city: prismaUser.city || '',
+            district: prismaUser.district || '',
+            job: prismaUser.job || '',
+            preferredMood: prismaUser.preferredMood as PreferredMood,
+            preferredGoal: prismaUser.preferredGoal as PreferredGoal,
+            currentBalance: Number(prismaUser.currentBalance || 0),
+            createdAt: prismaUser.createdAt,
+            updatedAt: prismaUser.updatedAt,
+            transactions: prismaUser.transactions,
+            recurringTransactions: prismaUser.recurringTransactions,
+            budgets: prismaUser.budgets,
+            goals: prismaUser.goals,
+            loans: prismaUser.loans
         });
     }
 }
