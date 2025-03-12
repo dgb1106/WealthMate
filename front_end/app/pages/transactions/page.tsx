@@ -86,30 +86,81 @@ const TransactionsPage: React.FC = () => {
     }
   };
 
+  // Thêm hàm kiểm tra để debug API và token
+  const checkApiConnection = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      console.log('Current token:', token ? token.substring(0, 10) + '...' : 'No token');
+      
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      console.log('API URL:', apiUrl);
+      
+      // Kiểm tra xem API có hoạt động không
+      const response = await fetch(`${apiUrl}/health`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('API health check status:', response.status);
+    } catch (error) {
+      console.error('API check failed:', error);
+    }
+  }
+
   useEffect(() => {
+    checkApiConnection(); // Chạy khi component mount
     fetchTransactions();
   }, []);
 
   const handleAddTransaction = async (values: any) => {
+    console.log('Form values:', values); // Thêm log để kiểm tra giá trị form
+    
     try {
-      const token = localStorage.getItem('token'); // Sử dụng token cho request thêm giao dịch
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transactions`, {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found');
+        message.error('Authentication error: No token found');
+        return;
+      }
+      
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      console.log('API URL:', apiUrl); // Kiểm tra URL API
+      
+      if (!apiUrl) {
+        console.error('API URL is not defined');
+        message.error('Configuration error: API URL is not defined');
+        return;
+      }
+      
+      const payload = {
+        description: values.description,
+        amount: parseFloat(values.amount),
+        categoryId: values.categoryId
+      };
+      
+      console.log('Sending payload:', payload); // Kiểm tra dữ liệu gửi đi
+      
+      const response = await fetch(`${apiUrl}/transactions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          ...values,
-          date: values.date.format('DD-MM-YYYY'),
-          categoryId: values.categoryId,
-          amount: parseFloat(values.amount), // Ensure amount is a number
-        }),
+        body: JSON.stringify(payload),
       });
       
+      console.log('Response status:', response.status); // Kiểm tra status code
+      
       if (!response.ok) {
-        throw new Error('Failed to add transaction');
+        const errorData = await response.text();
+        console.error('Server response:', errorData);
+        throw new Error(`Failed to add transaction: ${response.status} ${errorData}`);
       }
+      
+      const responseData = await response.json();
+      console.log('Success response:', responseData);
       
       message.success('Transaction added successfully');
       setModalVisible(false);
@@ -117,7 +168,7 @@ const TransactionsPage: React.FC = () => {
       fetchTransactions();
     } catch (error) {
       console.error('Failed to add transaction:', error);
-      message.error('Failed to add transaction');
+      message.error('Failed to add transaction: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
@@ -201,6 +252,9 @@ const TransactionsPage: React.FC = () => {
           form={form}
           layout="vertical"
           onFinish={handleAddTransaction}
+          onFinishFailed={(errorInfo) => {
+            console.log('Form validation failed:', errorInfo);
+          }}
         >
           <Form.Item
             name="description"
