@@ -1,39 +1,13 @@
 import google.generativeai as genai
 import re
-import enum
 import os
 from dotenv import load_dotenv
+from chatbot.moods import Mood
+from chatbot.transaction_categories import TransactionCategory
 
 load_dotenv()
 
 API_KEY = os.getenv('API_KEY')
-
-class TransactionCategory(enum.Enum):
-    EATING = "Ăn uống"
-    HOUSING = "Nhà ở"
-    TRANSPORT = "Di chuyển"
-    EDUCATION = "Giáo dục"
-    GIFTS = "Quà tặng"
-    BILLS = "Hóa đơn & Tiện ích"
-    SHOPPING = "Mua sắm"
-    BEAUTY = "Làm đẹp"
-    FAMILY = "Gia đình"
-    PETS = "Vật nuôi"
-    HEALTH = "Sức khỏe"
-    ENTERTAINMENT = "Giải trí"
-    WORK = "Công việc"
-    INSURANCE = "Bảo hiểm"
-    OTHER = "Các chi phí khác"
-    DEBT = "Trả nợ"
-    SPORTS = "Thể thao"
-    INVESTMENT = "Đầu tư"
-    SALARY = "Lương"
-    OTHER_INCOME = "Thu nhập khác"
-    UNKNOWN = "Không xác định"
-
-class Mood(enum.Enum):
-    IRRITATION = 'Tức giận'
-    ECOURAGEMENT = 'Khích lệ'
 
 categories = ', '.join([c.value for c in TransactionCategory])
 
@@ -87,7 +61,7 @@ chat_model = genai.GenerativeModel(
 
 def chat(mood, prompt):
     llm_prompt = (
-        f'Bạn có trách nhiệm trò chuyện cùng người dùng, bạn phải tỏ ra {mood} về việc chi tiêu của họ. '
+        f'Bạn có trách nhiệm trò chuyện cùng người dùng, bạn phải tỏ ra {Mood[mood].value} về việc chi tiêu của họ. '
         'Người dùng nói: ' + prompt + ' '
         'Bạn chỉ đưa ra phản hồi, không hỏi thêm gì từ người dùng.'
     )
