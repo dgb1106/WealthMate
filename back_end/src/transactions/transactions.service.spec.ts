@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TransactionsService } from './transactions.service';
+import { TransactionsService } from './transaction.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { TransactionType } from '../common/enums/enum';
