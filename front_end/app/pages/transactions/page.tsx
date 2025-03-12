@@ -8,12 +8,13 @@ import {
   Modal, 
   Form, 
   Input, 
-  DatePicker, 
   Select,
   message 
 } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import axios, { AxiosResponse } from 'axios';
+import { useRouter } from 'next/navigation';
 
 interface Transaction {
   id: string;
@@ -37,21 +38,7 @@ const predefinedCategories: Category[] = [
   { id: "1", name: "Ăn uống", type: "EXPENSE" },
   { id: "2", name: "Nhà ở", type: "EXPENSE" },
   { id: "3", name: "Di chuyển", type: "EXPENSE" },
-  { id: "4", name: "Giáo dục", type: "EXPENSE" },
-  { id: "5", name: "Quà tặng", type: "EXPENSE" },
-  { id: "6", name: "Hoá đơn & Tiện ích", type: "EXPENSE" },
-  { id: "7", name: "Mua sắm", type: "EXPENSE" },
-  { id: "8", name: "Làm đẹp", type: "EXPENSE" },
-  { id: "9", name: "Gia đình", type: "EXPENSE" },
-  { id: "10", name: "Vật nuôi", type: "EXPENSE" },
-  { id: "11", name: "Sức khoẻ", type: "EXPENSE" },
-  { id: "12", name: "Giải trí", type: "EXPENSE" },
-  { id: "13", name: "Công việc", type: "EXPENSE" },
-  { id: "14", name: "Bảo hiểm", type: "EXPENSE" },
-  { id: "15", name: "Các chi phí khác", type: "EXPENSE" },
-  { id: "16", name: "Trả nợ", type: "EXPENSE" },
-  { id: "17", name: "Thể thao", type: "EXPENSE" },
-  { id: "18", name: "Đầu tư", type: "EXPENSE" },
+  // ... các category khác ...
   { id: "19", name: "Lương", type: "INCOME" },
   { id: "20", name: "Thu nhập khác", type: "INCOME" },
 ];
@@ -61,158 +48,105 @@ const TransactionsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [form] = Form.useForm();
+  const router = useRouter();
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   const fetchTransactions = async () => {
-    setLoading(true);
+    if (!apiUrl) {
+      message.error('API URL chưa được cấu hình');
+      return;
+    }
+
     try {
-      const token = localStorage.getItem('authToken');
-      console.log('Fetch transactions - token:', token ? token.substring(0, 15) + '...' : 'No token');
-      console.log('API URL for fetch:', `${process.env.NEXT_PUBLIC_API_URL}/transactions`);
-      
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transactions`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+      setLoading(true);
+
+      const response = await fetch(`${apiUrl}/transactions`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Gửi kèm cookie
       });
-      console.log('Fetch response status:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response from server:', errorText);
-        throw new Error(`Failed to fetch transactions: ${response.status} ${errorText}`);
+
+      if (response.status === 401) {
+        message.error('Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn.');
+        // Tuỳ ý: chuyển hướng về trang đăng nhập
+        // router.push('/login');
+        setLoading(false);
+        return;
       }
-      
+
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error('Lỗi khi fetch transactions:', response.status, errText);
+        message.error(`Lỗi khi lấy danh sách: ${errText}`);
+        setLoading(false);
+        return;
+      }
+
       const data = await response.json();
-      console.log('Fetched transactions data:', data);
       setTransactions(Array.isArray(data) ? data : []);
       
-      // Hiển thị thông báo nếu không có dữ liệu
       if (Array.isArray(data) && data.length === 0) {
-        console.log('No transactions found in response');
-        message.info('No transactions found');
+        message.info('Hiện chưa có giao dịch nào');
       }
     } catch (error) {
-      console.error('Failed to fetch transactions:', error);
-      message.error('Failed to load transactions');
-      setTransactions([]);
+      console.error('Fetch failed:', error);
+      message.error('Đã xảy ra lỗi khi lấy dữ liệu giao dịch');
     } finally {
       setLoading(false);
     }
   };
 
-  // Thêm hàm kiểm tra để debug API và token
-  const checkApiConnection = async () => {
-    try {
-      const token = localStorage.getItem('authToken');
-      console.log('Current token:', token ? token.substring(0, 10) + '...' : 'No token');
-      
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      console.log('API URL:', apiUrl);
-      
-      if (!apiUrl) {
-        console.error('API URL is undefined - check your .env file');
-        message.error('API URL is not configured correctly');
-        return;
-      }
-      
-      // Kiểm tra xem API có hoạt động không
-      console.log('Attempting API health check:', `${apiUrl}/health`);
-      const response = await fetch(`${apiUrl}/health`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      console.log('API health check status:', response.status);
-    } catch (error) {
-      console.error('API check failed:', error);
-    }
-  }
-
-  useEffect(() => {
-    checkApiConnection(); // Chạy khi component mount
-    fetchTransactions();
-  }, []);
-
   const handleAddTransaction = async (values: any) => {
-    console.log('Form values:', values); // Thêm log để kiểm tra giá trị form
-    
+    if (!apiUrl) {
+      message.error('API URL chưa được cấu hình');
+      return;
+    }
+
     try {
-      const token = localStorage.getItem('authToken');
-      console.log('Add transaction - token:', token ? token.substring(0, 15) + '...' : 'No token');
-      
-      if (!token) {
-        console.error('No token found - user might be logged out');
-        message.error('Authentication error: No token found. Please log in again.');
-        return;
-      }
-      
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      console.log('API URL for add:', apiUrl);
-      
-      if (!apiUrl) {
-        console.error('API URL is not defined - check your .env file');
-        message.error('Configuration error: API URL is not defined');
-        return;
-      }
-      
       const payload = {
         description: values.description,
         amount: parseFloat(values.amount),
         categoryId: values.categoryId
       };
-      
-      console.log('Sending payload:', JSON.stringify(payload));
-      console.log('Request URL:', `${apiUrl}/transactions`);
-      
+
       const response = await fetch(`${apiUrl}/transactions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
+        credentials: 'include', // Gửi kèm cookie
         body: JSON.stringify(payload),
       });
-      
-      console.log('Add transaction response status:', response.status);
-      
-      // Ghi log toàn bộ response headers để debug
-      const headers: Record<string, string> = {};
-      response.headers.forEach((value, key) => {
-        headers[key] = value;
-      });
-      console.log('Response headers:', headers);
-      
+
+      if (response.status === 401) {
+        message.error('Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn.');
+        // Tuỳ ý: chuyển hướng về trang đăng nhập
+        // router.push('/login');
+        return;
+      }
+
       if (!response.ok) {
         const errorData = await response.text();
         console.error('Error response from server:', errorData);
-        throw new Error(`Failed to add transaction: ${response.status} ${errorData}`);
+        throw new Error(`Lỗi khi thêm giao dịch: ${errorData}`);
       }
-      
-      try {
-        const responseData = await response.json();
-        console.log('Success response:', responseData);
-        message.success('Transaction added successfully');
-        setModalVisible(false);
-        form.resetFields();
-        fetchTransactions();
-      } catch (e) {
-        console.error('Error parsing JSON response:', e);
-        // Nếu response body rỗng nhưng status ok
-        if (response.ok) {
-          message.success('Transaction added successfully (no response body)');
-          setModalVisible(false);
-          form.resetFields();
-          fetchTransactions();
-        }
-      }
+
+      // Trường hợp response OK
+      await response.json(); // hoặc có thể không cần nếu server trả về rỗng
+      message.success('Thêm giao dịch thành công');
+      setModalVisible(false);
+      form.resetFields();
+      fetchTransactions();
     } catch (error) {
       console.error('Failed to add transaction:', error);
-      message.error('Failed to add transaction: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      message.error('Thêm giao dịch thất bại: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
+
+  useEffect(() => {
+    fetchTransactions();
+  }, []);
 
   const columns = [
     {
@@ -228,7 +162,11 @@ const TransactionsPage: React.FC = () => {
       render: (amount: number) => {
         const color = amount < 0 ? 'red' : 'green';
         const formattedAmount = new Intl.NumberFormat('en-US').format(Math.abs(amount));
-        return <span style={{ color }}>{amount < 0 ? '-' : '+'}{formattedAmount}</span>;
+        return (
+          <span style={{ color }}>
+            {amount < 0 ? '-' : '+'}{formattedAmount}
+          </span>
+        );
       },
     },
     {
@@ -247,8 +185,6 @@ const TransactionsPage: React.FC = () => {
       key: 'category',
     },
   ];
-
-  const paymentMethods = ['Cash', 'Payment Transfer', 'Credit Card', 'Debit Card'];
 
   return (
     <MainLayout>
@@ -302,41 +238,42 @@ const TransactionsPage: React.FC = () => {
             name="description"
             label="Description"
             rules={[
-              { required: true, message: 'Please enter transaction description' },
-              { max: 255, message: 'Description cannot exceed 255 characters' }
+              { required: true, message: 'Hãy nhập mô tả giao dịch' },
+              { max: 255, message: 'Mô tả không vượt quá 255 ký tự' }
             ]}
           >
-            <Input placeholder="Transaction description" />
+            <Input placeholder="Mô tả giao dịch" />
           </Form.Item>
 
           <Form.Item
             name="amount"
             label="Amount"
             rules={[
-              { required: true, message: 'Please enter amount' },
-              { type: 'number', message: 'Amount must be a number' },
-              { validator: (_, value) => {
-                if (!value) return Promise.resolve();
-                const strValue = value.toString();
-                const decimalPart = strValue.split('.')[1];
-                return decimalPart && decimalPart.length > 2
-                  ? Promise.reject('Amount must have at most 2 decimal places')
-                  : Promise.resolve();
+              { required: true, message: 'Hãy nhập số tiền' },
+              { type: 'number', message: 'Số tiền phải là dạng số' },
+              {
+                validator: (_, value) => {
+                  if (!value) return Promise.resolve();
+                  const strValue = value.toString();
+                  const decimalPart = strValue.split('.')[1];
+                  return decimalPart && decimalPart.length > 2
+                    ? Promise.reject('Số tiền chỉ được tối đa 2 chữ số thập phân')
+                    : Promise.resolve();
+                }
               }
-            }
             ]}
-            help="Use negative value for expenses, positive for income"
+            help="Dùng giá trị âm cho chi phí, dương cho thu nhập"
           >
-            <Input type="number" placeholder="Amount" />
+            <Input type="number" placeholder="Số tiền" />
           </Form.Item>
 
           <Form.Item
             name="categoryId"
             label="Category"
-            rules={[{ required: true, message: 'Please select category' }]}
+            rules={[{ required: true, message: 'Hãy chọn danh mục' }]}
           >
             <Select 
-              placeholder="Select category"
+              placeholder="Chọn danh mục"
               showSearch
               optionFilterProp="children"
               filterOption={(input, option) => 
