@@ -17,23 +17,23 @@ const appRoutes: RouteType[] = [
         element: <DashBoardPage />,
     },
     {
-        path: '/transactions',
+        path: '/pages/transactions',
         element: <TransactionsPage />,
     },
     {
-        path: '/budgets',
+        path: '/pages/budgets',
         element: <BudgetsPage />,
     },
     {
-        path: '/investment',
+        path: '/pages/investment',
         element: <InvestmentPage />,
     },
     {
-        path: '/analytics',
+        path: '/pages/analytics',
         element: <AnalyticsPage />,
     },
     {
-        path: '/ai-assistant',
+        path: '/pages/ai-assistant',
         element: <AiAssistantPage />,
     },
 ];

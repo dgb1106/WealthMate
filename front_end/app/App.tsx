@@ -5,6 +5,7 @@ import LoginPage from './pages/auth/login/page';
 import RegisterPage from './pages/auth/register/page';
 import DashboardPage from './pages/dashboard/page';
 import TransactionsPage from './pages/transactions/page';
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuth();
   
@@ -35,7 +36,7 @@ const App: React.FC = () => {
           element={isAuthenticated ? <Navigate to="/pages/dashboard" /> : <RegisterPage />} 
         />
 
-        {/* Protected Routes */}
+        {/* Protected Routes - All will be wrapped with ProtectedRoute */}
         <Route 
           path="/pages/dashboard" 
           element={
@@ -45,7 +46,6 @@ const App: React.FC = () => {
           } 
         />
 
-        {/* THÊM route cho transactions */}
         <Route
           path="/pages/transactions"
           element={
@@ -55,7 +55,7 @@ const App: React.FC = () => {
           }
         />
 
-        {/* Redirect to Dashboard or Login based on auth state */}
+        {/* Root path redirect */}
         <Route 
           path="/" 
           element={
@@ -65,8 +65,8 @@ const App: React.FC = () => {
           } 
         />
 
-        {/* Catch all other routes */}
-        <Route path="*" element={<Navigate to="/" />} />
+        {/* Catch all unauthorized routes and redirect to login */}
+        <Route path="*" element={<Navigate to="/pages/auth/login" />} />
       </Routes>
     </Router>
   );
