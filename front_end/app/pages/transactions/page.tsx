@@ -66,11 +66,10 @@ const TransactionsPage: React.FC = () => {
   const fetchTransactions = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('userCookie');
       console.log('Current token:', token ? token.substring(0, 10) + '...' : 'No token');
       
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      console.log('API URL:', apiUrl);
       
       if (!apiUrl) {
         console.error('API URL is undefined - check your .env file');
@@ -78,19 +77,18 @@ const TransactionsPage: React.FC = () => {
         return;
       }
       
-      // Sử dụng credentials: 'include' để gửi cookie
       console.log('Fetching transactions from:', `${apiUrl}/transactions`);
       const response = await fetch(`${apiUrl}/transactions`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
-        credentials: 'include', // Quan trọng: cho phép gửi cookie
+        credentials: 'include',
       });
      
       console.log('Response:', response);
       if (!response.ok) {
-        // Handle HTTP errors
         console.error('Error fetching transactions:', response.status, response.statusText);
         message.error(`Failed to fetch transactions: ${response.statusText}`);
         return;
@@ -99,8 +97,6 @@ const TransactionsPage: React.FC = () => {
       const data = await response.json();
       console.log('Fetched transactions:', data);
       setTransactions(Array.isArray(data) ? data : []);
-      
-      // Hiển thị thông báo nếu không có dữ liệu
       if (Array.isArray(data) && data.length === 0) {
         console.log('No transactions found in response');
         message.info('No transactions found');
@@ -114,7 +110,6 @@ const TransactionsPage: React.FC = () => {
     }
   };
 
-  // Thêm hàm kiểm tra để debug API và token
   const checkApiConnection = async () => {
     try {
       const token = localStorage.getItem('authToken');
@@ -129,14 +124,13 @@ const TransactionsPage: React.FC = () => {
         return;
       }
       
-      // Kiểm tra xem API có hoạt động không
       console.log('Attempting API health check:', `${apiUrl}/transactions`);
       const response = await fetch(`${apiUrl}/transactions`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include', // Quan trọng: cho phép gửi cookie
+        credentials: 'include',
       });
       
       console.log('API health check status:', response.status);
@@ -146,12 +140,12 @@ const TransactionsPage: React.FC = () => {
   }
 
   useEffect(() => {
-    checkApiConnection(); // Chạy khi component mount
+    checkApiConnection();
     fetchTransactions();
   }, []);
 
   const handleAddTransaction = async (values: any) => {
-    console.log('Form values:', values); // Thêm log để kiểm tra giá trị form
+    console.log('Form values:', values); 
     
     try {
       const token = localStorage.getItem('authToken');
@@ -185,14 +179,13 @@ const TransactionsPage: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
-        credentials: 'include', // Quan trọng: cho phép gửi cookie
+        credentials: 'include',
         body: JSON.stringify(payload),
       });
       
       console.log('Add transaction response status:', response.status);
-      
-      // Ghi log toàn bộ response headers để debug
       const headers: Record<string, string> = {};
       response.headers.forEach((value, key) => {
         headers[key] = value;
@@ -214,7 +207,6 @@ const TransactionsPage: React.FC = () => {
         fetchTransactions();
       } catch (e) {
         console.error('Error parsing JSON response:', e);
-        // Nếu response body rỗng nhưng status ok
         if (response.ok) {
           message.success('Transaction added successfully (no response body)');
           setModalVisible(false);
