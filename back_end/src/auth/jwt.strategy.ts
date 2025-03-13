@@ -14,11 +14,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     
     super({
       jwtFromRequest: (req) => {
-        // Trích xuất token từ cookie hoặc header Authorization
+        // Lấy từ header TRƯỚC
+        const tokenFromHeader = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+        if (tokenFromHeader) {
+          return tokenFromHeader;
+        }
+        // Nếu không có header thì lấy từ cookie
         if (req && req.cookies) {
           return req.cookies['auth_token'];
         }
-        return ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+        return null;
       },
       ignoreExpiration: false,
       secretOrKey: jwtSecret,
