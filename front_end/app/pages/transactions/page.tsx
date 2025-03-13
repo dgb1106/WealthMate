@@ -14,8 +14,7 @@ import {
 } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { log } from 'console';
-import axios, { AxiosResponse } from 'axios';
+
 interface Transaction {
   id: string;
   name: string;
@@ -64,159 +63,60 @@ const TransactionsPage: React.FC = () => {
   const [form] = Form.useForm();
 
   const fetchTransactions = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const token = localStorage.getItem('userCookie');
-      console.log('Current token:', token ? token.substring(0, 10) + '...' : 'No token');
-      
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      
-      if (!apiUrl) {
-        console.error('API URL is undefined - check your .env file');
-        message.error('API URL is not configured correctly');
-        return;
-      }
-      
-      console.log('Fetching transactions from:', `${apiUrl}/transactions`);
-      const response = await fetch(`${apiUrl}/transactions`, {
-        method: 'GET',
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transactions`, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        credentials: 'include',
       });
-     
-      console.log('Response:', response);
       if (!response.ok) {
-        console.error('Error fetching transactions:', response.status, response.statusText);
-        message.error(`Failed to fetch transactions: ${response.statusText}`);
-        return;
+        throw new Error('Failed to fetch transactions');
       }
-      
       const data = await response.json();
-      console.log('Fetched transactions:', data);
       setTransactions(Array.isArray(data) ? data : []);
-      if (Array.isArray(data) && data.length === 0) {
-        console.log('No transactions found in response');
-        message.info('No transactions found');
-      }
     } catch (error) {
-      console.error('Fetch failed:', error);
-      message.error('An error occurred while fetching transactions');
+      console.error('Failed to fetch transactions:', error);
+      message.error('Failed to load transactions');
       setTransactions([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const checkApiConnection = async () => {
-    try {
-      const token = localStorage.getItem('authToken');
-      console.log('Current token:', token ? token.substring(0, 10) + '...' : 'No token');
-      
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      console.log('API URL:', apiUrl);
-      
-      if (!apiUrl) {
-        console.error('API URL is undefined - check your .env file');
-        message.error('API URL is not configured correctly');
-        return;
-      }
-      
-      console.log('Attempting API health check:', `${apiUrl}/transactions`);
-      const response = await fetch(`${apiUrl}/transactions`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
-      
-      console.log('API health check status:', response.status);
-    } catch (error) {
-      console.error('API check failed:', error);
-    }
-  }
-
   useEffect(() => {
-    checkApiConnection();
     fetchTransactions();
   }, []);
 
   const handleAddTransaction = async (values: any) => {
-    console.log('Form values:', values); 
-    
     try {
       const token = localStorage.getItem('authToken');
-      console.log('Add transaction - token:', token ? token.substring(0, 15) + '...' : 'No token');
-      
-      if (!token) {
-        console.error('No token found - user might be logged out');
-        message.error('Authentication error: No token found. Please log in again.');
-        return;
-      }
-      
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      console.log('API URL for add:', apiUrl);
-      
-      if (!apiUrl) {
-        console.error('API URL is not defined - check your .env file');
-        message.error('Configuration error: API URL is not defined');
-        return;
-      }
-      
-      const payload = {
-        description: values.description,
-        amount: parseFloat(values.amount),
-        categoryId: values.categoryId
-      };
-      
-      console.log('Sending payload:', JSON.stringify(payload));
-      console.log('Request URL:', `${apiUrl}/transactions`);
-      
-      const response = await fetch(`${apiUrl}/transactions`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transactions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        credentials: 'include',
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          ...values,
+          date: values.date.format('DD-MM-YYYY'),
+          categoryId: values.categoryId,
+          amount: parseFloat(values.amount),
+        }),
       });
-      
-      console.log('Add transaction response status:', response.status);
-      const headers: Record<string, string> = {};
-      response.headers.forEach((value, key) => {
-        headers[key] = value;
-      });
-      console.log('Response headers:', headers);
       
       if (!response.ok) {
-        const errorData = await response.text();
-        console.error('Error response from server:', errorData);
-        throw new Error(`Failed to add transaction: ${response.status} ${errorData}`);
+        throw new Error('Failed to add transaction');
       }
-      
-      try {
-        const responseData = await response.json();
-        console.log('Success response:', responseData);
-        message.success('Transaction added successfully');
-        setModalVisible(false);
-        form.resetFields();
-        fetchTransactions();
-      } catch (e) {
-        console.error('Error parsing JSON response:', e);
-        if (response.ok) {
-          message.success('Transaction added successfully (no response body)');
-          setModalVisible(false);
-          form.resetFields();
-          fetchTransactions();
-        }
-      }
+      message.success('Transaction added successfully');
+      setModalVisible(false);
+      form.resetFields();
+      fetchTransactions();
     } catch (error) {
       console.error('Failed to add transaction:', error);
-      message.error('Failed to add transaction: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      message.error('Failed to add transaction');
     }
   };
 
@@ -300,9 +200,6 @@ const TransactionsPage: React.FC = () => {
           form={form}
           layout="vertical"
           onFinish={handleAddTransaction}
-          onFinishFailed={(errorInfo) => {
-            console.log('Form validation failed:', errorInfo);
-          }}
         >
           <Form.Item
             name="description"
@@ -321,15 +218,11 @@ const TransactionsPage: React.FC = () => {
             rules={[
               { required: true, message: 'Please enter amount' },
               { type: 'number', message: 'Amount must be a number' },
-              { validator: (_, value) => {
-                if (!value) return Promise.resolve();
-                const strValue = value.toString();
-                const decimalPart = strValue.split('.')[1];
-                return decimalPart && decimalPart.length > 2
-                  ? Promise.reject('Amount must have at most 2 decimal places')
-                  : Promise.resolve();
+              { validator: (_, value) => 
+                  value && value.toString().split('.')[1]?.length > 2 
+                  ? Promise.reject('Amount must have at most 2 decimal places') 
+                  : Promise.resolve()
               }
-            }
             ]}
             help="Use negative value for expenses, positive for income"
           >

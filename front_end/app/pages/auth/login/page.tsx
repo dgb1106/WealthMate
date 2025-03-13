@@ -26,8 +26,6 @@ const LoginPage: React.FC = () => {
     if (response.ok) {
       const data = await response.json();
       localStorage.setItem('authToken', data.token);
-      const cookieString = `auth_token=${data.token}; path=/; SameSite=None; Secure`;
-      localStorage.setItem('userCookie', cookieString);
     } else {
       // Show error message
     }
