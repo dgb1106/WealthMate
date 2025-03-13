@@ -14,6 +14,7 @@ import {
 } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import styles from './styles.module.css';
 
 interface Transaction {
   id: string;
@@ -60,6 +61,8 @@ const TransactionsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [form] = Form.useForm();
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
 
   const fetchTransactions = async () => {
     setLoading(true);
@@ -134,7 +137,6 @@ const TransactionsPage: React.FC = () => {
     console.log('Form validation failed:', errorInfo);
   };
   
-
   const columns = [
     {
       title: 'Date',
@@ -147,9 +149,10 @@ const TransactionsPage: React.FC = () => {
       dataIndex: 'amount',
       key: 'amount',
       render: (amount: number) => {
-        const color = amount < 0 ? 'red' : 'green';
         const formattedAmount = new Intl.NumberFormat('en-US').format(Math.abs(amount));
-        return <span style={{ color }}>{amount < 0 ? '-' : '+'}{formattedAmount}</span>;
+        return <span className={amount < 0 ? styles.negativeAmount : styles.positiveAmount}>
+          {amount < 0 ? '-' : '+'}{formattedAmount}
+        </span>;
       },
     },
     {
@@ -164,9 +167,31 @@ const TransactionsPage: React.FC = () => {
     },
   ];
 
+  const monthOptions = [
+    { value: 'all', label: 'All' },
+    { value: 'jan', label: 'Jan' },
+    { value: 'feb', label: 'Feb' },
+    { value: 'mar', label: 'Mar' },
+    { value: 'apr', label: 'Apr' },
+    { value: 'may', label: 'May' },
+    { value: 'jun', label: 'Jun' },
+    { value: 'jul', label: 'Jul' },
+    { value: 'aug', label: 'Aug' },
+    { value: 'sep', label: 'Sep' },
+    { value: 'oct', label: 'Oct' },
+    { value: 'nov', label: 'Nov' },
+    { value: 'dec', label: 'Dec' },
+  ];
+
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 6 }, (_, i) => ({
+    value: (currentYear - i).toString(),
+    label: (currentYear - i).toString(),
+  }));
+
   return (
     <MainLayout>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <div className={styles.header}>
         <h1>Transactions</h1>
         <Button 
           type="primary" 
@@ -174,14 +199,26 @@ const TransactionsPage: React.FC = () => {
           icon={<PlusOutlined />} 
           size="large"
           onClick={() => setModalVisible(true)}
-          style={{ backgroundColor: '#1a1a47' }}
+          className={styles.addButton}
         />
       </div>
 
-      <div style={{ backgroundColor: '#f5f7ff', padding: '16px', borderRadius: '8px' }}>
-        <div style={{ marginBottom: '16px', display: 'flex', gap: '8px' }}>
-          <Button type="default" style={{ borderRadius: '20px' }}>All</Button>
-          <Button type="default" style={{ borderRadius: '20px' }}>2025</Button>
+      <div className={styles.container}>
+        <div className={styles.filterButtonsContainer}>
+          <Select
+            value={selectedMonth}
+            onChange={(value) => setSelectedMonth(value)}
+            options={monthOptions}
+            className={styles.filterSelect}
+            style={{ width: 100 }}
+          />
+          <Select
+            value={selectedYear}
+            onChange={(value) => setSelectedYear(value)}
+            options={yearOptions}
+            className={styles.filterSelect}
+            style={{ width: 100 }}
+          />
         </div>
 
         <Table 
@@ -190,11 +227,7 @@ const TransactionsPage: React.FC = () => {
           rowKey="id" 
           loading={loading}
           pagination={false}
-          style={{ 
-            backgroundColor: 'white', 
-            borderRadius: '8px',
-            overflow: 'hidden'
-          }}
+          className={styles.tableContainer}
         />
       </div>
 
