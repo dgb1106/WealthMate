@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Inject } from '@nestjs/common';
 import { RecurringTransactionRepository } from '../repositories/recurring-transaction-repository.interface';
 import { RecurringTransaction } from '../entities/recurring-transaction.entity';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -8,6 +8,7 @@ import { CreateRecurringTransactionDto } from '../dto/create-recurring-transacti
 @Injectable()
 export class RecurringTransactionDomainService {
   constructor(
+    @Inject('RecurringTransactionRepository')
     private readonly recurringTxRepository: RecurringTransactionRepository,
     private readonly prisma: PrismaService
   ) {}
@@ -75,10 +76,10 @@ export class RecurringTransactionDomainService {
           throw new NotFoundException(`Category with ID ${recurringTx.categoryId} not found`);
         }
         
-        // Create the transaction instance
+        // Create the transactions instance
         const txData = recurringTx.createTransactionInstance();
         
-        const transaction = await prisma.transactions.create({
+        const transactions = await prisma.transactions.create({
           data: {
             userId: txData.userId || '',
             categoryId: BigInt(txData.categoryId || '0'),
@@ -111,9 +112,9 @@ export class RecurringTransactionDomainService {
         });
         
         return {
-          transactionId: String(transaction.id),
+          transactionId: String(transactions.id),
           recurringTransactionId: recurringTx.id,
-          amount: Number(transaction.amount),
+          amount: Number(transactions.amount),
           nextOccurence: nextOccurence
         };
       } catch (error) {

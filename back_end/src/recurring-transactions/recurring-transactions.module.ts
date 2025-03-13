@@ -3,17 +3,22 @@ import { RecurringTransactionController } from './recurring-transactions.control
 import { RecurringTransactionService } from './recurring-transactions.service';
 import { RecurringTransactionDomainService } from './services/recurring-transaction-domain.service';
 import { PrismaModule } from '../prisma/prisma.module';
+import { CommonModule } from '../common/common.module'; 
 import { PrismaRecurringTransactionRepository } from './repositories/prisma-recurring-transaction.repository';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [
+    PrismaModule,
+    CommonModule 
+  ],
   controllers: [RecurringTransactionController],
   providers: [
     RecurringTransactionService,
     RecurringTransactionDomainService,
+    PrismaRecurringTransactionRepository,
     {
       provide: 'RecurringTransactionRepository',
-      useClass: PrismaRecurringTransactionRepository
+      useExisting: PrismaRecurringTransactionRepository
     }
   ],
   exports: [RecurringTransactionService]

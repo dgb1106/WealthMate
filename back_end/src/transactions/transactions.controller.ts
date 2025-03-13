@@ -14,7 +14,7 @@ import {
   HttpCode,
   HttpStatus
 } from '@nestjs/common';
-import { TransactionService } from './services/transaction.service';
+import { TransactionService } from './transactions.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';

@@ -1,9 +1,6 @@
-import { Loan } from './../../loans/entities/loans.entity';
-import { Budget } from './../../budgets/entities/budget.entity';
-import { RecurringTransaction } from './../../recurring-transactions/entities/recurring-transactions.entity';
-import { Transaction } from './../../transactions/entities/transaction.entity';
+
 import { PreferredGoal, PreferredMood } from './../../common/enums/enum';
-import { Goals, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 export class User {
     id: string;

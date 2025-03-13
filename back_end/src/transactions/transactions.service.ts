@@ -2,13 +2,14 @@ import { Injectable, NotFoundException, BadRequestException, InternalServerError
 import { Inject } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { PrismaService } from '../../prisma/prisma.service';
-import { TransactionRepository } from '../repositories/transaction-repository.interface';
-import { TransactionDomainService } from './transaction-domain.service';
-import { CreateTransactionDto } from '../dto/create-transaction.dto';
-import { UpdateTransactionDto } from '../dto/update-transaction.dto';
-import { TransactionType } from '../../common/enums/enum';
-import { Transaction } from '../entities/transaction.entity';
+import { PrismaService } from './../prisma/prisma.service';
+import { TransactionRepository } from './repositories/transaction-repository.interface';
+import { TransactionDomainService } from './services/transaction-domain.service';
+import { CreateTransactionDto } from './dto/create-transaction.dto';
+import { UpdateTransactionDto } from './dto/update-transaction.dto';
+import { TransactionType } from './../common/enums/enum';
+import { Transaction } from './entities/transaction.entity';
+import { PrismaTransactionRepository } from './repositories/prisma-transaction.repository';
 
 @Injectable()
 export class TransactionService {
@@ -19,7 +20,7 @@ export class TransactionService {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-    @Inject('TRANSACTION_REPOSITORY') private readonly transactionRepository: TransactionRepository, // <-- String token
+    private readonly transactionRepository: PrismaTransactionRepository,
     private readonly transactionDomainService: TransactionDomainService,
   ) {}
 

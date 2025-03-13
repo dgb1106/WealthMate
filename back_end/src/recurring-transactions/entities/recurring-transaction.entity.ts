@@ -128,8 +128,8 @@ export class RecurringTransaction {
   }
   
   /**
-   * Creates a Transaction entity from this recurring transaction
-   * @returns New Transaction entity
+   * Creates a Transactions entity from this recurring transaction
+   * @returns New Transactions entity
    */
   createTransactionInstance(): Partial<Transaction> {
     return {

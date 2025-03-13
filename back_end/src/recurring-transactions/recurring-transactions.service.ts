@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
 import { RecurringTransactionRepository } from './repositories/recurring-transaction-repository.interface';
 import { RecurringTransactionDomainService } from './services/recurring-transaction-domain.service';
 import { CreateRecurringTransactionDto } from './dto/create-recurring-transaction.dto';
@@ -8,6 +8,7 @@ import { Frequency } from './../common/enums/enum';
 @Injectable()
 export class RecurringTransactionService {
   constructor(
+    @Inject('RecurringTransactionRepository')
     private readonly recurringTxRepository: RecurringTransactionRepository,
     private readonly recurringTxDomainService: RecurringTransactionDomainService
   ) {}
