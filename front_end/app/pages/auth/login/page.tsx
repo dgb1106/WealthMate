@@ -8,10 +8,6 @@ export const metadata: Metadata = {
   description: 'Sign in to your WealthMate account',
 };
 
-<<<<<<< HEAD
-=======
-// Define the type for credentials
->>>>>>> 4265faa45cf72565b374b1d9019bc50bc0376657
 interface LoginCredentials {
   email: string;
   password: string;
@@ -29,10 +25,7 @@ const LoginPage: React.FC = () => {
 
     if (response.ok) {
       const data = await response.json();
-<<<<<<< HEAD
       localStorage.setItem('authToken', data.token);
-=======
->>>>>>> 4265faa45cf72565b374b1d9019bc50bc0376657
     } else {
       // Show error message
     }

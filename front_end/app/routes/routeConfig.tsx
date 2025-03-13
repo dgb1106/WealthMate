@@ -17,7 +17,6 @@ const appRoutes: RouteType[] = [
         element: <DashBoardPage />,
     },
     {
-<<<<<<< HEAD
         path: '/pages/transactions',
         element: <TransactionsPage />,
     },
@@ -35,25 +34,6 @@ const appRoutes: RouteType[] = [
     },
     {
         path: '/pages/ai-assistant',
-=======
-        path: '/transactions',
-        element: <TransactionsPage />,
-    },
-    {
-        path: '/budgets',
-        element: <BudgetsPage />,
-    },
-    {
-        path: '/investment',
-        element: <InvestmentPage />,
-    },
-    {
-        path: '/analytics',
-        element: <AnalyticsPage />,
-    },
-    {
-        path: '/ai-assistant',
->>>>>>> 4265faa45cf72565b374b1d9019bc50bc0376657
         element: <AiAssistantPage />,
     },
 ];

@@ -11,10 +11,6 @@
     background-color: #ffffff;
     padding: 5px 5px;
     gap: 20px;
-<<<<<<< HEAD
-=======
-    /*flex-grow: 1;*/
->>>>>>> 4265faa45cf72565b374b1d9019bc50bc0376657
 }
 .nav {
     display: flex;
@@ -27,17 +23,11 @@
     margin: 0;
     flex-grow: 1;
 }
-<<<<<<< HEAD
 .menuList li {
     margin: 10px 0px;
 }
 .menuItem {
     padding: 12px;
-=======
-.menuItem {
-    padding: 12px;
-    margin: 10px 0px;
->>>>>>> 4265faa45cf72565b374b1d9019bc50bc0376657
     border-radius: 6px;
     cursor: pointer;
     font-weight: 500;
@@ -47,10 +37,7 @@
     text-decoration: none;
     display: flex;
     align-items: center;
-<<<<<<< HEAD
     width: 100%;
-=======
->>>>>>> 4265faa45cf72565b374b1d9019bc50bc0376657
 }
 .menuItem i {
     margin-right: 15px;
@@ -59,25 +46,11 @@
     align-items: center;
     justify-content: center;
 }
-<<<<<<< HEAD
-=======
-.menuItem a {
-    text-decoration: none;
-    color:inherit;
-    width: 100%;
-    vertical-align: middle;
-    flex-grow: 1;
-}
->>>>>>> 4265faa45cf72565b374b1d9019bc50bc0376657
 .menuItem:hover {
     background-color: #e0e0e0;
     color: black;
 }
 
 .logoutItem {
-<<<<<<< HEAD
-=======
-    margin-top: auto;
->>>>>>> 4265faa45cf72565b374b1d9019bc50bc0376657
     color: #d32f2f;
 }
