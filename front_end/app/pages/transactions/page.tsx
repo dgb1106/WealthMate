@@ -17,10 +17,9 @@ import dayjs from 'dayjs';
 
 interface Transaction {
   id: string;
-  name: string;
+  description: string;
   amount: number;
   date: string;
-  method: string;
   category: {
     id: string;
     name: string;
@@ -91,7 +90,20 @@ const TransactionsPage: React.FC = () => {
   }, []);
 
   const handleAddTransaction = async (values: any) => {
+    console.log('Form values received:', values); // Debug logging
+    
     try {
+      const category = predefinedCategories.find(c => c.id === values.categoryId);
+      const amount = parseInt(values.amount, 10);
+      const signedAmount = category?.type === "EXPENSE" ? Math.abs(amount) : Math.abs(amount);
+      const requestData = {
+        categoryId: values.categoryId,
+        amount: signedAmount,
+        description: values.description
+      };
+      
+      console.log('Sending request data:', requestData);
+      
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transactions`, {
         method: 'POST',
@@ -99,17 +111,15 @@ const TransactionsPage: React.FC = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          ...values,
-          date: values.date.format('DD-MM-YYYY'),
-          categoryId: values.categoryId,
-          amount: parseFloat(values.amount),
-        }),
+        body: JSON.stringify(requestData),
       });
       
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server error:', errorText);
         throw new Error('Failed to add transaction');
       }
+      
       message.success('Transaction added successfully');
       setModalVisible(false);
       form.resetFields();
@@ -119,6 +129,11 @@ const TransactionsPage: React.FC = () => {
       message.error('Failed to add transaction');
     }
   };
+
+  const onFinishFailed = (errorInfo: any) => {
+    console.log('Form validation failed:', errorInfo);
+  };
+  
 
   const columns = [
     {
@@ -138,14 +153,9 @@ const TransactionsPage: React.FC = () => {
       },
     },
     {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: 'Method',
-      dataIndex: 'method',
-      key: 'method',
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
     },
     {
       title: 'Category',
@@ -153,8 +163,6 @@ const TransactionsPage: React.FC = () => {
       key: 'category',
     },
   ];
-
-  const paymentMethods = ['Cash', 'Payment Transfer', 'Credit Card', 'Debit Card'];
 
   return (
     <MainLayout>
@@ -200,12 +208,13 @@ const TransactionsPage: React.FC = () => {
           form={form}
           layout="vertical"
           onFinish={handleAddTransaction}
+          onFinishFailed={onFinishFailed}
         >
           <Form.Item
             name="description"
             label="Description"
             rules={[
-              { required: true, message: 'Please enter transaction description' },
+              { required: true, message: 'Description is required' },
               { max: 255, message: 'Description cannot exceed 255 characters' }
             ]}
           >
@@ -216,43 +225,53 @@ const TransactionsPage: React.FC = () => {
             name="amount"
             label="Amount"
             rules={[
-              { required: true, message: 'Please enter amount' },
-              { type: 'number', message: 'Amount must be a number' },
-              { validator: (_, value) => 
-                  value && value.toString().split('.')[1]?.length > 2 
-                  ? Promise.reject('Amount must have at most 2 decimal places') 
-                  : Promise.resolve()
+              { required: true, message: 'Amount is required' },
+              { 
+                validator: (_, value) => {
+                  if (!value) return Promise.resolve();
+                  
+                  try {
+                    const numValue = parseInt(value, 10);
+                    
+                    if (isNaN(numValue)) {
+                      return Promise.reject('Amount must be a valid number');
+                    }  
+                    if (numValue <= 0) {
+                      return Promise.reject('Amount must be a positive integer');
+                    }
+                    if (numValue.toString() !== value.toString()) {
+                      return Promise.reject('Amount must be a whole number');
+                    }
+                    
+                    return Promise.resolve();
+                  } catch (err) {
+                    return Promise.reject('Invalid amount format');
+                  }
+                }
               }
             ]}
-            help="Use negative value for expenses, positive for income"
+            help="Enter a positive integer amount"
           >
-            <Input type="number" placeholder="Amount" />
+            <Input type="number" min="1" step="1" placeholder="Amount" />
           </Form.Item>
 
           <Form.Item
             name="categoryId"
             label="Category"
-            rules={[{ required: true, message: 'Please select category' }]}
+            rules={[{ required: true, message: 'Category is required' }]}
           >
             <Select 
               placeholder="Select category"
               showSearch
               optionFilterProp="children"
               filterOption={(input, option) => 
-                (option?.children as unknown as string)
-                  .toLowerCase()
-                  .includes(input.toLowerCase())
+                (option?.label as string).toLowerCase().includes(input.toLowerCase())
               }
-            >
-              {predefinedCategories.map(category => (
-                <Select.Option 
-                  key={category.id} 
-                  value={category.id}
-                >
-                  {category.name} ({category.type === "INCOME" ? "Thu nhập" : "Chi phí"})
-                </Select.Option>
-              ))}
-            </Select>
+              options={predefinedCategories.map(category => ({
+                value: category.id,
+                label: `${category.name} (${category.type === "INCOME" ? "Thu nhập" : "Chi phí"})`
+              }))}
+            />
           </Form.Item>
 
           <Form.Item>
