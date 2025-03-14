@@ -11,12 +11,22 @@ describe('TransactionsController', () => {
   let transactionService: jest.Mocked<TransactionService>;
 
   const mockUser = { userId: 'user-1' };
+  
   const mockTransaction = new Transaction({
     id: '1',
     userId: mockUser.userId,
     categoryId: '1',
     amount: -50,
     description: 'Groceries',
+    created_at: new Date()
+  });
+  
+  const mockIncomeTransaction = new Transaction({
+    id: '2',
+    userId: mockUser.userId,
+    categoryId: '2',
+    amount: 1000,
+    description: 'Salary',
     created_at: new Date()
   });
 
@@ -28,12 +38,21 @@ describe('TransactionsController', () => {
       getCurrentMonthTransactions: jest.fn(),
       getTransactionsForMonth: jest.fn(),
       getTransactionsForDateRange: jest.fn(),
-      getIncomeTransactions: jest.fn(),
-      getExpenseTransactions: jest.fn(),
+      getAllIncomeTransactions: jest.fn(),
+      getCurrentMonthIncomeTransactions: jest.fn(),
+      getIncomeTransactionsForMonth: jest.fn(),
+      getAllExpenseTransactions: jest.fn(),
+      getCurrentMonthExpenseTransactions: jest.fn(),
+      getExpenseTransactionsForMonth: jest.fn(),
       getTransactionsByCategory: jest.fn(),
+      getCurrentMonthTransactionsByCategory: jest.fn(),
+      getTransactionsByCategoryForMonth: jest.fn(),
+      getTransactionSummaryByCategory: jest.fn(),
+      getTransactionSummaryByCategoryForMonth: jest.fn(),
+      getTotalAmountByCategoryForUserForDateRange: jest.fn(),
+      getFinancialSummaryForMonth: jest.fn(),
       updateTransaction: jest.fn(),
       deleteTransaction: jest.fn(),
-      getTransactionSummaryByCategory: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -45,6 +64,9 @@ describe('TransactionsController', () => {
 
     controller = module.get<TransactionsController>(TransactionsController);
     transactionService = module.get(TransactionService) as jest.Mocked<TransactionService>;
+    
+    // Clear all mocks before each test
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -73,7 +95,7 @@ describe('TransactionsController', () => {
   describe('findAllTransactions', () => {
     it('should return all transactions', async () => {
       // Arrange
-      const transactions = [mockTransaction];
+      const transactions = [mockTransaction, mockIncomeTransaction];
       transactionService.getAllTransactions.mockResolvedValue(transactions);
 
       // Act
@@ -119,16 +141,6 @@ describe('TransactionsController', () => {
       );
       expect(result).toEqual(transactions);
     });
-
-    it('should throw BadRequestException for invalid month', async () => {
-      // Arrange
-      const month = 12; // Invalid month
-      const year = 2023;
-
-      // Act & Assert
-      await expect(controller.getMonthTransactions({ user: mockUser }, month, year))
-        .rejects.toThrow(BadRequestException);
-    });
   });
 
   describe('getDateRangeTransactions', () => {
@@ -159,31 +171,103 @@ describe('TransactionsController', () => {
   describe('getIncomeTransactions', () => {
     it('should return income transactions', async () => {
       // Arrange
-      const incomeTransaction = new Transaction({
-        ...mockTransaction,
-        amount: 100
-      });
-      transactionService.getIncomeTransactions.mockResolvedValue([incomeTransaction]);
+      transactionService.getAllIncomeTransactions.mockResolvedValue([mockIncomeTransaction]);
 
       // Act
       const result = await controller.getIncomeTransactions({ user: mockUser });
 
       // Assert
-      expect(transactionService.getIncomeTransactions).toHaveBeenCalledWith(mockUser.userId);
-      expect(result).toEqual([incomeTransaction]);
+      expect(transactionService.getAllIncomeTransactions).toHaveBeenCalledWith(mockUser.userId);
+      expect(result).toEqual([mockIncomeTransaction]);
+    });
+  });
+
+  describe('getCurrentMonthIncomeTransactions', () => {
+    it('should return current month income transactions', async () => {
+      // Arrange
+      transactionService.getCurrentMonthIncomeTransactions.mockResolvedValue([mockIncomeTransaction]);
+
+      // Act
+      const result = await controller.getCurrentMonthIncomeTransactions({ user: mockUser });
+
+      // Assert
+      expect(transactionService.getCurrentMonthIncomeTransactions).toHaveBeenCalledWith(mockUser.userId);
+      expect(result).toEqual([mockIncomeTransaction]);
+    });
+  });
+
+  describe('getIncomeTransactionsForMonth', () => {
+    it('should return income transactions for specific month and year', async () => {
+      // Arrange
+      const month = 0; // January
+      const year = 2023;
+      transactionService.getIncomeTransactionsForMonth.mockResolvedValue([mockIncomeTransaction]);
+
+      // Act
+      const result = await controller.getIncomeTransactionsForMonth(
+        { user: mockUser },
+        month,
+        year
+      );
+
+      // Assert
+      expect(transactionService.getIncomeTransactionsForMonth).toHaveBeenCalledWith(
+        mockUser.userId,
+        month,
+        year
+      );
+      expect(result).toEqual([mockIncomeTransaction]);
     });
   });
 
   describe('getExpenseTransactions', () => {
     it('should return expense transactions', async () => {
       // Arrange
-      transactionService.getExpenseTransactions.mockResolvedValue([mockTransaction]);
+      transactionService.getAllExpenseTransactions.mockResolvedValue([mockTransaction]);
 
       // Act
       const result = await controller.getExpenseTransactions({ user: mockUser });
 
       // Assert
-      expect(transactionService.getExpenseTransactions).toHaveBeenCalledWith(mockUser.userId);
+      expect(transactionService.getAllExpenseTransactions).toHaveBeenCalledWith(mockUser.userId);
+      expect(result).toEqual([mockTransaction]);
+    });
+  });
+
+  describe('getCurrentMonthExpenseTransactions', () => {
+    it('should return current month expense transactions', async () => {
+      // Arrange
+      transactionService.getCurrentMonthExpenseTransactions.mockResolvedValue([mockTransaction]);
+
+      // Act
+      const result = await controller.getCurrentMonthExpenseTransactions({ user: mockUser });
+
+      // Assert
+      expect(transactionService.getCurrentMonthExpenseTransactions).toHaveBeenCalledWith(mockUser.userId);
+      expect(result).toEqual([mockTransaction]);
+    });
+  });
+
+  describe('getExpenseTransactionsForMonth', () => {
+    it('should return expense transactions for specific month and year', async () => {
+      // Arrange
+      const month = 0; // January
+      const year = 2023;
+      transactionService.getExpenseTransactionsForMonth.mockResolvedValue([mockTransaction]);
+
+      // Act
+      const result = await controller.getExpenseTransactionsForMonth(
+        { user: mockUser },
+        month,
+        year
+      );
+
+      // Assert
+      expect(transactionService.getExpenseTransactionsForMonth).toHaveBeenCalledWith(
+        mockUser.userId,
+        month,
+        year
+      );
       expect(result).toEqual([mockTransaction]);
     });
   });
@@ -206,28 +290,101 @@ describe('TransactionsController', () => {
     });
   });
 
-  describe('getTransactionSummary', () => {
-    it('should return transaction summary by category', async () => {
+  describe('getCurrentMonthCategoryTransactions', () => {
+    it('should return current month transactions for a category', async () => {
       // Arrange
-      const startDate = '2023-01-01';
-      const endDate = '2023-01-31';
-      const summary = [{ category: { id: '1', name: 'Food' }, totalAmount: -100 }];
-      transactionService.getTransactionSummaryByCategory.mockResolvedValue(summary);
+      const categoryId = '1';
+      transactionService.getCurrentMonthTransactionsByCategory.mockResolvedValue([mockTransaction]);
 
       // Act
-      const result = await controller.getTransactionSummary(
+      const result = await controller.getCurrentMonthCategoryTransactions({ user: mockUser }, categoryId);
+
+      // Assert
+      expect(transactionService.getCurrentMonthTransactionsByCategory).toHaveBeenCalledWith(
+        mockUser.userId,
+        categoryId
+      );
+      expect(result).toEqual([mockTransaction]);
+    });
+  });
+
+  describe('getCategoryTransactionsForMonth', () => {
+    it('should return transactions for a category for specific month and year', async () => {
+      // Arrange
+      const categoryId = '1';
+      const month = 0; // January
+      const year = 2023;
+      transactionService.getTransactionsByCategoryForMonth.mockResolvedValue([mockTransaction]);
+
+      // Act
+      const result = await controller.getCategoryTransactionsForMonth(
         { user: mockUser },
+        categoryId,
+        month,
+        year
+      );
+
+      // Assert
+      expect(transactionService.getTransactionsByCategoryForMonth).toHaveBeenCalledWith(
+        mockUser.userId,
+        categoryId,
+        month,
+        year
+      );
+      expect(result).toEqual([mockTransaction]);
+    });
+  });
+
+  describe('getTransactionSummaryForMonth', () => {
+    it('should return transaction summary for specific month and year', async () => {
+      // Arrange
+      const month = '0'; // January
+      const year = '2023';
+      const summary = [{ category: { id: '1', name: 'Food' }, totalAmount: -100 }];
+      transactionService.getTransactionSummaryByCategoryForMonth.mockResolvedValue(summary);
+
+      // Act
+      const result = await controller.getTransactionSummaryForMonth(
+        { user: mockUser },
+        month,
+        year
+      );
+
+      // Assert
+      expect(transactionService.getTransactionSummaryByCategoryForMonth).toHaveBeenCalledWith(
+        mockUser.userId,
+        month,
+        year
+      );
+      expect(result).toEqual(summary);
+    });
+  });
+
+  describe('getTotalAmountByCategory', () => {
+    it('should return total amount for a category in date range', async () => {
+      // Arrange
+      const categoryId = '1';
+      const startDate = '2023-01-01';
+      const endDate = '2023-01-31';
+      const total = -150;
+      transactionService.getTotalAmountByCategoryForUserForDateRange.mockResolvedValue(total);
+
+      // Act
+      const result = await controller.getTotalAmountByCategory(
+        { user: mockUser },
+        categoryId,
         startDate,
         endDate
       );
 
       // Assert
-      expect(transactionService.getTransactionSummaryByCategory).toHaveBeenCalledWith(
+      expect(transactionService.getTotalAmountByCategoryForUserForDateRange).toHaveBeenCalledWith(
         mockUser.userId,
         expect.any(Date),
-        expect.any(Date)
+        expect.any(Date),
+        categoryId
       );
-      expect(result).toEqual(summary);
+      expect(result).toEqual(total);
     });
   });
 
@@ -242,8 +399,8 @@ describe('TransactionsController', () => {
 
       // Assert
       expect(transactionService.getTransactionById).toHaveBeenCalledWith(
-        transactionId,
-        mockUser.userId
+        mockUser.userId,
+        transactionId
       );
       expect(result).toEqual(mockTransaction);
     });

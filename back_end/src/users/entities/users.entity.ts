@@ -16,12 +16,6 @@ export class User {
     createdAt: Date;
     updatedAt: Date;
 
-    transactions: Prisma.TransactionsGetPayload<{ include: {category: true} }>;
-    recurringTransactions: Prisma.RecurringTransactionsGetPayload<{ include: {category: true} }>;
-    budgets: Prisma.BudgetsGetPayload<{ include: {category: true} }>;
-    goals: Prisma.GoalsGetPayload<{}>;
-    loans: Prisma.LoansGetPayload<{}>;
-
     constructor(partial: Partial<User>) {
         Object.assign(this, partial);
     }
@@ -69,8 +63,8 @@ export class User {
             preferredMood: this.preferredMood,
             preferredGoal: this.preferredGoal,
             currentBalance: this.currentBalance,
-            createdAt: this.createdAt.toISOString(),
-            updatedAt: this.updatedAt.toISOString(),
+            createdAt: this.createdAt ? this.createdAt.toISOString() : null,
+            updatedAt: this.updatedAt ? this.updatedAt.toISOString() : null,
             profileComplete: this.isProfileComplete()
         };
     }
@@ -89,16 +83,11 @@ export class User {
             city: prismaUser.city || '',
             district: prismaUser.district || '',
             job: prismaUser.job || '',
-            preferredMood: prismaUser.preferredMood as PreferredMood,
-            preferredGoal: prismaUser.preferredGoal as PreferredGoal,
-            currentBalance: Number(prismaUser.currentBalance || 0),
-            createdAt: prismaUser.createdAt,
-            updatedAt: prismaUser.updatedAt,
-            transactions: prismaUser.transactions,
-            recurringTransactions: prismaUser.recurringTransactions,
-            budgets: prismaUser.budgets,
-            goals: prismaUser.goals,
-            loans: prismaUser.loans
+            preferredMood: prismaUser.preferred_mood as PreferredMood,
+            preferredGoal: prismaUser.preferred_goal as PreferredGoal,
+            currentBalance: Number(prismaUser.current_balance || 0),
+            createdAt: prismaUser.created_at,
+            updatedAt: prismaUser.updated_at,
         });
     }
 }

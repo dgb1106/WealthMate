@@ -104,6 +104,7 @@ export class UsersController {
   @Patch(':id/balance')
   @ApiOperation({ summary: 'Update user balance' })
   @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiBody({ type: Number })
   @ApiResponse({ status: 200, description: 'Balance updated successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -123,6 +124,32 @@ export class UsersController {
     }
     
     return this.usersService.updateBalance(id, amount);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/balance/increase')
+  @ApiOperation({ summary: 'Increase user balance' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiBody({ type: Number })
+  @ApiResponse({ status: 200, description: 'Balance increased successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiBearerAuth()
+  async increaseBalance(
+    @Param('id') id: string, 
+    @Body('amount') amount: number,
+    @Request() req
+  ) {
+    // Users can only update their own balance unless they're admins
+    if (id !== req.user.userId) {
+      throw new ForbiddenException('Access denied to modify other users\' balance');
+    }
+    
+    if (isNaN(amount)) {
+      throw new BadRequestException('Amount must be a valid number');
+    }
+    
+    return this.usersService.increaseBalance(id, amount);
   }
 
   @UseGuards(JwtAuthGuard)

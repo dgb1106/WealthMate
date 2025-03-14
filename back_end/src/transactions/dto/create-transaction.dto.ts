@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsString, MaxLength } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsPositive, MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
@@ -12,11 +12,12 @@ export class CreateTransactionDto {
   categoryId: string;
 
   @ApiProperty({
-    description: 'Amount of the transaction (positive for income, negative for expenses)',
-    example: -45.50
+    description: 'Amount of the transaction, must be positive',
+    example: 45.50
   })
   @IsNotEmpty({ message: 'Amount is required' })
   @IsNumber({ maxDecimalPlaces: 2 }, { message: 'Amount must be a number with at most 2 decimal places' })
+  @IsPositive({ message: 'Amount must be a positive number' })
   @Type(() => Number)
   amount: number;
 
