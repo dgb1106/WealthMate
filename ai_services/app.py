@@ -2,6 +2,9 @@ from flask import Flask, request, jsonify
 import pandas as pd
 from expense_forecast.Expense_Forecasting import get_input_data, forecast_expense, model_fit, df
 from chatbot.chatbot import extract_amount, classify_transaction, chat
+from speech_transcribe.speech_transcribe import transcribe_file
+from budget_suggestion.budget_suggestion import budget_suggestion
+import os
 
 app = Flask(__name__)
 
@@ -31,5 +34,36 @@ def chat_with_user():
     response = chat(mood, prompt)
     return jsonify({'response': response})
 
+@app.route('/speech_transcribe', methods=['POST'])
+def transcribe_speech():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+    temp_path = 'temp_audio.wav'
+    file.save(temp_path)
+    try:
+        transcription = transcribe_file(temp_path)
+        return jsonify({'transcription': transcription})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+            
+@app.route('/suggest_budget', methods=['POST'])
+def suggest_budget():
+    data = request.get_json()
+    amount = extract_amount(data['income'])
+    suggestion_text = budget_suggestion(amount)
+    budget_dict = {}
+    items = suggestion_text.split(',')
+    for item in items:
+        if ':' in item:
+            key, value = item.split(':')
+            budget_dict[key.strip()] = value.strip()
+    return jsonify(budget_dict)
+    
 if __name__ == '__main__':
     app.run(debug=True)

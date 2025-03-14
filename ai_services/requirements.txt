@@ -4,3 +4,8 @@ flask
 sklearn
 pandas
 numpy
+torch
+transformers
+librosa
+matplotlib
+statsmodels
