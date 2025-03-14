@@ -16,6 +16,11 @@ export default function RootLayout({
       <head>
         <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-rounded/css/uicons-regular-rounded.css' />
         <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/lufga" />
+        <link
+          rel="preload"
+          href="/styles/critical.css"
+          as="style"
+        />
       </head>
       <body className="font-lufga">{children}</body>
     </html>

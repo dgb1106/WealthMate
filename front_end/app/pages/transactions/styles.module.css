@@ -1,0 +1,47 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  
+  .addButton {
+    background-color: #1a1a47;
+    margin-right: 20px;
+    margin-top: 20px;
+  }
+  
+  .container {
+    background-color: #f5f7ff;
+    padding: 16px;
+    border-radius: 8px;
+  }
+  
+  .filterButtonsContainer {
+    margin-bottom: 16px;
+    display: flex;
+    gap: 8px;
+  }
+  
+  .filterButton {
+    border-radius: 20px;
+  }
+  
+  .tableContainer {
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .positiveAmount {
+    color: green;
+  }
+  
+  .negativeAmount {
+    color: red;
+  }
+
+  .filterSelect {
+    min-width: 100px;
+    border-radius: 20px;
+  }

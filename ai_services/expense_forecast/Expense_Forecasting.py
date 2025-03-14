@@ -1,8 +1,11 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from statsmodels.tsa.statespace.sarimax import SARIMAX
+import os
 
-df = pd.read_csv('sample_data_extended.csv')
+script_dir = os.path.dirname(os.path.abspath(__file__))
+csv_path = os.path.join(script_dir, 'sample_data_extended.csv')
+df = pd.read_csv(csv_path)
 
 def preprocess_data(df):
     df = df.dropna()

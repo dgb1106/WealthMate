@@ -1,11 +1,14 @@
+'use client'
+
 import { useState, useEffect } from 'react';
-import { transactionService } from '../../services/transactionService';
 import type { Transaction } from '../../types/transaction';
+import { transactionService } from '../../services/transactionService';
 
 interface UseTransactionsReturn {
   transactions: Transaction[];
   loading: boolean;
   error: string | null;
+  setTransactions: React.Dispatch<React.SetStateAction<Transaction[]>>;
 }
 
 export const useTransactions = (): UseTransactionsReturn => {
@@ -28,5 +31,5 @@ export const useTransactions = (): UseTransactionsReturn => {
     fetchTransactions();
   }, []);
 
-  return { transactions, loading, error };
-}; 
+  return { transactions, loading, error, setTransactions };
+};

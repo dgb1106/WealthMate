@@ -10,8 +10,7 @@ import { Loan } from './entities/loans.entity';
 @Injectable()
 export class LoansService {
   constructor(
-    @Inject('LoanRepository')
-    private readonly loanRepository: LoanRepository,
+    @Inject('LoanRepository') private readonly loanRepository: LoanRepository,
     private readonly prisma: PrismaService
   ) {}
 

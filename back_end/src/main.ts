@@ -31,6 +31,12 @@ async function bootstrap() {
     .addTag('users')
     .addTag('transactions')
     .addTag('categories')
+    .addTag('budgets')
+    .addTag('reports')
+    .addTag('goals')
+    .addTag('recurring-transactions')
+    .addTag('loans')
+    .addTag('ai-recommendations')
     .addBearerAuth()
     .build();
 
