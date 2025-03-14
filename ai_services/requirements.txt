@@ -1,7 +1,7 @@
 google-generativeai
 dotenv
 flask
-sklearn
+scikit-learn
 pandas
 numpy
 torch
