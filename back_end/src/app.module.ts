@@ -40,7 +40,7 @@ import { CacheModule } from '@nestjs/cache-manager';
       max: 100,
     }),
   ],
-  controllers: [AppController, LoansController],
-  providers: [AppService, LoansService],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

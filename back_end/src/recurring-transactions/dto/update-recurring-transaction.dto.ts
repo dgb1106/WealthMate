@@ -1,12 +1,12 @@
-import { IsEnum, IsOptional, IsNumber, IsString, MaxLength, IsDateString, Min } from 'class-validator';
+import { IsOptional, IsString, IsNumber, IsEnum, IsDateString, MinLength, MaxLength, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { Frequency } from '../../common/enums/enum';
 
 export class UpdateRecurringTransactionDto {
   @ApiProperty({
-    description: 'The ID of the category for this recurring transaction',
-    example: '123',
+    description: 'ID of the category for this recurring transaction',
+    example: '1',
     required: false
   })
   @IsOptional()
@@ -15,12 +15,11 @@ export class UpdateRecurringTransactionDto {
 
   @ApiProperty({
     description: 'Amount of the recurring transaction',
-    example: 250.00,
-    minimum: 0.01,
+    example: 100,
     required: false
   })
   @IsOptional()
-  @IsNumber({ maxDecimalPlaces: 2 })
+  @IsNumber()
   @Min(0.01)
   @Type(() => Number)
   amount?: number;
@@ -36,8 +35,8 @@ export class UpdateRecurringTransactionDto {
   frequency?: Frequency;
 
   @ApiProperty({
-    description: 'Next occurrence date of this transaction (YYYY-MM-DD)',
-    example: '2025-04-01',
+    description: 'Date of the next occurrence (YYYY-MM-DD)',
+    example: '2023-07-01',
     required: false
   })
   @IsOptional()
@@ -46,12 +45,13 @@ export class UpdateRecurringTransactionDto {
 
   @ApiProperty({
     description: 'Description of the recurring transaction',
-    example: 'Monthly Rent Payment',
+    example: 'Netflix Subscription',
     maxLength: 255,
     required: false
   })
   @IsOptional()
   @IsString()
+  @MinLength(3)
   @MaxLength(255)
   description?: string;
 }

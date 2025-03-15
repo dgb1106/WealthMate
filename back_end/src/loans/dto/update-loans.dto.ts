@@ -25,6 +25,18 @@ export class UpdateLoanDto {
   due_date?: string;
 
   @ApiProperty({
+    description: 'Total amount of the loan',
+    example: 250000.00,
+    minimum: 0,
+    required: false
+  })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  @Type(() => Number)
+  total_amount?: number;
+
+  @ApiProperty({
     description: 'Remaining amount to be paid',
     example: 235000.00,
     minimum: 0,
@@ -80,5 +92,4 @@ export class UpdateLoanDto {
   @IsString()
   @MaxLength(255)
   description?: string;
-  total_amount: { total_amount: any; };
 }
