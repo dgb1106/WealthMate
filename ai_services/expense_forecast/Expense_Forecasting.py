@@ -37,6 +37,10 @@ def fit_model(df):
     return model_fit
 
 def get_input_data(income, interest_rate, inflation_rate, holidays):
+    income = float(income)
+    interest_rate = float(interest_rate)
+    inflation_rate = float(inflation_rate)
+    holidays = int(holidays)
     input_data = pd.DataFrame({
         'Income (VND)': [income],
         'Interest rate (%)': [interest_rate],

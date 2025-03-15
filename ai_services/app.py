@@ -6,8 +6,10 @@ from speech_transcribe.speech_transcribe import transcribe_file
 from budget_suggestion.budget_suggestion import budget_suggestion
 from read_image.scan_bills import scan_bills
 import os
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route('/monthly_expense_prediction', methods=['POST'])
 def handle_predict():
@@ -89,4 +91,6 @@ def handle_scan_bills():
             os.remove(temp_path)
     
 if __name__ == '__main__':
-    app.run(debug=True)
+    # app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)

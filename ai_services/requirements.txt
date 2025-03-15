@@ -1,6 +1,7 @@
 google-generativeai
-dotenv
+python-dotenv
 flask
+flask-cors
 scikit-learn
 pandas
 numpy
@@ -9,3 +10,4 @@ transformers
 librosa
 matplotlib
 statsmodels
+gunicorn
