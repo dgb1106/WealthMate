@@ -111,7 +111,7 @@ export class RecurringTransactionDomainService {
           recurringTransactionId: recurringTx.id,
           amount: Number(transactionResult.amount),
           description: transactionResult.description,
-          categoryName: transactionResult.category || null,
+          categoryName: transactionResult.categoryId, // Sửa lại để truy cập đúng thuộc tính
           newBalance: transactionResult.newBalance,
           nextOccurence: nextOccurence
         };
