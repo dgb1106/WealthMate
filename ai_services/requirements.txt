@@ -1,6 +1,11 @@
 google-generativeai
 dotenv
 flask
-sklearn
+scikit-learn
 pandas
 numpy
+torch
+transformers
+librosa
+matplotlib
+statsmodels
