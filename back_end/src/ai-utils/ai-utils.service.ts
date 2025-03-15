@@ -11,7 +11,8 @@ export class AiUtilsService {
         private readonly httpService: HttpService,
         private readonly configService: ConfigService,
     ) {
-        this.baseUrl = this.configService.get('https://wealthmate-ai-services.onrender.com') || 'AI_SERVICES_BASE_URL';
+        // this.baseUrl = this.configService.get('AI_UTILS_BASE_URL') || 'https://wealthmate-ai-services.onrender.com';
+        this.baseUrl = 'https://wealthmate-ai-services.onrender.com';
     }
 
     async getExpenseForecast(income: number, interestRate: number, inflationRate: number, holidays: number): Promise<number> {
