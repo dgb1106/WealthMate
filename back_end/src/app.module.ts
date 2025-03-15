@@ -14,7 +14,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { LoansModule } from './loans/loans.module';
 import { LoansController } from './loans/loans.controller';
 import { LoansService } from './loans/loans.service';
-import { AiRecommendationsModule } from './ai-recommendations/ai-recommendations.module';
+import { AiUtilsModule } from './ai-utils/ai-utils.module';
 import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
@@ -33,7 +33,7 @@ import { CacheModule } from '@nestjs/cache-manager';
     RecurringTransactionsModule,
     CategoriesModule,
     LoansModule,
-    AiRecommendationsModule,
+    AiUtilsModule,
     CacheModule.register({
       isGlobal: true,
       ttl: 300,
