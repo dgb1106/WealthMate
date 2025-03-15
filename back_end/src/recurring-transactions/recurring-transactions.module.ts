@@ -5,11 +5,13 @@ import { RecurringTransactionDomainService } from './services/recurring-transact
 import { PrismaModule } from '../prisma/prisma.module';
 import { PrismaRecurringTransactionRepository } from './repositories/prisma-recurring-transaction.repository';
 import { TransactionsModule } from '../transactions/transactions.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     PrismaModule,
-    TransactionsModule // Thêm TransactionsModule để có thể inject TransactionService
+    TransactionsModule,
+    ScheduleModule,
   ],
   controllers: [RecurringTransactionController],
   providers: [
