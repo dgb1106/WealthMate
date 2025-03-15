@@ -9,6 +9,7 @@ export interface UsersRepository {
   update(id: string, updateUserDto: UpdateUserDto): Promise<User>;
   delete(id: string): Promise<void>;
   updateBalance(id: string, amount: number): Promise<User>;
+  increaseBalance(id: string, amount: number): Promise<User>;
   updatePassword(userId: string, hashedPassword: string): Promise<{ success: boolean }>;
   deleteAllUserTokens(userId: string): Promise<void>;
   getUserPasswordHash(userId: string): Promise<string | null>;

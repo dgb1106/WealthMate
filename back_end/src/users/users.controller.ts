@@ -84,26 +84,10 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete a user' })
-  @ApiParam({ name: 'id', description: 'User ID' })
-  @ApiResponse({ status: 200, description: 'User deleted successfully' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiBearerAuth()
-  async deleteUser(@Param('id') id: string, @Request() req) {
-    // Users can only delete their own account unless they're admins
-    if (id !== req.user.userId) {
-      throw new ForbiddenException('Access denied to delete other users');
-    }
-    await this.usersService.deleteUser(id);
-    return { message: 'User deleted successfully' };
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Patch(':id/balance')
   @ApiOperation({ summary: 'Update user balance' })
   @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiBody({ type: Number })
   @ApiResponse({ status: 200, description: 'Balance updated successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -123,6 +107,32 @@ export class UsersController {
     }
     
     return this.usersService.updateBalance(id, amount);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/balance/increase')
+  @ApiOperation({ summary: 'Increase user balance' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiBody({ type: Number })
+  @ApiResponse({ status: 200, description: 'Balance increased successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiBearerAuth()
+  async increaseBalance(
+    @Param('id') id: string, 
+    @Body('amount') amount: number,
+    @Request() req
+  ) {
+    // Users can only update their own balance unless they're admins
+    if (id !== req.user.userId) {
+      throw new ForbiddenException('Access denied to modify other users\' balance');
+    }
+    
+    if (isNaN(amount)) {
+      throw new BadRequestException('Amount must be a valid number');
+    }
+    
+    return this.usersService.increaseBalance(id, amount);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -154,5 +164,22 @@ export class UsersController {
     }
     
     return this.usersService.updatePassword(id, currentPassword, newPassword);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a user' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiResponse({ status: 200, description: 'User deleted successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiBearerAuth()
+  async deleteUser(@Param('id') id: string, @Request() req) {
+    // Users can only delete their own account unless they're admins
+    if (id !== req.user.userId) {
+      throw new ForbiddenException('Access denied to delete other users');
+    }
+    await this.usersService.deleteUser(id);
+    return { message: 'User deleted successfully' };
   }
 }

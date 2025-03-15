@@ -1,0 +1,60 @@
+/* BudgetCard.module.css */
+.card {
+    margin: 16px;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 202px;
+    width: 285px;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #e8e8e8;
+  }
+  
+  .header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+  }
+  
+  .header p {
+    margin: 0;
+    color: #888;
+  }
+  
+  .editButton {
+    color: #1890ff;
+  }
+  
+  .body {
+    padding: 16px;
+  }
+  
+  .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+  }
+  
+  .amount {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+  
+  .amount h3 {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+  
+  .amount p {
+    margin: 0;
+    color: #888;
+  }
