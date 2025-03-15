@@ -1,5 +1,5 @@
 import { User } from "../../users/entities/users.entity";
-import { Category } from "../../categories/entities/categories.entity";
+import { Category } from "../../categories/entities/category.entity";
 import { Type } from "class-transformer";
 import { TransactionType } from "../../common/enums/enum";
 
@@ -21,6 +21,7 @@ export class Transaction {
   created_at: Date;
   
   description: string;
+  newBalance: any;
   
   constructor(partial: Partial<Transaction>) {
     Object.assign(this, partial);
@@ -31,7 +32,7 @@ export class Transaction {
    * @returns Boolean indicating if this is an expense transaction
    */
   isExpense(): boolean {
-    return this.amount < 0 || (this.category?.isExpenseCategory() === true);
+    return this.amount < 0;
   }
   
   /**
@@ -39,7 +40,7 @@ export class Transaction {
    * @returns Boolean indicating if this is an income transaction
    */
   isIncome(): boolean {
-    return this.amount > 0 || (this.category?.isIncomeCategory() === true);
+    return this.amount > 0;
   }
   
   /**

@@ -1,5 +1,5 @@
 import { User } from "../../users/entities/users.entity";
-import { Category } from "../../categories/entities/categories.entity";
+import { Category } from "../../categories/entities/category.entity";
 import { Type } from "class-transformer";
 import { Frequency } from "../../common/enums/enum";
 

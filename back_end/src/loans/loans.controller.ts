@@ -2,9 +2,10 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, 
 import { LoansService } from './loans.service';
 import { CreateLoanDto } from './dto/create-loans.dto';
 import { UpdateLoanDto } from './dto/update-loans.dto';
-import { MakePaymentDto } from './dto/make-payment.dto';
+import { PayLoanDto } from './dto/pay-loan.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { RequestWithUser } from '../common/interfaces/request-with-user.interface';
 
 @ApiTags('loans')
 @ApiBearerAuth()
@@ -84,15 +85,14 @@ export class LoansController {
     return this.loansService.updateLoan(req.user.userId, id, updateLoanDto);
   }
 
-  @Patch(':id/payment')
-  @ApiOperation({ summary: 'Thanh toán khoản nợ' })
-  @ApiResponse({ status: 200, description: 'Thanh toán khoản nợ thành công.' })
-  @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ hoặc khoản nợ đã được trả hết.' })
-  @ApiResponse({ status: 401, description: 'Không có quyền truy cập.' })
-  @ApiResponse({ status: 404, description: 'Không tìm thấy khoản nợ.' })
-  @ApiParam({ name: 'id', description: 'ID của khoản nợ' })
-  makePayment(@Request() req, @Param('id') id: string, @Body() makePaymentDto: MakePaymentDto) {
-    return this.loansService.makePayment(req.user.userId, id, makePaymentDto.amount);
+  @Post(':id/payment')
+  @ApiOperation({ summary: 'Thanh toán khoản vay' })
+  @ApiResponse({ status: 200, description: 'Thanh toán thành công' })
+  @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ hoặc số dư không đủ' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy khoản vay' })
+  @ApiParam({ name: 'id', description: 'ID khoản vay' })
+  makePayment(@Request() req, @Param('id') id: string, @Body() payLoanDto: PayLoanDto) {
+    return this.loansService.makePayment(req.user.userId, id, payLoanDto);
   }
 
   @Delete(':id')
@@ -103,5 +103,35 @@ export class LoansController {
   @ApiParam({ name: 'id', description: 'ID của khoản nợ' })
   deleteLoan(@Request() req, @Param('id') id: string) {
     return this.loansService.deleteLoan(req.user.userId, id);
+  }
+
+  @Get(':id/repayment-plan')
+  @ApiOperation({ summary: 'Lấy kế hoạch trả nợ cho một khoản vay' })
+  @ApiResponse({ status: 200, description: 'Kế hoạch trả nợ được tạo thành công.' })
+  @ApiResponse({ status: 404, description: 'Khoản vay không tìm thấy.' })
+  @ApiParam({ name: 'id', description: 'ID của khoản vay' })
+  getRepaymentPlan(@Request() req, @Param('id') id: string) {
+    return this.loansService.getRepaymentPlan(req.user.userId, id);
+  }
+
+  @Get('analysis/portfolio')
+  @ApiOperation({ summary: 'Phân tích danh mục khoản vay' })
+  @ApiResponse({ status: 200, description: 'Phân tích danh mục khoản vay thành công.' })
+  analyzeLoanPortfolio(@Request() req) {
+    return this.loansService.analyzeLoanPortfolio(req.user.userId);
+  }
+
+  @Get(':id/prepayment-savings')
+  @ApiOperation({ summary: 'Tính toán tiết kiệm khi trả trước' })
+  @ApiResponse({ status: 200, description: 'Tính toán tiết kiệm thành công.' })
+  @ApiResponse({ status: 404, description: 'Khoản vay không tìm thấy.' })
+  @ApiParam({ name: 'id', description: 'ID của khoản vay' })
+  @ApiQuery({ name: 'amount', type: Number, description: 'Số tiền trả trước' })
+  calculatePrepaymentSavings(
+    @Request() req,
+    @Param('id') id: string,
+    @Query('amount') amount: number
+  ) {
+    return this.loansService.calculatePrepaymentSavings(req.user.userId, id, Number(amount));
   }
 }

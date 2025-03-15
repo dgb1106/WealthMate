@@ -114,6 +114,20 @@ export class UsersService {
   }
 
   /**
+   * Increase user's balance
+   * @param id User ID
+   * @param amount Amount to increase
+   * @returns Updated user entity
+   */
+  async increaseBalance(id: string, amount: number): Promise<User> {
+    // Check if user exists
+    await this.getUserById(id);
+    
+    // Increase balance via repository
+    return this.usersRepository.increaseBalance(id, amount);
+  }
+
+  /**
    * Update user password
    * @param userId User ID
    * @param currentPassword Current password

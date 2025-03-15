@@ -47,9 +47,11 @@ export class UserDomainService {
    * @returns Total amount and breakdown by category
    */
   calculateFinancialByCategory(transactions: any[], type: 'income' | 'expense'): any {
-    const categoryTotals = {};
+    // Use Map for better performance with large transaction lists
+    const categoryMap = new Map<string, { categoryId: string; categoryName: string; amount: number }>();
     let total = 0;
     
+    // Filter transactions by type and calculate totals
     transactions.forEach(tx => {
       const amount = Number(tx.amount);
       const isRelevantType = type === 'income' ? amount > 0 : amount < 0;
@@ -59,22 +61,26 @@ export class UserDomainService {
         const categoryId = String(tx.categoryId);
         const categoryName = tx.category?.name || 'Unknown';
         
-        if (!categoryTotals[categoryId]) {
-          categoryTotals[categoryId] = {
+        // Using Map for O(1) lookup instead of checking object property
+        if (!categoryMap.has(categoryId)) {
+          categoryMap.set(categoryId, {
             categoryId,
             categoryName,
             amount: 0
-          };
+          });
         }
         
-        categoryTotals[categoryId].amount += absAmount;
+        // Update category amount
+        const category = categoryMap.get(categoryId)!;
+        category.amount += absAmount;
         total += absAmount;
       }
     });
     
+    // Convert Map to sorted array for response
     return {
       total,
-      byCategory: Object.values(categoryTotals).sort((a: any, b: any) => b.amount - a.amount)
+      byCategory: Array.from(categoryMap.values()).sort((a, b) => b.amount - a.amount)
     };
   }
   
