@@ -89,6 +89,10 @@ def handle_scan_bills():
     finally:
         if os.path.exists(temp_path):
             os.remove(temp_path)
+            
+@app.route('/hello-world', methods=['GET'])
+def hello():
+    return "Hello World!"
     
 if __name__ == '__main__':
     # app.run(debug=True)
