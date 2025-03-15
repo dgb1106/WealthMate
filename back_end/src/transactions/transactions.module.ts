@@ -6,11 +6,16 @@ import { PrismaTransactionRepository } from './repositories/prisma-transaction.r
 import { TransactionDomainService } from './services/transaction-domain.service';
 import { UsersModule } from '../users/users.module';
 import { DateUtilsService } from '../common/services/date-utils.service';
-
+import { CategoriesModule } from 'src/categories/categories.module';
+import { BudgetsModule } from 'src/budgets/budgets.module';
+import { CacheModule } from '@nestjs/cache-manager';
 @Module({
   imports: [
     PrismaModule,
-    UsersModule
+    UsersModule,
+    BudgetsModule,
+    CategoriesModule,
+    CacheModule.register(),
   ],
   controllers: [TransactionsController],
   providers: [

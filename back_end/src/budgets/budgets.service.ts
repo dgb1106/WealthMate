@@ -116,6 +116,25 @@ export class BudgetsService {
     }
   }
 
+  async updateBudgetSpentAmount(
+    userId: string, 
+    categoryId: string, 
+    amount: number,
+    transactionDate: Date
+  ): Promise<void> {
+    // Tìm tất cả budgets phù hợp với điều kiện
+    const matchingBudgets = await this.budgetRepository.findMatchingBudgets(
+      userId, 
+      categoryId,
+      transactionDate
+    );
+    
+    // Cập nhật spent_amount cho mỗi budget tìm thấy
+    for (const budget of matchingBudgets) {
+      await this.budgetRepository.incrementSpentAmount(budget.id, userId, amount);
+    }
+  }
+
   async getCurrentMonthBudgets(userId: string) {
     // Get budgets for the current month
     const budgets = await this.budgetRepository.getCurrentMonthBudgets(userId);

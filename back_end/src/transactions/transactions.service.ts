@@ -10,8 +10,7 @@ import { TransactionType } from './../common/enums/enum';
 import { Transaction } from './entities/transaction.entity';
 import { PrismaTransactionRepository } from './repositories/prisma-transaction.repository';
 import { UsersService } from 'src/users/services/users.service';
-import { UserDomainService } from '../users/services/user-domain.service';
-
+import { BudgetsService } from 'src/budgets/budgets.service'; 
 @Injectable()
 export class TransactionService {
   // Cache TTL values in seconds
@@ -24,6 +23,7 @@ export class TransactionService {
     private readonly transactionRepository: PrismaTransactionRepository,
     private readonly transactionDomainService: TransactionDomainService,
     private readonly usersService: UsersService,
+    private readonly budgetsService: BudgetsService, // Thêm phụ thuộc này
   ) {}
 
   /**
@@ -115,6 +115,14 @@ export class TransactionService {
         
         // Update user balance separately
         const updatedUser = await this.usersService.increaseBalance(userId, balanceAdjustment);
+
+        if (category.type === TransactionType.EXPENSE) {
+          await this.budgetsService.increaseSpentAmount(
+            userId, 
+            createDto.categoryId, 
+            Math.abs(Number(transactionAmount)),
+          );
+        }
 
         // Clear all related caches
         await this.clearUserTransactionCache(userId);

@@ -292,4 +292,20 @@ export class PrismaBudgetRepository implements BudgetRepository {
     
     return Budget.fromPrismaArray(prismaBudgets);
   }
+
+  async findMatchingBudgets(userId: string, categoryId: string, date: Date): Promise<Budget[]> {
+    const prismaBudgets = await this.prisma.budgets.findMany({
+      where: {
+        userId,
+        categoryId: BigInt(categoryId),
+        start_date: { lte: date },
+        end_date: { gte: date },
+      },
+      include: {
+        category: true
+      }
+    });
+  
+    return prismaBudgets.map(Budget.fromPrisma);
+  }
 }

@@ -13,4 +13,5 @@ export interface BudgetRepository {
   updateSpentAmount(id: string, userId: string, amount: number): Promise<Budget>;
   incrementSpentAmount(id: string, userId: string, amount: number): Promise<Budget>;
   getCurrentMonthBudgets(userId: string): Promise<Budget[]>;
+  findMatchingBudgets(userId: string, categoryId: string, date: Date): Promise<Budget[]>;
 }

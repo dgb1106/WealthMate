@@ -5,7 +5,7 @@ import { Type } from 'class-transformer';
 export class UpdateBudgetDto {
   @ApiProperty({
     description: 'The ID of the category for this budget',
-    example: '123',
+    example: '1',
     required: false
   })
   @IsOptional()
