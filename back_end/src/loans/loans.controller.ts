@@ -5,6 +5,7 @@ import { UpdateLoanDto } from './dto/update-loans.dto';
 import { MakePaymentDto } from './dto/make-payment.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { RequestWithUser } from '../common/interfaces/request-with-user.interface';
 
 @ApiTags('loans')
 @ApiBearerAuth()
@@ -103,5 +104,35 @@ export class LoansController {
   @ApiParam({ name: 'id', description: 'ID của khoản nợ' })
   deleteLoan(@Request() req, @Param('id') id: string) {
     return this.loansService.deleteLoan(req.user.userId, id);
+  }
+
+  @Get(':id/repayment-plan')
+  @ApiOperation({ summary: 'Lấy kế hoạch trả nợ cho một khoản vay' })
+  @ApiResponse({ status: 200, description: 'Kế hoạch trả nợ được tạo thành công.' })
+  @ApiResponse({ status: 404, description: 'Khoản vay không tìm thấy.' })
+  @ApiParam({ name: 'id', description: 'ID của khoản vay' })
+  getRepaymentPlan(@Request() req: RequestWithUser, @Param('id') id: string) {
+    return this.loansService.getRepaymentPlan(req.user.userId, id);
+  }
+
+  @Get('analysis/portfolio')
+  @ApiOperation({ summary: 'Phân tích danh mục khoản vay' })
+  @ApiResponse({ status: 200, description: 'Phân tích danh mục khoản vay thành công.' })
+  analyzeLoanPortfolio(@Request() req: RequestWithUser) {
+    return this.loansService.analyzeLoanPortfolio(req.user.userId);
+  }
+
+  @Get(':id/prepayment-savings')
+  @ApiOperation({ summary: 'Tính toán tiết kiệm khi trả trước' })
+  @ApiResponse({ status: 200, description: 'Tính toán tiết kiệm thành công.' })
+  @ApiResponse({ status: 404, description: 'Khoản vay không tìm thấy.' })
+  @ApiParam({ name: 'id', description: 'ID của khoản vay' })
+  @ApiQuery({ name: 'amount', type: Number, description: 'Số tiền trả trước' })
+  calculatePrepaymentSavings(
+    @Request() req: RequestWithUser,
+    @Param('id') id: string,
+    @Query('amount') amount: number
+  ) {
+    return this.loansService.calculatePrepaymentSavings(req.user.userId, id, Number(amount));
   }
 }

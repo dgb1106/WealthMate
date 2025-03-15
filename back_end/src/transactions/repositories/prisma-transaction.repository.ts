@@ -92,6 +92,27 @@ export class PrismaTransactionRepository implements TransactionRepository {
     return transactions.map(transaction => Transaction.fromPrisma(transaction));
   }
 
+  async findAllByUserAndCategoryForDateRange(userId: string, categoryId: string, startDate: Date, endDate: Date): Promise<Transaction[]> {
+    const transactions = await this.prisma.transactions.findMany({
+      where: {
+        userId,
+        categoryId: BigInt(categoryId),
+        created_at: {
+          gte: startDate,
+          lte: endDate
+        }
+      },
+      include: {
+        category: true,
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+    });
+
+    return transactions.map(transaction => Transaction.fromPrisma(transaction));
+  }
+
   async findAllIncomeByUser(userId: string): Promise<Transaction[]> {
     const transactions = await this.prisma.transactions.findMany({
       where: {
@@ -109,11 +130,52 @@ export class PrismaTransactionRepository implements TransactionRepository {
     return transactions.map(transaction => Transaction.fromPrisma(transaction));
   }
 
+  async findAllIncomeByUserForDateRange(userId: string, startDate: Date, endDate: Date): Promise<Transaction[]> {
+    const transactions = await this.prisma.transactions.findMany({
+      where: {
+        userId,
+        amount: { gt: 0 },
+        created_at: {
+          gte: startDate,
+          lte: endDate
+        }
+      },
+      include: {
+        category: true,
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+    });
+    return transactions.map(transaction => Transaction.fromPrisma(transaction));
+  }
+
   async findAllExpensesByUser(userId: string): Promise<Transaction[]> {
     const transactions = await this.prisma.transactions.findMany({
       where: {
         userId,
         amount: { lt: 0 }
+      },
+      include: {
+        category: true,
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+    });
+
+    return transactions.map(transaction => Transaction.fromPrisma(transaction));
+  }
+
+  async findAllExpensesByUserForDateRange(userId: string, startDate: Date, endDate: Date): Promise<Transaction[]> {
+    const transactions = await this.prisma.transactions.findMany({
+      where: {
+        userId,
+        amount: { lt: 0 },
+        created_at: {
+          gte: startDate,
+          lte: endDate
+        }
       },
       include: {
         category: true,
@@ -164,7 +226,7 @@ export class PrismaTransactionRepository implements TransactionRepository {
     return true;
   }
 
-  async getSummaryByCategory(userId: string, startDate: Date, endDate: Date): Promise<any[]> {
+  async getSummaryByCategoryForDateRange(userId: string, startDate: Date, endDate: Date): Promise<any[]> {
     const [transactions, categories] = await Promise.all([
       this.prisma.transactions.groupBy({
         by: ['categoryId'],
@@ -190,18 +252,21 @@ export class PrismaTransactionRepository implements TransactionRepository {
     }));
   }
 
-  async getTotalAmountByCategoryForUser(userId: string, categoryId: string): Promise<number> {
+  async getTotalAmountByCategoryForUserForDateRange(userId: string, startDate: Date, endDate: Date, categoryId: string): Promise<number> {
     const result = await this.prisma.transactions.aggregate({
       where: {
         userId,
-        categoryId: BigInt(categoryId)
+        categoryId: BigInt(categoryId),
+        created_at: {
+          gte: startDate,
+          lte: endDate
+        }
       },
       _sum: {
         amount: true
       }
     });
 
-    // Handle case when no transactions found (sum would be null)
     return result._sum.amount ? Number(result._sum.amount) : 0;
   }
 }

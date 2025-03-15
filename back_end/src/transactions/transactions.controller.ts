@@ -14,7 +14,7 @@ import {
   HttpCode,
   HttpStatus
 } from '@nestjs/common';
-import { TransactionService } from './services/transaction.service';
+import { TransactionService } from './transactions.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -63,9 +63,6 @@ export class TransactionsController {
     @Query('month', ParseIntPipe) month: number,
     @Query('year', ParseIntPipe) year: number
   ) {
-    if (month < 0 || month > 11) {
-      throw new BadRequestException('Tháng phải từ 0-11');
-    }
     return this.transactionsService.getTransactionsForMonth(req.user.userId, month, year);
   }
 
@@ -91,14 +88,60 @@ export class TransactionsController {
   @ApiOperation({ summary: 'Lấy tất cả giao dịch thu nhập' })
   @ApiResponse({ status: 200, description: 'Danh sách giao dịch thu nhập.' })
   async getIncomeTransactions(@Request() req) {
-    return this.transactionsService.getIncomeTransactions(req.user.userId);
+    return this.transactionsService.getAllIncomeTransactions(req.user.userId);
+  }
+
+  @Get('income/current-month')
+  @ApiOperation({ summary: 'Lấy giao dịch thu nhập của tháng hiện tại' })
+  @ApiResponse({ status: 200, description: 'Danh sách giao dịch thu nhập của tháng hiện tại.' })
+  async getCurrentMonthIncomeTransactions(@Request() req) {
+    return this.transactionsService.getCurrentMonthIncomeTransactions(req.user.userId);
+  }
+
+  @Get('income/month')
+  @ApiOperation({ summary: 'Lấy giao dịch thu nhập theo tháng và năm cụ thể' })
+  @ApiQuery({ name: 'month', type: Number, description: 'Tháng (0-11)' })
+  @ApiQuery({ name: 'year', type: Number, description: 'Năm' })
+  async getIncomeTransactionsForMonth(
+    @Request() req,
+    @Query('month', ParseIntPipe) month: number,
+    @Query('year', ParseIntPipe) year: number
+  ) {
+    return this.transactionsService.getIncomeTransactionsForMonth(
+      req.user.userId,
+      month,
+      year
+    );
   }
 
   @Get('expenses')
   @ApiOperation({ summary: 'Lấy tất cả giao dịch chi tiêu' })
   @ApiResponse({ status: 200, description: 'Danh sách giao dịch chi tiêu.' })
   async getExpenseTransactions(@Request() req) {
-    return this.transactionsService.getExpenseTransactions(req.user.userId);
+    return this.transactionsService.getAllExpenseTransactions(req.user.userId);
+  }
+
+  @Get('expenses/current-month')
+  @ApiOperation({ summary: 'Lấy giao dịch chi tiêu của tháng hiện tại' })
+  @ApiResponse({ status: 200, description: 'Danh sách giao dịch chi tiêu của tháng hiện tại.' })
+  async getCurrentMonthExpenseTransactions(@Request() req) {
+    return this.transactionsService.getCurrentMonthExpenseTransactions(req.user.userId);
+  }
+
+  @Get('expenses/month')
+  @ApiOperation({ summary: 'Lấy giao dịch chi tiêu theo tháng và năm cụ thể' })
+  @ApiQuery({ name: 'month', type: Number, description: 'Tháng (0-11)' })
+  @ApiQuery({ name: 'year', type: Number, description: 'Năm' })
+  async getExpenseTransactionsForMonth(
+    @Request() req,
+    @Query('month', ParseIntPipe) month: number,
+    @Query('year', ParseIntPipe) year: number
+  ) {
+    return this.transactionsService.getExpenseTransactionsForMonth(
+      req.user.userId,
+      month,
+      year
+    );
   }
 
   @Get('category/:categoryId')
@@ -115,22 +158,76 @@ export class TransactionsController {
     );
   }
 
-  @Get('summary')
-  @ApiOperation({ summary: 'Lấy tổng hợp giao dịch theo danh mục trong khoảng thời gian' })
-  @ApiResponse({ status: 200, description: 'Danh sách tổng hợp giao dịch.' })
+  @Get('category/:categoryId/current-month')
+  @ApiOperation({ summary: 'Lấy giao dịch theo danh mục của tháng hiện tại' })
+  @ApiResponse({ status: 200, description: 'Danh sách giao dịch theo danh mục của tháng hiện tại.' })
+  @ApiParam({ name: 'categoryId', description: 'ID của danh mục' })
+  async getCurrentMonthCategoryTransactions(
+    @Request() req,
+    @Param('categoryId') categoryId: string
+  ) {
+    return this.transactionsService.getCurrentMonthTransactionsByCategory(
+      req.user.userId,
+      categoryId
+    );
+  }
+
+  @Get('category/:categoryId/month')
+  @ApiOperation({ summary: 'Lấy giao dịch theo danh mục cho tháng và năm cụ thể' })
+  @ApiResponse({ status: 200, description: 'Danh sách giao dịch theo danh mục cho tháng và năm cụ thể.' })
+  @ApiParam({ name: 'categoryId', description: 'ID của danh mục' })
+  @ApiQuery({ name: 'month', type: Number, description: 'Tháng (0-11)' })
+  @ApiQuery({ name: 'year', type: Number, description: 'Năm' })
+  async getCategoryTransactionsForMonth(
+    @Request() req,
+    @Param('categoryId') categoryId: string,
+    @Query('month', ParseIntPipe) month: number,
+    @Query('year', ParseIntPipe) year: number
+  ) {
+    return this.transactionsService.getTransactionsByCategoryForMonth(
+      req.user.userId,
+      categoryId,
+      month,
+      year
+    );
+  }
+
+  @Get('summary/month')
+  @ApiOperation({ summary: 'Lấy tổng hợp giao dịch theo danh mục cho tháng và năm cụ thể' })
+  @ApiResponse({ status: 200, description: 'Danh sách tổng hợp giao dịch theo tháng.' })
+  @ApiQuery({ name: 'month', type: String, description: 'Tháng (0-11)' })
+  @ApiQuery({ name: 'year', type: String, description: 'Năm' })
+  async getTransactionSummaryForMonth(
+    @Request() req,
+    @Query('month') month: string,
+    @Query('year') year: string
+  ) {
+    return this.transactionsService.getTransactionSummaryByCategoryForMonth(
+      req.user.userId,
+      month,
+      year
+    );
+  }
+
+  @Get('category/:categoryId/total')
+  @ApiOperation({ summary: 'Lấy tổng số tiền theo danh mục trong khoảng thời gian' })
+  @ApiResponse({ status: 200, description: 'Tổng số tiền theo danh mục.' })
+  @ApiParam({ name: 'categoryId', description: 'ID của danh mục' })
   @ApiQuery({ name: 'startDate', type: String, description: 'Ngày bắt đầu (YYYY-MM-DD)' })
   @ApiQuery({ name: 'endDate', type: String, description: 'Ngày kết thúc (YYYY-MM-DD)' })
-  async getTransactionSummary(
+  async getTotalAmountByCategory(
     @Request() req,
+    @Param('categoryId') categoryId: string,
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string
   ) {
     const start = new Date(startDate);
     const end = new Date(endDate);
-    return this.transactionsService.getTransactionSummaryByCategory(
-      req.user.userId, 
-      start, 
-      end
+    return this.transactionsService.getTotalAmountByCategoryForUserForDateRange(
+      req.user.userId,
+      start,
+      end,
+      categoryId
     );
   }
 
@@ -143,7 +240,7 @@ export class TransactionsController {
     @Request() req,
     @Param('id') id: string
   ) {
-    return this.transactionsService.getTransactionById(id, req.user.userId);
+    return this.transactionsService.getTransactionById(req.user.userId, id);
   }
 
   @Patch(':id')

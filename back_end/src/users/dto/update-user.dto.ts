@@ -62,20 +62,20 @@ export class UpdateUserDto {
   @ApiProperty({
     description: 'User preferred financial mood',
     enum: PreferredMood,
-    example: 'CONSERVATIVE',
+    example: 'IRRITATION',
     required: false
   })
   @IsOptional()
   @IsEnum(PreferredMood)
-  preferredMood?: PreferredMood;
+  preferred_mood?: PreferredMood;
 
   @ApiProperty({
     description: 'User preferred financial goal',
     enum: PreferredGoal,
-    example: 'RETIREMENT',
+    example: 'SAVING',
     required: false
   })
   @IsOptional()
   @IsEnum(PreferredGoal)
-  preferredGoal?: PreferredGoal;
+  preferred_goal?: PreferredGoal;
 }
