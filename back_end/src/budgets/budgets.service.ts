@@ -99,7 +99,6 @@ export class BudgetsService {
     return {
       ...response,
       isOverLimit: budget.isOverLimit(),
-      remainingAmount: budget.getRemainingAmount(),
       status: budget.getStatus()
     };
   }
@@ -108,9 +107,14 @@ export class BudgetsService {
     // Increase the spent amount
     const budget = await this.budgetRepository.incrementSpentAmount(id, userId, amount);
 
-    
-
     // Get the formatted response with statistics
+    const response = budget.toResponseFormat();
+
+    return {
+      ...response,
+      isOverLimit: budget.isOverLimit(),
+      status: budget.getStatus()
+    }
   }
 
   async getCurrentMonthBudgets(userId: string) {
