@@ -16,6 +16,8 @@ import { LoansController } from './loans/loans.controller';
 import { LoansService } from './loans/loans.service';
 import { AiRecommendationsModule } from './ai-recommendations/ai-recommendations.module';
 import { CacheModule } from '@nestjs/cache-manager';
+import { ScheduleModule } from '@nestjs/schedule';
+import { RecurringTransactionsScheduler } from './schedules/recurring-transactions.scheduler';
 
 @Module({
   imports: [
@@ -39,8 +41,9 @@ import { CacheModule } from '@nestjs/cache-manager';
       ttl: 300,
       max: 100,
     }),
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, RecurringTransactionsScheduler],
 })
 export class AppModule {}

@@ -1,103 +1,103 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaGoalRepository } from '../repositories/prisma-goal.repository';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { Goal } from '../entities/goal.entity';
-import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class GoalDomainService {
-  constructor(
-    private readonly goalRepository: PrismaGoalRepository,
-    private readonly prisma: PrismaService
-  ) {}
-
-  async addFunds(id: string, userId: string, amount: number): Promise<Goal> {
-    if (amount <= 0) {
-      throw new BadRequestException('Amount must be greater than 0');
-    }
-
-    // Verify user has enough balance
-    const user = await this.prisma.users.findUnique({
-      where: { id: userId }
-    });
-
-    if (!user) {
-      throw new NotFoundException(`User with ID ${userId} not found`);
-    }
-
-    const currentBalance = Number(user.current_balance || 0);
-    if (currentBalance < amount) {
-      throw new BadRequestException('Insufficient balance to add to goal');
-    }
-
-    // Start a transaction to update both goal and user balance
-    return this.prisma.$transaction(async (prisma) => {
-      // Add funds to goal
-      const goal = await this.goalRepository.addFundsToGoal(id, userId, amount);
-      
-      // Update user balance
-      await prisma.users.update({
-        where: { id: userId },
-        data: { current_balance: { decrement: amount } }
-      });
-
-      return goal;
-    });
-  }
-
-  async updateSavedAmount(id: string, userId: string, amount: number): Promise<Goal> {
-    if (amount < 0) {
-      throw new BadRequestException('Amount cannot be negative');
-    }
-    
-    return this.goalRepository.updateSavedAmount(id, userId, amount);
-  }
-  
-  async transferFundsBetweenGoals(
-    sourceGoalId: string, 
-    targetGoalId: string, 
-    userId: string, 
-    amount: number
-  ): Promise<{ sourceGoal: Goal; targetGoal: Goal }> {
+  /**
+   * Validates funds transfer operation
+   * @param sourceGoal Source goal
+   * @param targetGoal Target goal 
+   * @param amount Amount to transfer
+   * @throws BadRequestException if validation fails
+   */
+  validateFundsTransfer(sourceGoal: Goal, targetGoal: Goal, amount: number): void {
     if (amount <= 0) {
       throw new BadRequestException('Transfer amount must be greater than 0');
     }
 
-    // Validate both goals exist and belong to the user
-    const sourceGoal = await this.goalRepository.findOne(sourceGoalId, userId);
-    const targetGoal = await this.goalRepository.findOne(targetGoalId, userId);
-
     if (!sourceGoal || !targetGoal) {
-      throw new NotFoundException('One or both goals not found');
+      throw new BadRequestException('Both source and target goals must exist');
     }
 
     if (sourceGoal.saved_amount < amount) {
       throw new BadRequestException('Source goal has insufficient funds');
     }
-
-    // Execute the transfer in a transaction
-    return this.prisma.$transaction(async () => {
-      // Reduce amount from source goal
-      const updatedSourceGoal = await this.goalRepository.updateSavedAmount(
-        sourceGoalId, 
-        userId, 
-        sourceGoal.saved_amount - amount
-      );
-      
-      // Add amount to target goal
-      const updatedTargetGoal = await this.goalRepository.addFundsToGoal(
-        targetGoalId,
-        userId,
-        amount
-      );
-
-      return { 
-        sourceGoal: updatedSourceGoal, 
-        targetGoal: updatedTargetGoal 
-      };
-    });
   }
   
-  async getGoalStatistics(userId: string): Promise<{
+  /**
+   * Validates adding funds operation
+   * @param amount Amount to add
+   * @throws BadRequestException if validation fails
+   */
+  validateAddFunds(amount: number): void {
+    if (amount <= 0) {
+      throw new BadRequestException('Amount must be greater than 0');
+    }
+  }
+  
+  /**
+   * Validates updating saved amount
+   * @param amount New amount
+   * @throws BadRequestException if validation fails
+   */
+  validateSavedAmount(amount: number): void {
+    if (amount < 0) {
+      throw new BadRequestException('Amount cannot be negative');
+    }
+  }
+
+  /**
+   * Calculate the progress percentage of a goal
+   * @param goal Goal to analyze
+   * @returns Progress percentage (0-100)
+   */
+  calculateProgress(goal: Goal): number {
+    if (goal.target_amount <= 0) return 0;
+    return Math.min(100, (goal.saved_amount / goal.target_amount) * 100);
+  }
+
+  /**
+   * Calculate days left to reach goal
+   * @param goal Goal to analyze
+   * @returns Number of days left
+   */
+  calculateDaysLeft(goal: Goal): number {
+    if (!goal.due_date) return 0;
+    
+    const today = new Date();
+    const dueDate = new Date(goal.due_date);
+    const timeDiff = dueDate.getTime() - today.getTime();
+    
+    return Math.max(0, Math.ceil(timeDiff / (1000 * 3600 * 24)));
+  }
+
+  /**
+   * Calculate monthly payment needed to reach goal on time
+   * @param goal Goal to analyze
+   * @returns Monthly payment amount
+   */
+  calculateMonthlyPayment(goal: Goal): number {
+    const daysLeft = this.calculateDaysLeft(goal);
+    if (daysLeft <= 0) return goal.getRemainingAmount();
+    
+    const monthsLeft = Math.max(0.1, daysLeft / 30);
+    return goal.getRemainingAmount() / monthsLeft;
+  }
+
+  /**
+   * Process a collection of goals and calculate statistics
+   * @param allGoals All goals
+   * @param completedGoals Completed goals
+   * @param activeGoals Active goals
+   * @param overdueGoals Overdue goals
+   * @returns Goal statistics
+   */
+  calculateGoalStatistics(
+    allGoals: Goal[], 
+    completedGoals: Goal[], 
+    activeGoals: Goal[], 
+    overdueGoals: Goal[]
+  ): {
     totalGoals: number;
     completedGoals: number;
     activeGoals: number;
@@ -105,14 +105,7 @@ export class GoalDomainService {
     totalSaved: number;
     totalTarget: number;
     overallProgress: number;
-  }> {
-    const [allGoals, completedGoals, activeGoals, overdueGoals] = await Promise.all([
-      this.goalRepository.findAll(userId),
-      this.goalRepository.findCompletedGoals(userId),
-      this.goalRepository.findActiveGoals(userId),
-      this.goalRepository.findOverdueGoals(userId),
-    ]);
-    
+  } {
     const totalSaved = allGoals.reduce((sum, goal) => sum + goal.saved_amount, 0);
     const totalTarget = allGoals.reduce((sum, goal) => sum + goal.target_amount, 0);
     
@@ -128,18 +121,23 @@ export class GoalDomainService {
         : 0
     };
   }
-  
-  async getGoalRecommendations(userId: string): Promise<{
+
+  /**
+   * Process goals and generate recommendations
+   * @param overdueGoals Overdue goals
+   * @param nearingDeadlineGoals Goals nearing deadline
+   * @param allActiveGoals All active goals
+   * @returns Goal recommendations
+   */
+  generateGoalRecommendations(
+    overdueGoals: Goal[], 
+    nearingDeadlineGoals: Goal[], 
+    allActiveGoals: Goal[]
+  ): {
     needsAttention: Goal[];
     nearingCompletion: Goal[];
     recommendedSavings: { goal: Goal; recommendedAmount: number }[];
-  }> {
-    const [overdueGoals, nearingDeadlineGoals, allActiveGoals] = await Promise.all([
-      this.goalRepository.findOverdueGoals(userId),
-      this.goalRepository.findGoalsNearingDeadline(userId, 30),
-      this.goalRepository.findActiveGoals(userId)
-    ]);
-    
+  } {
     // Find goals nearing completion (80%+ complete)
     const nearingCompletion = allActiveGoals
       .filter(goal => {

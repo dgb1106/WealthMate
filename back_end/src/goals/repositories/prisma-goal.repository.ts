@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateGoalDto } from '../dto/create-goal.dto';
 import { UpdateGoalDto } from '../dto/update-goal.dto';
@@ -17,6 +17,7 @@ export interface GoalRepository {
   findCompletedGoals(userId: string): Promise<Goal[]>;
   findOverdueGoals(userId: string): Promise<Goal[]>;
   findGoalsNearingDeadline(userId: string, daysThreshold: number): Promise<Goal[]>;
+  transferFundsBetweenGoals(sourceGoalId: string, targetGoalId: string, userId: string, amount: number): Promise<{ sourceGoal: Goal; targetGoal: Goal }>;
 }
 
 @Injectable()
@@ -130,23 +131,85 @@ export class PrismaGoalRepository implements GoalRepository {
   }
 
   async addFundsToGoal(id: string, userId: string, amount: number): Promise<Goal> {
-    const existingGoal = await this.findOne(id, userId);
-    if (!existingGoal) {
-      throw new NotFoundException(`Goal with ID ${id} not found`);
-    }
-    
-    const goalEntity = Goal.fromPrisma(existingGoal);
-    goalEntity.addFunds(amount);
-    
-    const updatedGoal = await this.prisma.goals.update({
-      where: { id: BigInt(id) },
-      data: {
-        saved_amount: goalEntity.saved_amount,
-        status: goalEntity.status
+    // Start a transaction to update both goal and user balance
+    return this.prisma.$transaction(async (prisma) => {
+      // Verify user has enough balance
+      const user = await prisma.users.findUnique({
+        where: { id: userId }
+      });
+
+      if (!user) {
+        throw new NotFoundException(`User with ID ${userId} not found`);
       }
+
+      // Check if the user has enough balance
+      const currentBalance = Number(user.current_balance || 0);
+      if (currentBalance < amount) {
+        throw new BadRequestException(`Insufficient balance. Available: ${currentBalance}, Required: ${amount}`);
+      }
+
+      // Add funds to goal
+      const updatedGoal = await prisma.goals.update({
+        where: {
+          id: BigInt(id),
+          userId
+        },
+        data: {
+          saved_amount: {
+            increment: amount
+          }
+        }
+      });
+      
+      // Update user balance
+      await prisma.users.update({
+        where: { id: userId },
+        data: { current_balance: { decrement: amount } }
+      });
+
+      return Goal.fromPrisma(updatedGoal);
     });
-    
-    return Goal.fromPrisma(updatedGoal);
+  }
+
+  async transferFundsBetweenGoals(
+    sourceGoalId: string, 
+    targetGoalId: string, 
+    userId: string, 
+    amount: number
+  ): Promise<{ sourceGoal: Goal; targetGoal: Goal }> {
+    // Execute the transfer in a transaction
+    return this.prisma.$transaction(async (prisma) => {
+      // Reduce amount from source goal
+      const updatedSourceGoal = await prisma.goals.update({
+        where: { 
+          id: BigInt(sourceGoalId),
+          userId
+        },
+        data: {
+          saved_amount: {
+            decrement: amount
+          }
+        }
+      });
+      
+      // Add amount to target goal
+      const updatedTargetGoal = await prisma.goals.update({
+        where: {
+          id: BigInt(targetGoalId),
+          userId
+        },
+        data: {
+          saved_amount: {
+            increment: amount
+          }
+        }
+      });
+
+      return { 
+        sourceGoal: Goal.fromPrisma(updatedSourceGoal), 
+        targetGoal: Goal.fromPrisma(updatedTargetGoal) 
+      };
+    });
   }
 
   async findActiveGoals(userId: string): Promise<Goal[]> {

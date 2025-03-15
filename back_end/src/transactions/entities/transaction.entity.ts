@@ -21,6 +21,7 @@ export class Transaction {
   created_at: Date;
   
   description: string;
+  newBalance: any;
   
   constructor(partial: Partial<Transaction>) {
     Object.assign(this, partial);

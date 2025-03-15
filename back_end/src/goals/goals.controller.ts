@@ -29,20 +29,6 @@ export class GoalsController {
     return this.goalsService.findAll(req.user.userId);
   }
 
-  @Get('statistics')
-  @ApiOperation({ summary: 'Lấy thống kê về mục tiêu tài chính' })
-  @ApiResponse({ status: 200, description: 'Thống kê mục tiêu tài chính.' })
-  async getStatistics(@Request() req: RequestWithUser) {
-    return this.goalsService.getGoalStatistics(req.user.userId);
-  }
-
-  @Get('recommendations')
-  @ApiOperation({ summary: 'Lấy đề xuất về mục tiêu tài chính' })
-  @ApiResponse({ status: 200, description: 'Đề xuất mục tiêu tài chính.' })
-  async getRecommendations(@Request() req: RequestWithUser) {
-    return this.goalsService.getGoalRecommendations(req.user.userId);
-  }
-
   @Get('active')
   @ApiOperation({ summary: 'Lấy các mục tiêu đang hoạt động' })
   @ApiResponse({ status: 200, description: 'Danh sách mục tiêu đang hoạt động.' })

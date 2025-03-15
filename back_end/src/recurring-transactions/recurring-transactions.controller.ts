@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { RecurringTransactionService } from './recurring-transactions.service';
 import { CreateRecurringTransactionDto } from './dto/create-recurring-transaction.dto';
 import { UpdateRecurringTransactionDto } from './dto/update-recurring-transaction.dto';
@@ -15,9 +15,9 @@ export class RecurringTransactionController {
   constructor(private readonly recurringTxService: RecurringTransactionService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new recurring transaction' })
-  @ApiResponse({ status: 201, description: 'Recurring transaction created successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid data' })
+  @ApiOperation({ summary: 'Tạo giao dịch định kỳ mới' })
+  @ApiResponse({ status: 201, description: 'Giao dịch định kỳ được tạo thành công' })
+  @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ' })
   async create(
     @Request() req: RequestWithUser,
     @Body() createDto: CreateRecurringTransactionDto
@@ -26,16 +26,16 @@ export class RecurringTransactionController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all recurring transactions for a user' })
-  @ApiResponse({ status: 200, description: 'List of recurring transactions' })
+  @ApiOperation({ summary: 'Lấy tất cả giao dịch định kỳ của người dùng' })
+  @ApiResponse({ status: 200, description: 'Danh sách giao dịch định kỳ' })
   async findAll(@Request() req: RequestWithUser) {
     return this.recurringTxService.findAll(req.user.userId);
   }
 
   @Get('frequency/:frequency')
-  @ApiOperation({ summary: 'Get recurring transactions by frequency' })
-  @ApiParam({ name: 'frequency', enum: Frequency, description: 'Frequency type' })
-  @ApiResponse({ status: 200, description: 'List of recurring transactions with specified frequency' })
+  @ApiOperation({ summary: 'Lấy giao dịch định kỳ theo tần suất' })
+  @ApiParam({ name: 'frequency', enum: Frequency, description: 'Loại tần suất' })
+  @ApiResponse({ status: 200, description: 'Danh sách giao dịch định kỳ theo tần suất chỉ định' })
   async findByFrequency(
     @Request() req: RequestWithUser,
     @Param('frequency') frequency: Frequency
@@ -44,9 +44,9 @@ export class RecurringTransactionController {
   }
 
   @Get('category/:categoryId')
-  @ApiOperation({ summary: 'Get recurring transactions by category' })
-  @ApiParam({ name: 'categoryId', type: String, description: 'Category ID' })
-  @ApiResponse({ status: 200, description: 'List of recurring transactions for the category' })
+  @ApiOperation({ summary: 'Lấy giao dịch định kỳ theo danh mục' })
+  @ApiParam({ name: 'categoryId', type: String, description: 'ID danh mục' })
+  @ApiResponse({ status: 200, description: 'Danh sách giao dịch định kỳ theo danh mục' })
   async findByCategory(
     @Request() req: RequestWithUser,
     @Param('categoryId') categoryId: string
@@ -55,9 +55,9 @@ export class RecurringTransactionController {
   }
 
   @Get('upcoming')
-  @ApiOperation({ summary: 'Get upcoming recurring transactions' })
-  @ApiQuery({ name: 'days', type: Number, required: false, description: 'Number of days to look ahead' })
-  @ApiResponse({ status: 200, description: 'List of upcoming recurring transactions' })
+  @ApiOperation({ summary: 'Lấy các giao dịch định kỳ sắp tới' })
+  @ApiQuery({ name: 'days', type: Number, required: false, description: 'Số ngày xem trước' })
+  @ApiResponse({ status: 200, description: 'Danh sách giao dịch định kỳ sắp tới' })
   async getUpcoming(
     @Request() req: RequestWithUser,
     @Query('days') days?: number
@@ -65,29 +65,11 @@ export class RecurringTransactionController {
     return this.recurringTxService.getUpcomingTransactions(req.user.userId, days);
   }
 
-  @Get('forecast')
-  @ApiOperation({ summary: 'Generate transaction forecast' })
-  @ApiQuery({ name: 'days', type: Number, required: false, description: 'Number of days to forecast' })
-  @ApiResponse({ status: 200, description: 'Transaction forecast' })
-  async getForecast(
-    @Request() req: RequestWithUser,
-    @Query('days') days?: number
-  ) {
-    return this.recurringTxService.generateTransactionForecast(req.user.userId, days);
-  }
-
-  @Get('stats')
-  @ApiOperation({ summary: 'Get recurring transaction statistics' })
-  @ApiResponse({ status: 200, description: 'Recurring transaction statistics' })
-  async getStats(@Request() req: RequestWithUser) {
-    return this.recurringTxService.getRecurringTransactionStats(req.user.userId);
-  }
-
   @Post(':id/process')
-  @ApiOperation({ summary: 'Process a recurring transaction immediately' })
-  @ApiParam({ name: 'id', type: String, description: 'Recurring transaction ID' })
-  @ApiResponse({ status: 200, description: 'Transaction processed successfully' })
-  @ApiResponse({ status: 404, description: 'Recurring transaction not found' })
+  @ApiOperation({ summary: 'Xử lý giao dịch định kỳ ngay lập tức' })
+  @ApiParam({ name: 'id', type: String, description: 'ID giao dịch định kỳ' })
+  @ApiResponse({ status: 200, description: 'Giao dịch đã được xử lý thành công' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy giao dịch định kỳ' })
   async processTransaction(
     @Request() req: RequestWithUser,
     @Param('id') id: string
@@ -96,10 +78,10 @@ export class RecurringTransactionController {
   }
 
   @Post(':id/skip')
-  @ApiOperation({ summary: 'Skip the next occurrence of a recurring transaction' })
-  @ApiParam({ name: 'id', type: String, description: 'Recurring transaction ID' })
-  @ApiResponse({ status: 200, description: 'Next occurrence skipped successfully' })
-  @ApiResponse({ status: 404, description: 'Recurring transaction not found' })
+  @ApiOperation({ summary: 'Bỏ qua lần xuất hiện tiếp theo của giao dịch định kỳ' })
+  @ApiParam({ name: 'id', type: String, description: 'ID giao dịch định kỳ' })
+  @ApiResponse({ status: 200, description: 'Đã bỏ qua lần xuất hiện tiếp theo thành công' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy giao dịch định kỳ' })
   async skipNextOccurrence(
     @Request() req: RequestWithUser,
     @Param('id') id: string
@@ -108,10 +90,10 @@ export class RecurringTransactionController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a recurring transaction by ID' })
-  @ApiParam({ name: 'id', type: String, description: 'Recurring transaction ID' })
-  @ApiResponse({ status: 200, description: 'Recurring transaction details' })
-  @ApiResponse({ status: 404, description: 'Recurring transaction not found' })
+  @ApiOperation({ summary: 'Lấy thông tin giao dịch định kỳ theo ID' })
+  @ApiParam({ name: 'id', type: String, description: 'ID giao dịch định kỳ' })
+  @ApiResponse({ status: 200, description: 'Chi tiết giao dịch định kỳ' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy giao dịch định kỳ' })
   async findOne(
     @Request() req: RequestWithUser,
     @Param('id') id: string
@@ -120,11 +102,11 @@ export class RecurringTransactionController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update a recurring transaction' })
-  @ApiParam({ name: 'id', type: String, description: 'Recurring transaction ID' })
-  @ApiResponse({ status: 200, description: 'Recurring transaction updated successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid data' })
-  @ApiResponse({ status: 404, description: 'Recurring transaction not found' })
+  @ApiOperation({ summary: 'Cập nhật giao dịch định kỳ' })
+  @ApiParam({ name: 'id', type: String, description: 'ID giao dịch định kỳ' })
+  @ApiResponse({ status: 200, description: 'Giao dịch định kỳ được cập nhật thành công' })
+  @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy giao dịch định kỳ' })
   async update(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -134,14 +116,24 @@ export class RecurringTransactionController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a recurring transaction' })
-  @ApiParam({ name: 'id', type: String, description: 'Recurring transaction ID' })
-  @ApiResponse({ status: 200, description: 'Recurring transaction deleted successfully' })
-  @ApiResponse({ status: 404, description: 'Recurring transaction not found' })
+  @ApiOperation({ summary: 'Xóa giao dịch định kỳ' })
+  @ApiParam({ name: 'id', type: String, description: 'ID giao dịch định kỳ' })
+  @ApiResponse({ status: 200, description: 'Giao dịch định kỳ đã được xóa thành công' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy giao dịch định kỳ' })
   async remove(
     @Request() req: RequestWithUser,
     @Param('id') id: string
   ) {
     return this.recurringTxService.remove(id, req.user.userId);
+  }
+
+  @Post('process-due')
+  @ApiOperation({ summary: 'Xử lý tất cả giao dịch định kỳ đến hạn' })
+  @ApiResponse({ status: 200, description: 'Các giao dịch định kỳ đến hạn đã được xử lý thành công' })
+  @ApiResponse({ status: 401, description: 'Không được phép truy cập' })
+  @HttpCode(HttpStatus.OK)
+  async processDueTransactions(@Request() req) {
+    // Có thể thêm kiểm tra admin ở đây nếu cần
+    return this.recurringTxService.processDueTransactions();
   }
 }

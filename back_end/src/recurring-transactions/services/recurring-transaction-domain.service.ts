@@ -1,16 +1,21 @@
-import { Injectable, BadRequestException, NotFoundException, Inject } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Inject, Logger } from '@nestjs/common';
 import { RecurringTransactionRepository } from '../repositories/recurring-transaction-repository.interface';
 import { RecurringTransaction } from '../entities/recurring-transaction.entity';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Frequency, TransactionType } from '../../common/enums/enum';
 import { CreateRecurringTransactionDto } from '../dto/create-recurring-transaction.dto';
+import { TransactionService } from '../../transactions/transactions.service';
+import { CreateTransactionDto } from '../../transactions/dto/create-transaction.dto';
 
 @Injectable()
 export class RecurringTransactionDomainService {
+  private readonly logger = new Logger(RecurringTransactionDomainService.name);
+
   constructor(
     @Inject('RecurringTransactionRepository')
     private readonly recurringTxRepository: RecurringTransactionRepository,
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService,
+    private readonly transactionService: TransactionService
   ) {}
 
   /**
@@ -41,21 +46,32 @@ export class RecurringTransactionDomainService {
    * Processes all due recurring transactions
    * @returns Array of created transactions
    */
-  async processDueTransactions(): Promise<{ processedCount: number; transactions: any[] }> {
+  async processDueTransactions(): Promise<{ processedCount: number; transactions: any[]; errors: string[] }> {
     const today = new Date();
     const dueTransactions = await this.recurringTxRepository.findDueTransactions(today);
     const createdTransactions: any[] = [];
+    const errors: string[] = [];
+    
+    this.logger.log(`Found ${dueTransactions.length} due recurring transactions to process`);
     
     for (const recurringTx of dueTransactions) {
-      const result = await this.processTransaction(recurringTx);
-      if (result) {
-        createdTransactions.push(result);
+      try {
+        const result = await this.processTransaction(recurringTx);
+        if (result) {
+          createdTransactions.push(result);
+          this.logger.log(`Successfully processed recurring transaction ID: ${recurringTx.id}`);
+        }
+      } catch (error) {
+        const errorMessage = `Error processing recurring transaction ${recurringTx.id}: ${error.message}`;
+        this.logger.error(errorMessage);
+        errors.push(errorMessage);
       }
     }
     
     return {
       processedCount: createdTransactions.length,
-      transactions: createdTransactions
+      transactions: createdTransactions,
+      errors
     };
   }
 
@@ -65,61 +81,43 @@ export class RecurringTransactionDomainService {
    * @returns Created transaction or null if processing failed
    */
   async processTransaction(recurringTx: RecurringTransaction): Promise<any> {
-    return this.prisma.$transaction(async (prisma) => {
+    return this.prisma.$transaction(async () => {
       try {
-        // Get category to determine transaction type
-        const category = await prisma.categories.findUnique({
-          where: { id: BigInt(recurringTx.categoryId) }
-        });
+        // Chuẩn bị dữ liệu cho CreateTransactionDto
+        const createTransactionDto: CreateTransactionDto = {
+          categoryId: recurringTx.categoryId,
+          amount: Math.abs(Number(recurringTx.amount)), // Luôn dùng số dương, định dạng sẽ được xử lý trong TransactionService
+          description: `${recurringTx.description} (Định kỳ)`
+        };
         
-        if (!category) {
-          throw new NotFoundException(`Category with ID ${recurringTx.categoryId} not found`);
-        }
+        // Gọi TransactionService để tạo giao dịch
+        const transactionResult = await this.transactionService.createTransaction(
+          recurringTx.userId,
+          createTransactionDto
+        );
         
-        // Create the transactions instance
-        const txData = recurringTx.createTransactionInstance();
-        
-        const transactions = await prisma.transactions.create({
-          data: {
-            userId: txData.userId || '',
-            categoryId: BigInt(txData.categoryId || '0'),
-            amount: txData.amount || 0,
-            description: txData.description || '',
-            created_at: txData.created_at || new Date()
-          }
-        });
-        
-        // Update user balance
-        const balanceAdjustment = category.type === TransactionType.INCOME 
-          ? Math.abs(Number(recurringTx.amount)) 
-          : -Math.abs(Number(recurringTx.amount));
-        
-        await prisma.users.update({
-          where: { id: recurringTx.userId },
-          data: {
-            current_balance: { increment: balanceAdjustment }
-          }
-        });
-        
-        // Calculate next occurrence and update recurring transaction
+        // Tính toán ngày xuất hiện tiếp theo
         const nextOccurence = recurringTx.calculateNextOccurrence();
         
-        await prisma.recurringTransactions.update({
+        // Cập nhật ngày xuất hiện tiếp theo cho giao dịch định kỳ
+        await this.prisma.recurringTransactions.update({
           where: { id: BigInt(recurringTx.id) },
-          data: {
-            next_occurence: nextOccurence
-          }
+          data: { next_occurence: nextOccurence }
         });
         
+        // Trả về kết quả
         return {
-          transactionId: String(transactions.id),
+          transactionId: transactionResult.id,
           recurringTransactionId: recurringTx.id,
-          amount: Number(transactions.amount),
+          amount: Number(transactionResult.amount),
+          description: transactionResult.description,
+          categoryName: transactionResult.category || null,
+          newBalance: transactionResult.newBalance,
           nextOccurence: nextOccurence
         };
       } catch (error) {
-        console.error(`Error processing recurring transaction ${recurringTx.id}:`, error);
-        return null;
+        this.logger.error(`Error processing recurring transaction ${recurringTx.id}: ${error.message}`);
+        throw error;
       }
     });
   }

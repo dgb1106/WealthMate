@@ -94,7 +94,7 @@ export class GoalsService {
   async updateSavedAmount(id: string, userId: string, amount: number) {
     try {
       // Sử dụng domain service để cập nhật số tiền đã tiết kiệm
-      const goal = await this.goalDomainService.updateSavedAmount(id, userId, amount);
+      const goal = await this.goalRepository.updateSavedAmount(id, userId, amount);
       return goal.toResponseFormat();
     } catch (error) {
       if (error instanceof NotFoundException || error instanceof BadRequestException) {
@@ -106,8 +106,12 @@ export class GoalsService {
 
   async addFundsToGoal(id: string, userId: string, amount: number) {
     try {
-      // Sử dụng domain service để thêm tiền vào mục tiêu và cập nhật số dư người dùng
-      const goal = await this.goalDomainService.addFunds(id, userId, amount);
+      // Validate the amount
+      this.goalDomainService.validateAddFunds(amount);
+      
+      // Use repository to add funds
+      const goal = await this.goalRepository.addFundsToGoal(id, userId, amount);
+      
       return goal.toResponseFormat();
     } catch (error) {
       if (error instanceof NotFoundException || error instanceof BadRequestException) {
@@ -117,11 +121,23 @@ export class GoalsService {
     }
   }
   
-  // Thêm các phương thức mới tận dụng domain service
-  
   async getGoalStatistics(userId: string) {
     try {
-      return await this.goalDomainService.getGoalStatistics(userId);
+      // Fetch all the required data from repositories
+      const [allGoals, completedGoals, activeGoals, overdueGoals] = await Promise.all([
+        this.goalRepository.findAll(userId),
+        this.goalRepository.findCompletedGoals(userId),
+        this.goalRepository.findActiveGoals(userId),
+        this.goalRepository.findOverdueGoals(userId),
+      ]);
+      
+      // Use domain service to calculate statistics
+      return this.goalDomainService.calculateGoalStatistics(
+        allGoals, 
+        completedGoals, 
+        activeGoals, 
+        overdueGoals
+      );
     } catch (error) {
       throw new BadRequestException('Không thể lấy thống kê mục tiêu: ' + error.message);
     }
@@ -129,9 +145,21 @@ export class GoalsService {
   
   async getGoalRecommendations(userId: string) {
     try {
-      const recommendations = await this.goalDomainService.getGoalRecommendations(userId);
+      // Fetch all the required data from repositories
+      const [overdueGoals, nearingDeadlineGoals, allActiveGoals] = await Promise.all([
+        this.goalRepository.findOverdueGoals(userId),
+        this.goalRepository.findGoalsNearingDeadline(userId, 30),
+        this.goalRepository.findActiveGoals(userId)
+      ]);
       
-      // Chuyển đổi mục tiêu sang định dạng phản hồi
+      // Use domain service to generate recommendations
+      const recommendations = this.goalDomainService.generateGoalRecommendations(
+        overdueGoals, 
+        nearingDeadlineGoals, 
+        allActiveGoals
+      );
+      
+      // Format the response
       return {
         needsAttention: recommendations.needsAttention.map(goal => goal.toResponseFormat()),
         nearingCompletion: recommendations.nearingCompletion.map(goal => goal.toResponseFormat()),
@@ -147,7 +175,20 @@ export class GoalsService {
   
   async transferFundsBetweenGoals(sourceGoalId: string, targetGoalId: string, userId: string, amount: number) {
     try {
-      const result = await this.goalDomainService.transferFundsBetweenGoals(
+      // Get both goals
+      const sourceGoal = await this.goalRepository.findOne(sourceGoalId, userId);
+      const targetGoal = await this.goalRepository.findOne(targetGoalId, userId);
+      
+      // Check if both goals exist
+      if (!sourceGoal || !targetGoal) {
+        throw new NotFoundException('Both source and target goals must exist');
+      }
+      
+      // Validate the transfer
+      this.goalDomainService.validateFundsTransfer(sourceGoal, targetGoal, amount);
+      
+      // Execute the transfer through the repository
+      const result = await this.goalRepository.transferFundsBetweenGoals(
         sourceGoalId, 
         targetGoalId, 
         userId, 

@@ -41,11 +41,20 @@ export class RecurringTransaction {
       case Frequency.WEEKLY:
         nextDate.setDate(nextDate.getDate() + 7);
         break;
+      case Frequency.BIWEEKLY:
+        nextDate.setDate(nextDate.getDate() + 14);
+        break;
       case Frequency.MONTHLY:
         nextDate.setMonth(nextDate.getMonth() + 1);
         break;
+      case Frequency.QUARTERLY:
+        nextDate.setMonth(nextDate.getMonth() + 3);
+        break;
       case Frequency.YEARLY:
         nextDate.setFullYear(nextDate.getFullYear() + 1);
+        break;
+      default:
+        nextDate.setMonth(nextDate.getMonth() + 1); // Default to monthly
         break;
     }
     
