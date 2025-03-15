@@ -187,57 +187,7 @@ export class LoansService {
       throw new BadRequestException('Không thể tạo kế hoạch trả nợ: ' + error.message);
     }
   }
-
-  /**
-   * Thanh toán khoản vay và cập nhật số dư của người dùng
-   */
-  async makePaymentWithBalanceUpdate(userId: string, loanId: string, amount: number): Promise<{
-    loan: Loan;
-    updatedBalance: number;
-  }> {
-    if (amount <= 0) {
-      throw new BadRequestException('Số tiền thanh toán phải lớn hơn 0');
-    }
-
-    // Kiểm tra số dư người dùng
-    const user = await this.prisma.users.findUnique({
-      where: { id: userId },
-      select: { current_balance: true }
-    });
-
-    if (!user) {
-      throw new NotFoundException(`Người dùng với ID ${userId} không tồn tại`);
-    }
-
-    // Kiểm tra số dư đủ để thanh toán
-    const currentBalance = Number(user.current_balance || 0);
-    if (currentBalance < amount) {
-      throw new BadRequestException('Số dư không đủ để thanh toán khoản vay này');
-    }
-
-    // Thực hiện thanh toán trong transaction
-    return this.prisma.$transaction(async (prisma) => {
-      // Thanh toán khoản vay
-      const loan = await this.loanRepository.makePayment(userId, loanId, amount);
-      
-      // Cập nhật số dư người dùng
-      const updatedUser = await prisma.users.update({
-        where: { id: userId },
-        data: {
-          current_balance: {
-            decrement: amount
-          }
-        },
-        select: { current_balance: true }
-      });
-      
-      return {
-        loan,
-        updatedBalance: Number(updatedUser.current_balance)
-      };
-    });
-  }
-
+  
   /**
    * Phân tích và đưa ra kế hoạch trả nợ
    */
