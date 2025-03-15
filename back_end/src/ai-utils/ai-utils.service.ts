@@ -17,14 +17,14 @@ export class AiUtilsService {
     async getExpenseForecast(income: number, interestRate: number, inflationRate: number, holidays: number): Promise<number> {
         try {
             const response = await firstValueFrom(
-                this.httpService.post(`${this.baseUrl}/monthly_expense_prediction`, {
+                this.httpService.post<{ forecasted_expense: number }>(`${this.baseUrl}/monthly_expense_prediction`, {
                     'Income (VND)': income,
                     'Interest rate (%)': interestRate,
                     'Inflation rate (%)': inflationRate,
                     'Holidays': holidays,
                 })
             );
-            return response.data;
+            return response.data.forecasted_expense;
         } catch (error) {
             throw new HttpException(`Failed to get expense forecast: ${error.message}`, 500);
         }
