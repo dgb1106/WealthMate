@@ -104,6 +104,15 @@ export class BudgetsService {
     };
   }
 
+  async increaseSpentAmount(id: string, userId: string, amount: number) {
+    // Increase the spent amount
+    const budget = await this.budgetRepository.incrementSpentAmount(id, userId, amount);
+
+    
+
+    // Get the formatted response with statistics
+  }
+
   async getCurrentMonthBudgets(userId: string) {
     // Get budgets for the current month
     const budgets = await this.budgetRepository.getCurrentMonthBudgets(userId);

@@ -226,6 +226,28 @@ export class PrismaBudgetRepository implements BudgetRepository {
     return Budget.fromPrisma(updatedPrismaBudget);
   }
 
+  async incrementSpentAmount(id: string, userId: string, amount: number): Promise<Budget> {
+    // Verify budget exists and belongs to user
+    await this.findOne(id, userId);
+
+    // Increment spent amount
+    const updatedPrismaBudget = await this.prisma.budgets.update({
+      where: {
+        id: BigInt(id)
+      },
+      data: {
+        spent_amount: {
+          increment: amount
+        }
+      },
+      include: {
+        category: true
+      }
+    });
+
+    return Budget.fromPrisma(updatedPrismaBudget);
+  }
+
   async getCurrentMonthBudgets(userId: string): Promise<Budget[]> {
     const { firstDay, lastDay } = this.dateUtils.getCurrentMonthRange();
     
