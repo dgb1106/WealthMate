@@ -3,7 +3,6 @@ import { CreateBudgetDto } from './dto/create-budget.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
 import { BudgetRepository } from './repositories/budget-repository.interface';
 import { BudgetDomainService } from './services/budget-domain.service';
-import { Budget } from './entities/budget.entity';
 
 @Injectable()
 export class BudgetsService {
@@ -19,7 +18,7 @@ export class BudgetsService {
     
     // Create the budget using the repository
     const budget = await this.budgetRepository.create(userId, createBudgetDto);
-    
+    budget.spent_amount = 0;
     // Return the formatted budget
     return budget.toResponseFormat();
   }

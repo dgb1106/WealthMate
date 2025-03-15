@@ -19,6 +19,6 @@ import { DateUtilsService } from '../common/services/date-utils.service';
     TransactionDomainService,
     DateUtilsService
   ],
-  exports: [TransactionService] // Đảm bảo TransactionService được export để các module khác có thể sử dụng
+  exports: [TransactionService]
 })
 export class TransactionsModule {}

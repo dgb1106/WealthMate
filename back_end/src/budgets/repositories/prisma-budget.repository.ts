@@ -40,13 +40,30 @@ export class PrismaBudgetRepository implements BudgetRepository {
         throw new BadRequestException('Start date must be before end date');
       }
 
+      // Calculate spent amount from existing transactions
+      const existingTransactions = await this.prisma.transactions.aggregate({
+        where: {
+          userId,
+          categoryId: BigInt(createBudgetDto.categoryId),
+          created_at: {
+            gte: startDate,
+            lte: endDate
+          }
+        },
+        _sum: {
+          amount: true
+        }
+      });
+
+      const initialSpentAmount = Number(existingTransactions._sum.amount || 0);
+
       // Create budget in database
       const prismaBudget = await this.prisma.budgets.create({
         data: {
           userId,
           categoryId: BigInt(createBudgetDto.categoryId),
           limit_amount: createBudgetDto.limit_amount,
-          spent_amount: createBudgetDto.spent_amount || 0,
+          spent_amount: initialSpentAmount,
           start_date: startDate,
           end_date: endDate,
         },
