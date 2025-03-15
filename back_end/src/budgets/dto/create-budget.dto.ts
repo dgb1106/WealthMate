@@ -5,7 +5,7 @@ import { Type } from 'class-transformer';
 export class CreateBudgetDto {
   @ApiProperty({
     description: 'The ID of the category for this budget',
-    example: '123',
+    example: '1',
   })
   @IsString()
   categoryId: string;
@@ -36,7 +36,7 @@ export class CreateBudgetDto {
 
   @ApiProperty({
     description: 'The amount spent so far in this budget',
-    example: 0.00,
+    example: 30.00,
     minimum: 0,
     default: 0
   })

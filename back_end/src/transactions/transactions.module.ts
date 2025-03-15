@@ -2,30 +2,28 @@ import { Module } from '@nestjs/common';
 import { TransactionsController } from './transactions.controller';
 import { TransactionService } from './transactions.service';
 import { PrismaModule } from '../prisma/prisma.module';
-import { CommonModule } from '../common/common.module'; 
-import { UsersModule } from 'src/users/users.module';
 import { PrismaTransactionRepository } from './repositories/prisma-transaction.repository';
 import { TransactionDomainService } from './services/transaction-domain.service';
-import { UsersService } from 'src/users/services/users.service';
-import { User } from 'src/users/entities/users.entity';
-
+import { UsersModule } from '../users/users.module';
+import { DateUtilsService } from '../common/services/date-utils.service';
+import { CategoriesModule } from 'src/categories/categories.module';
+import { BudgetsModule } from 'src/budgets/budgets.module';
+import { CacheModule } from '@nestjs/cache-manager';
 @Module({
   imports: [
     PrismaModule,
-    CommonModule,
     UsersModule,
+    BudgetsModule,
+    CategoriesModule,
+    CacheModule.register(),
   ],
   controllers: [TransactionsController],
   providers: [
     TransactionService,
+    PrismaTransactionRepository,
     TransactionDomainService,
-    {
-      provide: PrismaTransactionRepository,
-      useClass: PrismaTransactionRepository,
-    },
+    DateUtilsService
   ],
-  exports: [
-    TransactionService,
-  ]
+  exports: [TransactionService]
 })
 export class TransactionsModule {}

@@ -85,6 +85,20 @@ export class BudgetsController {
     return this.budgetsService.updateSpentAmount(id, req.user.userId, amount);
   }
 
+  @Patch(':id/increment-spent-amount')
+  @ApiOperation({ summary: 'Tăng số tiền đã chi tiêu trong ngân sách' })
+  @ApiParam({ name: 'id', type: String, description: 'ID của ngân sách' })
+  @ApiQuery({ name: 'amount', type: Number, description: 'Số tiền đã chi tiêu' })
+  @ApiResponse({ status: 200, description: 'Số tiền đã chi tiêu đã được cập nhật.' })
+  @ApiResponse({ status: 404, description: 'Ngân sách không tìm thấy.' })
+  async incrementSpentAmount(
+    @Request() req,
+    @Param('id') id: string,
+    @Query('amount') amount: number
+  ) {
+    return this.budgetsService.increaseSpentAmount(id, req.user.userId, amount);
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Xóa ngân sách' })
   @ApiParam({ name: 'id', type: String, description: 'ID của ngân sách' })

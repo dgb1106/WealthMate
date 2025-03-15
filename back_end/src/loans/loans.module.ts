@@ -4,8 +4,10 @@ import { LoansService } from './loans.service';
 import { LoansController } from './loans.controller';
 import { PrismaLoanRepository } from './repositories/prisma-loans.repository';
 import { LoanRepository } from './repositories/loans-repository.interface';
+import { TransactionsModule } from '../transactions/transactions.module';
+
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, TransactionsModule],
   controllers: [LoansController],
   providers: [
     LoansService,

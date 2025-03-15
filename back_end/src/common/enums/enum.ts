@@ -17,6 +17,8 @@ export enum PreferredMood {
     DAILY = "DAILY",
     WEEKLY = "WEEKLY",
     MONTHLY = "MONTHLY",
+    BIWEEKLY = "BIWEEKLY",
+    QUARTERLY = "QUARTERLY",
     YEARLY = "YEARLY"
   }
   

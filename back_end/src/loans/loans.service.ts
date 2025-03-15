@@ -1,17 +1,19 @@
-import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
-import { LoanRepository } from './repositories/loans-repository.interface';
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Inject } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { TransactionService } from '../transactions/transactions.service';
 import { CreateLoanDto } from './dto/create-loans.dto';
 import { UpdateLoanDto } from './dto/update-loans.dto';
+import { PayLoanDto } from './dto/pay-loan.dto';
+import { LoanRepository } from './repositories/loans-repository.interface';
 import { LoanStatus } from '../common/enums/enum';
-import { PrismaLoanRepository } from './repositories/prisma-loans.repository';
-import { PrismaService } from '../prisma/prisma.service';
 import { Loan } from './entities/loans.entity';
 
 @Injectable()
 export class LoansService {
   constructor(
-    @Inject('LoanRepository') private readonly loanRepository: LoanRepository,
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService,
+    private readonly transactionService: TransactionService,
+    @Inject('LoanRepository') private readonly loanRepository: LoanRepository
   ) {}
 
   async createLoan(userId: string, createLoanDto: CreateLoanDto): Promise<any> {
@@ -85,21 +87,73 @@ export class LoansService {
     }
   }
 
-  async makePayment(userId: string, loanId: string, amount: number): Promise<any> {
-    try {
-      // Gọi trực tiếp đến phương thức đã được đưa vào service này
-      const result = await this.makePaymentWithBalanceUpdate(userId, loanId, amount);
-      
-      return {
-        ...result.loan.toResponseFormat(),
-        updatedBalance: result.updatedBalance
-      };
-    } catch (error) {
-      if (error instanceof NotFoundException || error instanceof BadRequestException) {
-        throw error;
-      }
-      throw new BadRequestException('Không thể thanh toán khoản vay: ' + error.message);
+  async makePayment(userId: string, loanId: string, payLoanDto: PayLoanDto) {
+    // Kiểm tra xem khoản vay có tồn tại không
+    const loan = await this.loanRepository.findById(userId, loanId);
+
+    if (!loan) {
+      throw new NotFoundException(`Không tìm thấy khoản vay với ID ${loanId}`);
     }
+
+    // Kiểm tra số tiền thanh toán
+    const paymentAmount = payLoanDto.amount;
+    if (paymentAmount <= 0) {
+      throw new BadRequestException('Số tiền thanh toán phải lớn hơn 0');
+    }
+
+    // Lấy thông tin người dùng để kiểm tra số dư
+    const user = await this.prisma.users.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      throw new NotFoundException(`Không tìm thấy người dùng với ID ${userId}`);
+    }
+
+    // Kiểm tra số dư
+    if (Number(user.current_balance) < paymentAmount) {
+      throw new BadRequestException(`Số dư không đủ để thanh toán. Số dư hiện tại: ${user.current_balance}, Cần thanh toán: ${paymentAmount}`);
+    }
+
+    return this.prisma.$transaction(async (prisma) => {
+      try {
+        // Tạo transaction thanh toán khoản vay (danh mục "trả nợ" có ID = 16)
+        const transaction = await this.transactionService.createTransaction(userId, {
+          categoryId: '16', // ID của danh mục "trả nợ"
+          amount: paymentAmount,
+          description: `Thanh toán khoản vay: ${loan.name || 'Khoản vay #' + loanId}`
+        });
+
+        // Cập nhật thông tin khoản vay
+        let remainingAmount = 0;
+        if (loan.remaining_amount) {
+          remainingAmount = Number(loan.remaining_amount) - paymentAmount;
+        } else if (loan.remaining_principal) {
+          remainingAmount = Number(loan.remaining_principal) - paymentAmount;
+        }
+        
+        // Cập nhật khoản vay
+        const updatedLoan = await prisma.loans.update({
+          where: { id: BigInt(loanId) },
+          data: {
+            remaining_amount: remainingAmount > 0 ? remainingAmount : 0,
+            status: remainingAmount <= 0 ? LoanStatus.PAID : loan.status,
+          }
+        });
+
+        return {
+          loan: updatedLoan,
+          transaction: transaction,
+          message: 'Thanh toán khoản vay thành công',
+          newBalance: transaction.newBalance
+        };
+      } catch (error) {
+        if (error instanceof BadRequestException || error instanceof NotFoundException) {
+          throw error;
+        }
+        throw new InternalServerErrorException(`Lỗi khi thanh toán khoản vay: ${error.message}`);
+      }
+    });
   }
 
   async deleteLoan(userId: string, loanId: string): Promise<{ success: boolean, message: string }> {
@@ -133,57 +187,7 @@ export class LoansService {
       throw new BadRequestException('Không thể tạo kế hoạch trả nợ: ' + error.message);
     }
   }
-
-  /**
-   * Thanh toán khoản vay và cập nhật số dư của người dùng
-   */
-  async makePaymentWithBalanceUpdate(userId: string, loanId: string, amount: number): Promise<{
-    loan: Loan;
-    updatedBalance: number;
-  }> {
-    if (amount <= 0) {
-      throw new BadRequestException('Số tiền thanh toán phải lớn hơn 0');
-    }
-
-    // Kiểm tra số dư người dùng
-    const user = await this.prisma.users.findUnique({
-      where: { id: userId },
-      select: { current_balance: true }
-    });
-
-    if (!user) {
-      throw new NotFoundException(`Người dùng với ID ${userId} không tồn tại`);
-    }
-
-    // Kiểm tra số dư đủ để thanh toán
-    const currentBalance = Number(user.current_balance || 0);
-    if (currentBalance < amount) {
-      throw new BadRequestException('Số dư không đủ để thanh toán khoản vay này');
-    }
-
-    // Thực hiện thanh toán trong transaction
-    return this.prisma.$transaction(async (prisma) => {
-      // Thanh toán khoản vay
-      const loan = await this.loanRepository.makePayment(userId, loanId, amount);
-      
-      // Cập nhật số dư người dùng
-      const updatedUser = await prisma.users.update({
-        where: { id: userId },
-        data: {
-          current_balance: {
-            decrement: amount
-          }
-        },
-        select: { current_balance: true }
-      });
-      
-      return {
-        loan,
-        updatedBalance: Number(updatedUser.current_balance)
-      };
-    });
-  }
-
+  
   /**
    * Phân tích và đưa ra kế hoạch trả nợ
    */

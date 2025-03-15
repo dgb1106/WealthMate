@@ -18,6 +18,7 @@ export class Loan {
   created_at: Date;
   status: LoanStatus;
   description?: string;
+  remaining_principal: any;
   
   constructor(partial: Partial<Loan>) {
     Object.assign(this, partial);

@@ -40,13 +40,30 @@ export class PrismaBudgetRepository implements BudgetRepository {
         throw new BadRequestException('Start date must be before end date');
       }
 
+      // Calculate spent amount from existing transactions
+      const existingTransactions = await this.prisma.transactions.aggregate({
+        where: {
+          userId,
+          categoryId: BigInt(createBudgetDto.categoryId),
+          created_at: {
+            gte: startDate,
+            lte: endDate
+          }
+        },
+        _sum: {
+          amount: true
+        }
+      });
+
+      const initialSpentAmount = Number(existingTransactions._sum.amount || 0);
+
       // Create budget in database
       const prismaBudget = await this.prisma.budgets.create({
         data: {
           userId,
           categoryId: BigInt(createBudgetDto.categoryId),
           limit_amount: createBudgetDto.limit_amount,
-          spent_amount: createBudgetDto.spent_amount || 0,
+          spent_amount: initialSpentAmount,
           start_date: startDate,
           end_date: endDate,
         },
@@ -226,6 +243,28 @@ export class PrismaBudgetRepository implements BudgetRepository {
     return Budget.fromPrisma(updatedPrismaBudget);
   }
 
+  async incrementSpentAmount(id: string, userId: string, amount: number): Promise<Budget> {
+    // Verify budget exists and belongs to user
+    await this.findOne(id, userId);
+
+    // Increment spent amount
+    const updatedPrismaBudget = await this.prisma.budgets.update({
+      where: {
+        id: BigInt(id)
+      },
+      data: {
+        spent_amount: {
+          increment: amount
+        }
+      },
+      include: {
+        category: true
+      }
+    });
+
+    return Budget.fromPrisma(updatedPrismaBudget);
+  }
+
   async getCurrentMonthBudgets(userId: string): Promise<Budget[]> {
     const { firstDay, lastDay } = this.dateUtils.getCurrentMonthRange();
     
@@ -252,5 +291,21 @@ export class PrismaBudgetRepository implements BudgetRepository {
     });
     
     return Budget.fromPrismaArray(prismaBudgets);
+  }
+
+  async findMatchingBudgets(userId: string, categoryId: string, date: Date): Promise<Budget[]> {
+    const prismaBudgets = await this.prisma.budgets.findMany({
+      where: {
+        userId,
+        categoryId: BigInt(categoryId),
+        start_date: { lte: date },
+        end_date: { gte: date },
+      },
+      include: {
+        category: true
+      }
+    });
+  
+    return prismaBudgets.map(Budget.fromPrisma);
   }
 }

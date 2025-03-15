@@ -3,24 +3,25 @@ import { RecurringTransactionController } from './recurring-transactions.control
 import { RecurringTransactionService } from './recurring-transactions.service';
 import { RecurringTransactionDomainService } from './services/recurring-transaction-domain.service';
 import { PrismaModule } from '../prisma/prisma.module';
-import { CommonModule } from '../common/common.module'; 
 import { PrismaRecurringTransactionRepository } from './repositories/prisma-recurring-transaction.repository';
+import { TransactionsModule } from '../transactions/transactions.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     PrismaModule,
-    CommonModule 
+    TransactionsModule,
+    ScheduleModule,
   ],
   controllers: [RecurringTransactionController],
   providers: [
     RecurringTransactionService,
     RecurringTransactionDomainService,
-    PrismaRecurringTransactionRepository,
     {
       provide: 'RecurringTransactionRepository',
-      useExisting: PrismaRecurringTransactionRepository
-    }
+      useClass: PrismaRecurringTransactionRepository,
+    },
   ],
-  exports: [RecurringTransactionService]
+  exports: [RecurringTransactionService, RecurringTransactionDomainService]
 })
 export class RecurringTransactionsModule {}
