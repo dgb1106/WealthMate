@@ -19,14 +19,14 @@ export class AiUtilsService {
             const response = await firstValueFrom(
                 this.httpService.post(`${this.baseUrl}/monthly_expense_prediction`, {
                     'Income (VND)': income,
-                    'Interest Rate (%)': interestRate,
-                    'Inflation Rate (%)': inflationRate,
+                    'Interest rate (%)': interestRate,
+                    'Inflation rate (%)': inflationRate,
                     'Holidays': holidays,
                 })
             );
             return response.data;
         } catch (error) {
-            throw new HttpException('Failed to get expense forecast: ${error.message}', 500);
+            throw new HttpException(`Failed to get expense forecast: ${error.message}`, 500);
         }
     }
 
@@ -39,21 +39,21 @@ export class AiUtilsService {
             );
             return response.data;
         } catch (error) {
-            throw new HttpException('Failed to get transaction classification: ${error.message}', 500);
+            throw new HttpException(`Failed to get transaction classification: ${error.message}`, 500);
         }
     }
 
-    async getChatResponse(mood: string, message: string): Promise<string> {
+    async getChatResponse(mood: string, prompt: string): Promise<string> {
         try {
             const response = await firstValueFrom(
                 this.httpService.post(`${this.baseUrl}/chat`, {
                     'mood': mood,
-                    'prompt': message
+                    'prompt': prompt
                 })
             );
             return response.data;
         } catch (error) {
-            throw new HttpException('Failed to get chat response: ${error.message}', 500);
+            throw new HttpException(`Failed to get chat response: ${error.message}`, 500);
         }
     }
 
@@ -72,7 +72,7 @@ export class AiUtilsService {
             );
             return response.data;
         } catch (error) {
-            throw new HttpException('Failed to get transcription from speech: ${error.message}', 500);
+            throw new HttpException(`Failed to get transcription from speech: ${error.message}`, 500);
         }
     }
 
@@ -85,7 +85,7 @@ export class AiUtilsService {
             );
             return response.data;
         } catch (error) {
-            throw new HttpException('Failed to get budget suggestion: ${error.message}', 500);
+            throw new HttpException(`Failed to get budget suggestion: ${error.message}`, 500);
         }
     }
 
@@ -103,7 +103,7 @@ export class AiUtilsService {
             );
             return response.data;
         } catch (error) {
-            throw new HttpException('Failed to scan bill: ${error.message}', 500);
+            throw new HttpException(`Failed to scan bill: ${error.message}`, 500);
         }
     }
 }
