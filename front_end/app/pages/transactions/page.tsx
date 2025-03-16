@@ -15,6 +15,7 @@ import {
 import { PlusOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import styles from './styles.module.css';
+import transactionService from '@/services/transactionService';
 
 interface Transaction {
   id: string;
@@ -73,44 +74,15 @@ const TransactionsPage: React.FC = () => {
   const fetchTransactions = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('authToken');
-      let endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions`;
-      const adjustedMonth = selectedMonth !== 'all' ? parseInt(selectedMonth) - 1 : null;
+      const filters = {
+        month: selectedMonth,
+        year: selectedYear,
+        type: selectedType,
+        categoryId: selectedCategory
+      };
       
-      if (selectedCategory !== 'all') {
-        if (selectedMonth !== 'all' && selectedYear) {
-          endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/category/${selectedCategory}/month?month=${adjustedMonth}&year=${selectedYear}`;
-        } 
-        else {
-          endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/category/${selectedCategory}`;
-        }
-      }
-      else if (selectedMonth !== 'all' && selectedYear) {
-        if (selectedType === 'income') {
-          endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/income/month?month=${adjustedMonth}&year=${selectedYear}`;
-        } else if (selectedType === 'expenses') {
-          endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/expenses/month?month=${adjustedMonth}&year=${selectedYear}`;
-        } else {
-          endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/summary/month?month=${adjustedMonth}&year=${selectedYear}`;
-        }
-      } 
-      else if (selectedType === 'income') {
-        endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/income`;
-      } else if (selectedType === 'expenses') {
-        endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/expenses`;
-      }
-      
-      const response = await fetch(endpoint, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch transactions');
-      }
-      const data = await response.json();
-      setTransactions(Array.isArray(data) ? data : []);
+      const data = await transactionService.getTransactions(filters);
+      setTransactions(data);
     } catch (error) {
       console.error('Failed to fetch transactions:', error);
       message.error('Failed to load transactions');
@@ -125,36 +97,18 @@ const TransactionsPage: React.FC = () => {
   }, [selectedType, selectedMonth, selectedYear, selectedCategory]);
 
   const handleAddTransaction = async (values: any) => {
-    console.log('Form values received:', values);
-    
     try {
       const category = predefinedCategories.find(c => c.id === values.categoryId);
       const amount = parseInt(values.amount, 10);
-      const signedAmount = category?.type === "EXPENSE" ? Math.abs(amount) : Math.abs(amount);
+      const signedAmount = category?.type === "EXPENSE" ? -Math.abs(amount) / 1000 : Math.abs(amount) / 1000;
+      
       const requestData = {
         categoryId: values.categoryId,
         amount: signedAmount,
         description: values.description
       };
       
-      console.log('Sending request data:', requestData);
-      
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transactions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(requestData),
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Server error:', errorText);
-        throw new Error('Failed to add transaction');
-      }
-      
+      await transactionService.createTransaction(requestData);
       message.success('Transaction added successfully');
       setModalVisible(false);
       form.resetFields();
@@ -271,20 +225,7 @@ const TransactionsPage: React.FC = () => {
         description: values.description
       };
       
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transactions/${selectedTransaction.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(requestData),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to update transaction');
-      }
-      
+      await transactionService.updateTransaction(selectedTransaction.id, requestData);
       message.success('Transaction updated successfully');
       setEditModalVisible(false);
       fetchTransactions();
@@ -298,18 +239,7 @@ const TransactionsPage: React.FC = () => {
     if (!selectedTransaction) return;
     
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transactions/${selectedTransaction.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete transaction');
-      }
-      
+      await transactionService.deleteTransaction(selectedTransaction.id);
       message.success('Transaction deleted successfully');
       setDetailModalVisible(false);
       fetchTransactions();
