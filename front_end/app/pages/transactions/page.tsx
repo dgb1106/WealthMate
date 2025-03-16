@@ -20,7 +20,7 @@ interface Transaction {
   id: string;
   description: string;
   amount: number;
-  date: string;
+  created_at: string;
   category: {
     id: string;
     name: string;
@@ -140,8 +140,8 @@ const TransactionsPage: React.FC = () => {
   const columns = [
     {
       title: 'Date',
-      dataIndex: 'date',
-      key: 'date',
+      dataIndex: 'created_at',
+      key: 'created_at',
       render: (text: string) => dayjs(text).format('DD MMM'),
     },
     {
