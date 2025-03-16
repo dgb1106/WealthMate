@@ -63,12 +63,35 @@ const TransactionsPage: React.FC = () => {
   const [form] = Form.useForm();
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  const [selectedType, setSelectedType] = useState<string>("all");
 
   const fetchTransactions = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transactions`, {
+      let endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions`;
+      
+      // Convert month value to account for JavaScript's 0-11 indexing
+      const adjustedMonth = selectedMonth !== 'all' ? parseInt(selectedMonth) - 1 : null;
+      
+      // Handle combined filters (month/year + transaction type)
+      if (selectedMonth !== 'all' && selectedYear) {
+        if (selectedType === 'income') {
+          endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/income/month?month=${adjustedMonth}&year=${selectedYear}`;
+        } else if (selectedType === 'expenses') {
+          endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/expenses/month?month=${adjustedMonth}&year=${selectedYear}`;
+        } else {
+          endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/summary/month?month=${adjustedMonth}&year=${selectedYear}`;
+        }
+      } 
+      // Handle only transaction type filters (no month/year)
+      else if (selectedType === 'income') {
+        endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/income`;
+      } else if (selectedType === 'expenses') {
+        endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/expenses`;
+      }
+      
+      const response = await fetch(endpoint, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -90,10 +113,10 @@ const TransactionsPage: React.FC = () => {
 
   useEffect(() => {
     fetchTransactions();
-  }, []);
+  }, [selectedType, selectedMonth, selectedYear]);
 
   const handleAddTransaction = async (values: any) => {
-    console.log('Form values received:', values); // Debug logging
+    console.log('Form values received:', values);
     
     try {
       const category = predefinedCategories.find(c => c.id === values.categoryId);
@@ -169,18 +192,18 @@ const TransactionsPage: React.FC = () => {
 
   const monthOptions = [
     { value: 'all', label: 'All' },
-    { value: 'jan', label: 'Jan' },
-    { value: 'feb', label: 'Feb' },
-    { value: 'mar', label: 'Mar' },
-    { value: 'apr', label: 'Apr' },
-    { value: 'may', label: 'May' },
-    { value: 'jun', label: 'Jun' },
-    { value: 'jul', label: 'Jul' },
-    { value: 'aug', label: 'Aug' },
-    { value: 'sep', label: 'Sep' },
-    { value: 'oct', label: 'Oct' },
-    { value: 'nov', label: 'Nov' },
-    { value: 'dec', label: 'Dec' },
+    { value: '1', label: 'Jan' },
+    { value: '2', label: 'Feb' },
+    { value: '3', label: 'Mar' },
+    { value: '4', label: 'Apr' },
+    { value: '5', label: 'May' },
+    { value: '6', label: 'Jun' },
+    { value: '7', label: 'Jul' },
+    { value: '8', label: 'Aug' },
+    { value: '9', label: 'Sep' },
+    { value: '10', label: 'Oct' },
+    { value: '11', label: 'Nov' },
+    { value: '12', label: 'Dec' },
   ];
 
   const currentYear = new Date().getFullYear();
@@ -188,6 +211,12 @@ const TransactionsPage: React.FC = () => {
     value: (currentYear - i).toString(),
     label: (currentYear - i).toString(),
   }));
+
+  const typeOptions = [
+    { value: 'all', label: 'All' },
+    { value: 'income', label: 'Income' },
+    { value: 'expenses', label: 'Expenses' },
+  ];
 
   return (
     <MainLayout>
@@ -218,6 +247,13 @@ const TransactionsPage: React.FC = () => {
             options={yearOptions}
             className={styles.filterSelect}
             style={{ width: 100 }}
+          />
+          <Select
+            value={selectedType}
+            onChange={(value) => setSelectedType(value)}
+            options={typeOptions}
+            className={styles.filterSelect}
+            style={{ width: 120 }}
           />
         </div>
 
