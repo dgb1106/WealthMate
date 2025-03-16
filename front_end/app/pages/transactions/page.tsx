@@ -64,6 +64,7 @@ const TransactionsPage: React.FC = () => {
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [selectedType, setSelectedType] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   const fetchTransactions = async () => {
     setLoading(true);
@@ -74,8 +75,19 @@ const TransactionsPage: React.FC = () => {
       // Convert month value to account for JavaScript's 0-11 indexing
       const adjustedMonth = selectedMonth !== 'all' ? parseInt(selectedMonth) - 1 : null;
       
-      // Handle combined filters (month/year + transaction type)
-      if (selectedMonth !== 'all' && selectedYear) {
+      // Handle category filter first
+      if (selectedCategory !== 'all') {
+        // Category + month/year filter
+        if (selectedMonth !== 'all' && selectedYear) {
+          endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/category/${selectedCategory}/month?month=${adjustedMonth}&year=${selectedYear}`;
+        } 
+        // Just category filter
+        else {
+          endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/category/${selectedCategory}`;
+        }
+      }
+      // If no category selected, use the existing filters
+      else if (selectedMonth !== 'all' && selectedYear) {
         if (selectedType === 'income') {
           endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/income/month?month=${adjustedMonth}&year=${selectedYear}`;
         } else if (selectedType === 'expenses') {
@@ -84,7 +96,7 @@ const TransactionsPage: React.FC = () => {
           endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/summary/month?month=${adjustedMonth}&year=${selectedYear}`;
         }
       } 
-      // Handle only transaction type filters (no month/year)
+      // Handle only transaction type filters (no month/year or category)
       else if (selectedType === 'income') {
         endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/income`;
       } else if (selectedType === 'expenses') {
@@ -113,7 +125,7 @@ const TransactionsPage: React.FC = () => {
 
   useEffect(() => {
     fetchTransactions();
-  }, [selectedType, selectedMonth, selectedYear]);
+  }, [selectedType, selectedMonth, selectedYear, selectedCategory]);
 
   const handleAddTransaction = async (values: any) => {
     console.log('Form values received:', values);
@@ -172,9 +184,10 @@ const TransactionsPage: React.FC = () => {
       dataIndex: 'amount',
       key: 'amount',
       render: (amount: number) => {
-        const formattedAmount = new Intl.NumberFormat('en-US').format(Math.abs(amount));
-        return <span className={amount < 0 ? styles.negativeAmount : styles.positiveAmount}>
-          {amount < 0 ? '-' : '+'}{formattedAmount}
+        const adjustedAmount = amount * 1000;
+        const formattedAmount = new Intl.NumberFormat('en-US').format(Math.abs(adjustedAmount));
+        return <span className={adjustedAmount < 0 ? styles.negativeAmount : styles.positiveAmount}>
+          {adjustedAmount < 0 ? '-' : '+'}{formattedAmount}
         </span>;
       },
     },
@@ -218,6 +231,14 @@ const TransactionsPage: React.FC = () => {
     { value: 'expenses', label: 'Expenses' },
   ];
 
+  const categoryOptions = [
+    { value: 'all', label: 'All Categories' },
+    ...predefinedCategories.map(category => ({
+      value: category.id,
+      label: category.name
+    }))
+  ];
+
   return (
     <MainLayout>
       <div className={styles.header}>
@@ -254,6 +275,19 @@ const TransactionsPage: React.FC = () => {
             options={typeOptions}
             className={styles.filterSelect}
             style={{ width: 120 }}
+          />
+          <Select
+            value={selectedCategory}
+            onChange={(value) => setSelectedCategory(value)}
+            options={categoryOptions}
+            className={styles.filterSelect}
+            style={{ width: 180 }}
+            showSearch
+            optionFilterProp="label"
+            filterOption={(input, option) => 
+              (option?.label as string).toLowerCase().includes(input.toLowerCase())
+            }
+            placeholder="Select category"
           />
         </div>
 
