@@ -58,7 +58,7 @@ def handle_transcribe_speech():
 @app.route('/suggest_budget', methods=['POST'])
 def handle_suggest_budget():
     data = request.get_json()
-    amount = extract_amount(data['income'])
+    amount = data['income']
     suggestion_text = budget_suggestion(amount)
     budget_dict = {}
     items = suggestion_text.split(',')

@@ -12,7 +12,8 @@ export class AiUtilsService {
         private readonly configService: ConfigService,
     ) {
         // this.baseUrl = this.configService.get('AI_UTILS_BASE_URL') || 'https://wealthmate-ai-services.onrender.com';
-        this.baseUrl = 'https://wealthmate-ai-services.onrender.com';
+        // this.baseUrl = 'https://wealthmate-ai-services.onrender.com';
+        this.baseUrl = 'http://127.0.0.1:5000';
     }
 
     async getExpenseForecast(income: number, interestRate: number, inflationRate: number, holidays: number): Promise<number> {
@@ -60,14 +61,16 @@ export class AiUtilsService {
 
     async getTranscriptionFromSpeech(audioFile: Buffer): Promise<string> {
         try {
+            const FormData = require('form-data');
             const formData = new FormData();
-            const blob = new Blob([audioFile], { type: 'audio/wav' });
-            formData.append('audio', blob, 'audio.wav');
+            formData.append('file', audioFile, {
+                filename: 'audio.wav',
+                contentType: 'audio/wav',
+            });
             const response = await firstValueFrom(
-                this.httpService.post(`${this.baseUrl}/speech_to_text`, formData, {
+                this.httpService.post(`${this.baseUrl}/speech_transcribe`, formData, {
                     headers: {
-                        'Content-Type': 'multipart/form-data',
-
+                        ...formData.getHeaders(),
                     }
                 })
             );
@@ -82,7 +85,13 @@ export class AiUtilsService {
             const response = await firstValueFrom(
                 this.httpService.post(`${this.baseUrl}/suggest_budget`, {
                     'income': income,
-                })
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                }
+                )
             );
             return response.data;
         } catch (error) {
@@ -92,13 +101,16 @@ export class AiUtilsService {
 
     async scanBill(imageFile: Buffer) {
         try {
+            const FormData = require('form-data');
             const formData = new FormData();
-            const blob = new Blob([imageFile], { type: 'image/jpeg' });
-            formData.append('image', blob, 'bill.jpg');
+            formData.append('file', imageFile, {
+                filename: 'bill.jpeg',
+                contentType: 'image/jpeg',
+            });
             const response = await firstValueFrom(
-                this.httpService.post(`${this.baseUrl}/scan_bill`, formData, {
+                this.httpService.post(`${this.baseUrl}/scan_bills`, formData, {
                     headers: {
-                        'Content-Type': 'multipart/form-data',
+                        ...formData.getHeaders(),
                     }
                 })
             );
