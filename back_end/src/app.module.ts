@@ -15,7 +15,7 @@ import { LoansModule } from './loans/loans.module';
 import { AiRecommendationsModule } from './ai-recommendations/ai-recommendations.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ScheduleModule } from '@nestjs/schedule';
-import { RecurringTransactionsScheduler } from './schedules/recurring-transactions.scheduler';
+import { SchedulesModule } from './schedules/schedules.module';
 
 @Module({
   imports: [
@@ -40,8 +40,9 @@ import { RecurringTransactionsScheduler } from './schedules/recurring-transactio
       max: 100,
     }),
     ScheduleModule.forRoot(),
+    SchedulesModule,
   ],
   controllers: [AppController],
-  providers: [AppService, RecurringTransactionsScheduler],
+  providers: [AppService],
 })
 export class AppModule {}
