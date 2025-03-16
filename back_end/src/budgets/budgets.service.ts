@@ -18,7 +18,7 @@ export class BudgetsService {
     
     // Create the budget using the repository
     const budget = await this.budgetRepository.create(userId, createBudgetDto);
-    budget.spent_amount = 0;
+
     // Return the formatted budget
     return budget.toResponseFormat();
   }
