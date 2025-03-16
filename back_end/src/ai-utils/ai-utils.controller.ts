@@ -79,7 +79,8 @@ export class AiUtilsController {
     @ApiOperation({ summary: 'Nhận gợi ý ngân sách' })
     @ApiResponse({ status: 200, description: 'Gợi ý ngân sách.' })
     @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ.' })
-    async getBudgetSuggestion(@Query('income') income: number) {
-        return this.aiUtilsService.getBudgetSuggestion(income);
+    async getBudgetSuggestion(@Query('income') income: string) {
+        const incomeNum = parseFloat(income);
+        return this.aiUtilsService.getBudgetSuggestion(incomeNum);
     }
 }
