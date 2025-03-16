@@ -64,6 +64,8 @@ const BudgetsPage: React.FC = () => {
         endpoint = '/budgets/current';
       } else if (budgetView === 'month') {
         endpoint = '/budgets/current-month';
+      } else if (budgetView === 'all') {
+        endpoint = '/budgets';
       }
       
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
@@ -219,6 +221,32 @@ const BudgetsPage: React.FC = () => {
     }, 0);
   };
 
+  const handleEditButton = (budget: Budget) => {
+    setCurrentBudgetId(budget.id);
+    setModalVisible(true);
+    console.log(budget.name);
+    setTimeout(() => {
+      form.setFieldsValue({
+        name: budget.name,
+        limit_amount: budget.limit_amount,
+        categoryId: budget.categoryId,
+        start_date: dayjs(budget.start_date).format('YYYY-MM-DD'),
+        end_date: dayjs(budget.end_date).format('YYYY-MM-DD')
+      });
+    }, 0);
+  }
+
+  const handleDeleteButton = (id: string) => {
+    Modal.confirm({
+      title: 'Delete Budget',
+      content: 'Are you sure you want to delete this budget?',
+      okText: 'Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: () => handleDeleteBudget(id)
+    });
+  };
+
   return (
     <MainLayout>
       <h1>Budgets</h1>
@@ -235,7 +263,7 @@ const BudgetsPage: React.FC = () => {
         {/* Budget Cards Section - Takes 2/3 of the width */}
         <div className="col-span-2 grid grid-cols-2 gap-4">
           {budgets.map((budget) => (
-            <BudgetCard key={budget.id} budget={budget} onEdit={() => setCurrentBudgetId(budget.id)} />
+            <BudgetCard key={budget.id} budget={budget} onEdit={handleEditButton} />
           ))}
         </div>
 
@@ -323,7 +351,11 @@ const BudgetsPage: React.FC = () => {
 
           <Form.Item>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
-              <Button onClick={() => setModalVisible(false)}>Cancel</Button>
+            {currentBudgetId && (
+              <Button danger onClick={() => handleDeleteButton(currentBudgetId)}>
+                Delete
+              </Button>
+              )}
               <Button type="primary" htmlType="submit">
                 {currentBudgetId ? "Save Changes" : "Add Budget"}
               </Button>

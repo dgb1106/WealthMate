@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Button } from 'antd';
-import { EditOutlined } from '@ant-design/icons';
+import { EditFilled } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import styles from './styles.module.css';
 
@@ -22,12 +22,12 @@ interface BudgetCardProps {
 
 const BudgetCard: React.FC<BudgetCardProps> = ({ budget, onEdit }) => {
     const { name, limit_amount, spent_amount, category } = budget;
-    const remaining_amount = limit_amount - spent_amount;
-    const percentage = (spent_amount / limit_amount) * 100;
+    const remaining_amount: number = limit_amount - spent_amount;
+    const percentage = Math.min(Math.max((remaining_amount / limit_amount) * 100, 0), 100);
 
     const options = {
         chart: {
-            type: 'radialBar',
+            type: 'radialBar' as 'radialBar',
             offsetY: -10,
             sparkline: {
                 enabled: true,
@@ -39,34 +39,54 @@ const BudgetCard: React.FC<BudgetCardProps> = ({ budget, onEdit }) => {
                 endAngle: 90,
                 hollow: {
                     margin: 0,
-                    size: '70%',
+                    size: '55%',
                     background: 'transparent',
-                    image: undefined,
                 },
                 dataLabels: {
-                    name: {
-                        show: false,
+                    name: { 
+                        /*show: true,
+                        fontSize: '16px',
+                        fontFamily: 'Lufga, sans-serif',
+                        fontWeight: 600,
+                        color: "#a6a6a6",
+                        offsetY: -35, */
+                        show: false
                     },
                     value: {
-                        show: false,
+                        /*show: true,
+                        fontSize: '18px',
+                        fontWeight: 700,
+                        fontFamily: 'Lufga, sans-serif',
+                        color: "#000000",
+                        offsetY: 10, 
+                        formatter: function() {
+                            return `${limit_amount.toLocaleString()} VND`;
+                        }*/
+                        show: false
                     }
                 }
             }
         },
-        labels: ["Used"],
-        colors: ["#003f88", "#e0e7ff"]
-    };
+        fill: {
+            colors: [remaining_amount >= 0 ? "#004aad" : "#ff4d4f"],
+            type: "solid",
+        },
+        stroke: { lineCap: "round" as "round"},
+        labels: ['Left: '],
+        tooltip: {
+            enabled: false
+        }
+    };    
 
     return (
         <Card className={styles.card}>
             <div className={styles.header}>
                 <div>
-                    <h3>{name}</h3>
-                    <p>{category.name}</p>
+                    <p>{name}</p>
                 </div>
                 <Button
                     type="text"
-                    icon={<EditOutlined />}
+                    icon={<EditFilled />}
                     onClick={() => onEdit(budget)}
                     className={styles.editButton}
                 />
@@ -77,15 +97,11 @@ const BudgetCard: React.FC<BudgetCardProps> = ({ budget, onEdit }) => {
                         options={options}
                         series={[Math.round(percentage)]}
                         type="radialBar"
-                        height={150}
+                        height={260}
                     />
-                </div>
-                <div className={styles.amountContainer}>
-                    <div>
-                        <p>Left: </p>
-                    </div>
-                    <div>
-                        <h3>{remaining_amount}</h3>
+                    <div className={styles.chartOverlay}>
+                        <span className={styles.label}>Left:</span>
+                        <span className={styles.value}>{remaining_amount.toLocaleString()} VND</span>
                     </div>
                 </div>
             </div>
