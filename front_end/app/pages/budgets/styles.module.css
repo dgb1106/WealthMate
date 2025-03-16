@@ -7,30 +7,33 @@
 
 .budgetsContainer {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 1.5rem;
-  /*padding: 1.5rem;*/
+  grid-template-columns: 3fr 1fr;
+  gap: 1rem;
+  width: 100%;
+  align-items: start;
+  padding: 1rem;
 }
   
-.budgetCardsSection {
+.budgetsCardsSection {
   grid-column: 1;
   display: flex;
   flex-wrap: wrap;
   flex-direction: row;
-  gap: 1rem;
-  max-width: 100%; 
+  gap: 1.5rem;
+  width: 100%;
+  align-content: flex-start; 
 }
 
 .budgetCardsSection > * {
-    width: calc(50% - 0.5rem);
+    width: calc(33.333% - 0.667rem);
+    margin: 0;
 }
   
 .rightColumn {
   grid-column: 2;
   position: relative;
   min-height: 100%;
-  padding: 1rem;
-  align-items: stretch;
+  width: 100%;
 }
   
 .addButton {

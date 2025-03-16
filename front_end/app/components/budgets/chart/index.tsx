@@ -55,7 +55,7 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ categories }) => {
                 options={options}
                 series={series}
                 type="donut"
-                height={400}
+                height={300}
             />
         </Card>
     );

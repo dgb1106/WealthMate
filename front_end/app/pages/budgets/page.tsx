@@ -22,7 +22,6 @@ interface Budget {
   spent_amount: number;
   start_date: string;
   end_date: string;
-  name: string;
 }
 
 // This would be replaced with your actual categories from your API
@@ -175,7 +174,6 @@ const BudgetsPage: React.FC = () => {
       }
 
       const payload = {
-        name: budget.name,
         limit_amount: budget.limit_amount,
         categoryId: budget.categoryId,
         start_date: budget.start_date,
@@ -242,10 +240,8 @@ const BudgetsPage: React.FC = () => {
   const handleEditButton = (budget: Budget) => {
     setCurrentBudgetId(budget.id);
     setModalVisible(true);
-    console.log(budget.name);
     setTimeout(() => {
       form.setFieldsValue({
-        name: budget.name,
         limit_amount: budget.limit_amount,
         categoryId: budget.categoryId,
         start_date: dayjs(budget.start_date).format('YYYY-MM-DD'),
@@ -312,22 +308,6 @@ const BudgetsPage: React.FC = () => {
           onFinish={currentBudgetId ? handleEditBudget : handleAddBudget}
         >
           <Form.Item
-            name="name"
-            label="Budget Name"
-            rules={[{ required: true, message: "Please enter a budget name" }]}
-          >
-            <Input placeholder="e.g. Monthly Groceries" />
-          </Form.Item>
-
-          <Form.Item
-            name="limit_amount"
-            label="Budget Amount"
-            rules={[{ required: true, message: "Please enter a budget amount" }]}
-          >
-            <Input type="number" placeholder="0.00" />
-          </Form.Item>
-
-          <Form.Item
             name="categoryId"
             label="Category"
             rules={[{ required: true, message: "Please select a category" }]}
@@ -339,6 +319,14 @@ const BudgetsPage: React.FC = () => {
                 </Select.Option>
               ))}
             </Select>
+          </Form.Item>
+          
+          <Form.Item
+            name="limit_amount"
+            label="Budget Amount"
+            rules={[{ required: true, message: "Please enter a budget amount" }]}
+          >
+            <Input type="number" placeholder="0.00" />
           </Form.Item>
 
           <Form.Item

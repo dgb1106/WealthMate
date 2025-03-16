@@ -9,7 +9,6 @@ const ReactApexChart = dynamic(() => import('react-apexcharts'), { ssr: false })
 interface BudgetCardProps {
     budget: {
         id: string;
-        name: string;
         limit_amount: number;
         spent_amount: number;
         category: {
@@ -21,7 +20,7 @@ interface BudgetCardProps {
 }
 
 const BudgetCard: React.FC<BudgetCardProps> = ({ budget, onEdit }) => {
-    const { name, limit_amount, spent_amount, category } = budget;
+    const { limit_amount, spent_amount, category } = budget;
     const remaining_amount: number = limit_amount - spent_amount;
     const percentage = Math.min(Math.max((remaining_amount / limit_amount) * 100, 0), 100);
 
