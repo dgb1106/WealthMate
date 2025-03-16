@@ -31,11 +31,11 @@ export class AiUtilsService {
         }
     }
 
-    async getTransactionClassification(transaction: string): Promise<string> {
+    async getTransactionClassification(message: string): Promise<string> {
         try {
             const response = await firstValueFrom(
                 this.httpService.post(`${this.baseUrl}/transaction_classification`, {
-                    'Transaction': transaction,
+                    'prompt': message,
                 })
             );
             return response.data;
@@ -81,7 +81,7 @@ export class AiUtilsService {
         try {
             const response = await firstValueFrom(
                 this.httpService.post(`${this.baseUrl}/suggest_budget`, {
-                    'Income (VND)': income,
+                    'income': income,
                 })
             );
             return response.data;
