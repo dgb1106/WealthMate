@@ -208,7 +208,7 @@ export class ReportsService {
         spentAmount: spent,
         remainingAmount: remaining,
         percentageUsed,
-        warning: percentageUsed >= 90 ? 'Warning: Near budget limit' : ''
+        warning: percentageUsed >= 100 ? 'Warning: Over budget limit' : ''
       };
     });
     
@@ -271,7 +271,7 @@ export class ReportsService {
     const currentMonth = currentDate.getMonth();
 
     // Xác định khoảng thời gian mong muốn
-    let startMonth = currentMonth - months + 1;
+    let startMonth = 0;
     let startYear = currentYear;
     if (startMonth < 0) {
       startYear -= 1;
@@ -311,7 +311,7 @@ export class ReportsService {
     const monthlyData: { year: number; month: number; monthName: string; totalIncome: number; totalExpense: number; net: number }[] = [];
 
     // Xác định khoảng thời gian phân tích
-    let startMonth = currentMonth - months + 1;
+    let startMonth = 0;
     let startYear = currentYear;
     if (startMonth < 0) {
       startYear -= 1;
