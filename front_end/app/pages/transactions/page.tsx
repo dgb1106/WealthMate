@@ -60,7 +60,11 @@ const TransactionsPage: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [form] = Form.useForm();
+  const [editForm] = Form.useForm();
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [selectedType, setSelectedType] = useState<string>("all");
@@ -71,22 +75,16 @@ const TransactionsPage: React.FC = () => {
     try {
       const token = localStorage.getItem('authToken');
       let endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions`;
-      
-      // Convert month value to account for JavaScript's 0-11 indexing
       const adjustedMonth = selectedMonth !== 'all' ? parseInt(selectedMonth) - 1 : null;
       
-      // Handle category filter first
       if (selectedCategory !== 'all') {
-        // Category + month/year filter
         if (selectedMonth !== 'all' && selectedYear) {
           endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/category/${selectedCategory}/month?month=${adjustedMonth}&year=${selectedYear}`;
         } 
-        // Just category filter
         else {
           endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/category/${selectedCategory}`;
         }
       }
-      // If no category selected, use the existing filters
       else if (selectedMonth !== 'all' && selectedYear) {
         if (selectedType === 'income') {
           endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/income/month?month=${adjustedMonth}&year=${selectedYear}`;
@@ -96,7 +94,6 @@ const TransactionsPage: React.FC = () => {
           endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/summary/month?month=${adjustedMonth}&year=${selectedYear}`;
         }
       } 
-      // Handle only transaction type filters (no month/year or category)
       else if (selectedType === 'income') {
         endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/income`;
       } else if (selectedType === 'expenses') {
@@ -172,6 +169,11 @@ const TransactionsPage: React.FC = () => {
     console.log('Form validation failed:', errorInfo);
   };
   
+  const handleRowClick = (record: Transaction) => {
+    setSelectedTransaction(record);
+    setDetailModalVisible(true);
+  };
+  
   const columns = [
     {
       title: 'Date',
@@ -239,6 +241,95 @@ const TransactionsPage: React.FC = () => {
     }))
   ];
 
+  const handleEditTransaction = () => {
+    if (selectedTransaction) {
+      const category = predefinedCategories.find(c => c.id === selectedTransaction.category.id);
+      const amount = Math.abs(selectedTransaction.amount * 1000);
+
+      editForm.setFieldsValue({
+        description: selectedTransaction.description,
+        amount: amount,
+        categoryId: selectedTransaction.category.id
+      });
+
+      setDetailModalVisible(false);
+      setEditModalVisible(true);
+    }
+  };
+
+  const handleUpdateTransaction = async (values: any) => {
+    if (!selectedTransaction) return;
+    
+    try {
+      const category = predefinedCategories.find(c => c.id === values.categoryId);
+      const amount = parseInt(values.amount, 10);
+      const signedAmount = category?.type === "EXPENSE" ? -Math.abs(amount) / 1000 : Math.abs(amount) / 1000;
+      
+      const requestData = {
+        categoryId: values.categoryId,
+        amount: signedAmount,
+        description: values.description
+      };
+      
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transactions/${selectedTransaction.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(requestData),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update transaction');
+      }
+      
+      message.success('Transaction updated successfully');
+      setEditModalVisible(false);
+      fetchTransactions();
+    } catch (error) {
+      console.error('Failed to update transaction:', error);
+      message.error('Failed to update transaction');
+    }
+  };
+
+  const handleDeleteTransaction = async () => {
+    if (!selectedTransaction) return;
+    
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transactions/${selectedTransaction.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete transaction');
+      }
+      
+      message.success('Transaction deleted successfully');
+      setDetailModalVisible(false);
+      fetchTransactions();
+    } catch (error) {
+      console.error('Failed to delete transaction:', error);
+      message.error('Failed to delete transaction');
+    }
+  };
+
+  const confirmDelete = () => {
+    Modal.confirm({
+      title: 'Are you sure you want to delete this transaction?',
+      content: 'This action cannot be undone.',
+      okText: 'Yes, Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: handleDeleteTransaction
+    });
+  };
+
   return (
     <MainLayout>
       <div className={styles.header}>
@@ -298,6 +389,10 @@ const TransactionsPage: React.FC = () => {
           loading={loading}
           pagination={false}
           className={styles.tableContainer}
+          onRow={(record) => ({
+            onClick: () => handleRowClick(record),
+            style: { cursor: 'pointer' }
+          })}
         />
       </div>
 
@@ -380,6 +475,135 @@ const TransactionsPage: React.FC = () => {
           <Form.Item>
             <Button type="primary" htmlType="submit" block>
               Add Transaction
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Transaction Details"
+        open={detailModalVisible}
+        onCancel={() => setDetailModalVisible(false)}
+        footer={[
+          <Button key="delete" danger onClick={confirmDelete}>
+            Delete
+          </Button>,
+          <Button key="edit" type="primary" onClick={handleEditTransaction}>
+            Edit
+          </Button>,
+          <Button key="close" onClick={() => setDetailModalVisible(false)}>
+            Close
+          </Button>
+        ]}
+      >
+        {selectedTransaction && (
+          <div className={styles.transactionDetails}>
+            <p>
+              <strong>Date:</strong> {dayjs(selectedTransaction.created_at).format('MMMM D, YYYY')}
+            </p>
+            <p>
+              <strong>Amount:</strong>{' '}
+              <span className={selectedTransaction.amount < 0 ? styles.negativeAmount : styles.positiveAmount}>
+                {selectedTransaction.amount < 0 ? '-' : '+'}
+                {new Intl.NumberFormat('en-US').format(Math.abs(selectedTransaction.amount * 1000))}
+              </span>
+            </p>
+            <p>
+              <strong>Description:</strong> {selectedTransaction.description}
+            </p>
+            <p>
+              <strong>Category:</strong> {selectedTransaction.category.name}
+            </p>
+            <p>
+              <strong>Type:</strong>{' '}
+              {selectedTransaction.amount < 0 ? 'Expense' : 'Income'}
+            </p>
+            <p>
+              <strong>Transaction ID:</strong> {selectedTransaction.id}
+            </p>
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        title="Edit Transaction"
+        open={editModalVisible}
+        onCancel={() => setEditModalVisible(false)}
+        footer={null}
+      >
+        <Form
+          form={editForm}
+          layout="vertical"
+          onFinish={handleUpdateTransaction}
+          onFinishFailed={onFinishFailed}
+        >
+          <Form.Item
+            name="description"
+            label="Description"
+            rules={[
+              { required: true, message: 'Description is required' },
+              { max: 255, message: 'Description cannot exceed 255 characters' }
+            ]}
+          >
+            <Input placeholder="Transaction description" />
+          </Form.Item>
+
+          <Form.Item
+            name="amount"
+            label="Amount"
+            rules={[
+              { required: true, message: 'Amount is required' },
+              { 
+                validator: (_, value) => {
+                  if (!value) return Promise.resolve();
+                  
+                  try {
+                    const numValue = parseInt(value, 10);
+                    
+                    if (isNaN(numValue)) {
+                      return Promise.reject('Amount must be a valid number');
+                    }  
+                    if (numValue <= 0) {
+                      return Promise.reject('Amount must be a positive integer');
+                    }
+                    if (numValue.toString() !== value.toString()) {
+                      return Promise.reject('Amount must be a whole number');
+                    }
+                    
+                    return Promise.resolve();
+                  } catch (err) {
+                    return Promise.reject('Invalid amount format');
+                  }
+                }
+              }
+            ]}
+            help="Enter a positive integer amount"
+          >
+            <Input type="number" min="1" step="1" placeholder="Amount" />
+          </Form.Item>
+
+          <Form.Item
+            name="categoryId"
+            label="Category"
+            rules={[{ required: true, message: 'Category is required' }]}
+          >
+            <Select 
+              placeholder="Select category"
+              showSearch
+              optionFilterProp="children"
+              filterOption={(input, option) => 
+                (option?.label as string).toLowerCase().includes(input.toLowerCase())
+              }
+              options={predefinedCategories.map(category => ({
+                value: category.id,
+                label: `${category.name} (${category.type === "INCOME" ? "Thu nhập" : "Chi phí"})`
+              }))}
+            />
+          </Form.Item>
+
+          <Form.Item>
+            <Button type="primary" htmlType="submit" block>
+              Update Transaction
             </Button>
           </Form.Item>
         </Form>
