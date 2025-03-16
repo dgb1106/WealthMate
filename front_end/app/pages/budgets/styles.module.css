@@ -1,0 +1,44 @@
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.budgetsContainer {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+  /*padding: 1.5rem;*/
+}
+  
+.budgetCardsSection {
+  grid-column: 1;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  gap: 1rem;
+  max-width: 100%; 
+}
+
+.budgetCardsSection > * {
+    width: calc(50% - 0.5rem);
+}
+  
+.rightColumn {
+  grid-column: 2;
+  position: relative;
+  min-height: 100%;
+  padding: 1rem;
+  align-items: stretch;
+}
+  
+.addButton {
+  background-color: #050a30;
+}
+  
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

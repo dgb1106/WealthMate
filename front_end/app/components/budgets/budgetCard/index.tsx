@@ -82,7 +82,7 @@ const BudgetCard: React.FC<BudgetCardProps> = ({ budget, onEdit }) => {
         <Card className={styles.card}>
             <div className={styles.header}>
                 <div>
-                    <p>{name}</p>
+                    <p>{category.name}</p>
                 </div>
                 <Button
                     type="text"

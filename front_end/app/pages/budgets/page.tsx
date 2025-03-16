@@ -6,6 +6,8 @@ import { PlusOutlined } from '@ant-design/icons';
 import MainLayout from '@/layouts/MainLayout';
 import BudgetCard from '@/components/budgets/budgetCard';
 import dayjs from 'dayjs';
+import styles from './styles.module.css';
+import CategoryChart from '@/components/budgets/chart';
 
 // Define the Budget interface based on your backend structure
 interface Budget {
@@ -93,6 +95,22 @@ const BudgetsPage: React.FC = () => {
   useEffect(() => {
     fetchBudgets();
   }, [budgetView]);
+
+  const getCategoryTotals = () => {
+    const categoryTotals: { [key: string]: number } = {};
+    
+    budgets.forEach(budget => {
+        if (!categoryTotals[budget.category.name]) {
+            categoryTotals[budget.category.name] = 0;
+        }
+        categoryTotals[budget.category.name] += budget.spent_amount;
+    });
+
+    return Object.entries(categoryTotals)
+        .map(([name, spent_amount]) => ({ name, spent_amount }))
+        .filter(cat => cat.spent_amount >= 0)
+        .sort((a, b) => b.spent_amount - a.spent_amount);
+  };
 
   const handleAddBudget = async (values: any) => {
     try {
@@ -249,7 +267,17 @@ const BudgetsPage: React.FC = () => {
 
   return (
     <MainLayout>
-      <h1>Budgets</h1>
+      <div className={styles.pageHeader}>
+        <h1>Budgets</h1>
+        <Button
+          type="primary"
+          shape="circle"
+          icon={<PlusOutlined />}
+          size="large"
+          onClick={handleAddButton}
+          className={styles.addButton}
+        />
+      </div>
       <Tabs
         activeKey={budgetView}
         onChange={(key) => setBudgetView(key as 'all' | 'current' | 'month')}
@@ -259,35 +287,15 @@ const BudgetsPage: React.FC = () => {
           { key: 'all', label: 'All Budgets' }
         ]}
       />
-      <div className="grid grid-cols-3 gap-6 p-6">
-        {/* Budget Cards Section - Takes 2/3 of the width */}
-        <div className="col-span-2 grid grid-cols-2 gap-4">
+      <div className={styles.budgetsContainer}>
+        <div className={styles.budgetsCardsSection}>
           {budgets.map((budget) => (
             <BudgetCard key={budget.id} budget={budget} onEdit={handleEditButton} />
           ))}
         </div>
 
-        {/* Right Column */}
-        <div className="col-span-1">
-          <Button
-            type="primary"
-            shape="circle"
-            icon={<PlusOutlined />}
-            size="large"
-            onClick={handleAddButton}
-            style={{
-              position: 'fixed',
-              bottom: '24px',
-              right: '24px',
-              width: '56px',
-              height: '56px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)',
-              zIndex: 1000
-            }}
-          />
+        <div className={styles.rightColumn}>
+          <CategoryChart categories={getCategoryTotals()} />
         </div>
       </div>
 
@@ -350,7 +358,7 @@ const BudgetsPage: React.FC = () => {
           </Form.Item>
 
           <Form.Item>
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+            <div className={styles.modalFooter}>
             {currentBudgetId && (
               <Button danger onClick={() => handleDeleteButton(currentBudgetId)}>
                 Delete
