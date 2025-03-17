@@ -266,7 +266,7 @@ const TransactionsPage: React.FC = () => {
       // Số nguyên người dùng nhập vào (vd: 500000)
       const amount = parseInt(values.amount, 10);
       // Chuyển đổi sang giá trị lưu trữ (vd: 500) và xác định dấu dựa trên loại giao dịch
-      const signedAmount = category?.type === "EXPENSE" ? -Math.abs(amount) / 1000 : Math.abs(amount) / 1000;
+      const signedAmount = category?.type === "EXPENSE" ? Math.abs(amount) / 1000 : Math.abs(amount) / 1000;
       
       const requestData = {
         categoryId: values.categoryId,
