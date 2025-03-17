@@ -1,12 +1,12 @@
 import { Controller, Get, Post, Body, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { FamilyTransactionContributionService } from '../services/family-transaction-contribution.service';
-import { AuthGuard } from '../../auth/guards/auth.guard';
+import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { CreateFamilyTransactionContributionDto } from '../dto/create-family-transaction-contribution.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Family Contributions')
 @ApiBearerAuth()
-@UseGuards(AuthGuard)
+@UseGuards(JwtAuthGuard)
 @Controller()
 export class FamilyTransactionContributionController {
   constructor(

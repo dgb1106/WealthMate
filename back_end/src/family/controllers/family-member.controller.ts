@@ -1,20 +1,21 @@
 import { Controller, Get, Post, Body, Param, Delete, Put, UseGuards, Req } from '@nestjs/common';
 import { FamilyMemberService } from '../services/family-member.service';
-import { AuthGuard } from '../../auth/guards/auth.guard';
+import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { UpdateFamilyMemberRoleDto } from '../dto/update-family-member-role.dto';
 import { TransferOwnershipDto } from '../dto/transfer-ownership.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { RequestWithUser } from '../../common/interfaces/request.interface';
 
 @ApiTags('Family Members')
 @ApiBearerAuth()
-@UseGuards(AuthGuard)
+@UseGuards(JwtAuthGuard)
 @Controller('family-groups/:groupId/members')
 export class FamilyMemberController {
   constructor(private readonly familyMemberService: FamilyMemberService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all members of a family group' })
-  async findAll(@Param('groupId') groupId: string, @Req() req) {
+  async findAll(@Param('groupId') groupId: string, @Req() req: RequestWithUser) {
     const userId = req.user.id;
     const members = await this.familyMemberService.findAll(groupId, userId);
     return { 
@@ -28,7 +29,7 @@ export class FamilyMemberController {
   async addMember(
     @Param('groupId') groupId: string,
     @Param('userId') newUserId: string,
-    @Req() req,
+    @Req() req: RequestWithUser,
   ) {
     const userId = req.user.id;
     const member = await this.familyMemberService.addMember(groupId, newUserId, userId);
@@ -40,7 +41,7 @@ export class FamilyMemberController {
   async updateRole(
     @Param('id') id: string,
     @Body() updateRoleDto: UpdateFamilyMemberRoleDto,
-    @Req() req,
+    @Req() req: RequestWithUser,
   ) {
     const userId = req.user.id;
     const member = await this.familyMemberService.updateRole(id, updateRoleDto, userId);
@@ -49,7 +50,7 @@ export class FamilyMemberController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Remove a member from the family group' })
-  async remove(@Param('id') id: string, @Req() req) {
+  async remove(@Param('id') id: string, @Req() req: RequestWithUser) {
     const userId = req.user.id;
     await this.familyMemberService.remove(id, userId);
     return { success: true, message: 'Member removed successfully' };
@@ -60,7 +61,7 @@ export class FamilyMemberController {
   async transferOwnership(
     @Param('groupId') groupId: string,
     @Body() transferDto: TransferOwnershipDto,
-    @Req() req,
+    @Req() req: RequestWithUser,
   ) {
     const userId = req.user.id;
     await this.familyMemberService.transferOwnership(groupId, transferDto, userId);
@@ -69,7 +70,7 @@ export class FamilyMemberController {
 
   @Delete('leave')
   @ApiOperation({ summary: 'Leave the family group' })
-  async leaveGroup(@Param('groupId') groupId: string, @Req() req) {
+  async leaveGroup(@Param('groupId') groupId: string, @Req() req: RequestWithUser) {
     const userId = req.user.id;
     await this.familyMemberService.leaveGroup(groupId, userId);
     return { success: true, message: 'You have left the group' };

@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsEnum, Min } from 'class-validator';
+import { IsString, IsNumber, Min, IsEnum } from 'class-validator';
 import { ContributionType } from '../../common/enums/enum';
 
 export class CreateFamilyTransactionContributionDto {
@@ -9,12 +9,12 @@ export class CreateFamilyTransactionContributionDto {
   groupId: string;
 
   @IsNumber()
-  @Min(0)
+  @Min(0.01)
   amount: number;
 
   @IsEnum(ContributionType)
   contributionType: ContributionType;
 
   @IsString()
-  targetId: string; // ID of either a budget or goal depending on contributionType
+  targetId: string; // ID of either a budget or goal, depending on contributionType
 }

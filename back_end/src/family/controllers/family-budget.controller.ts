@@ -1,13 +1,13 @@
 import { Controller, Get, Post, Body, Param, Delete, Put, UseGuards, Req } from '@nestjs/common';
 import { FamilyBudgetService } from '../services/family-budget.service';
-import { AuthGuard } from '../../auth/guards/auth.guard';
+import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { CreateFamilyBudgetDto } from '../dto/create-family-budget.dto';
 import { UpdateFamilyBudgetDto } from '../dto/update-family-budget.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Family Budgets')
 @ApiBearerAuth()
-@UseGuards(AuthGuard)
+@UseGuards(JwtAuthGuard)
 @Controller('family-groups/:groupId/budgets')
 export class FamilyBudgetController {
   constructor(private readonly familyBudgetService: FamilyBudgetService) {}

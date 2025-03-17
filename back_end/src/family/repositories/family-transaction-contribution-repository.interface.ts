@@ -4,9 +4,9 @@ import { CreateFamilyTransactionContributionDto } from '../dto/create-family-tra
 export interface FamilyTransactionContributionRepository {
   create(userId: string, createContributionDto: CreateFamilyTransactionContributionDto): Promise<FamilyTransactionContribution>;
   findAll(groupId: string): Promise<FamilyTransactionContribution[]>;
-  findByTransaction(transactionId: string): Promise<FamilyTransactionContribution[]>;
-  findByTarget(targetId: string, contributionType: string): Promise<FamilyTransactionContribution[]>;
+  findOne(id: string): Promise<FamilyTransactionContribution | null>;
   findByUser(userId: string, groupId: string): Promise<FamilyTransactionContribution[]>;
-  remove(id: string, userId: string): Promise<void>;
+  findByTransaction(transactionId: string, userId: string): Promise<FamilyTransactionContribution[]>;
+  remove(id: string): Promise<void>;
   getGroupContributionStats(groupId: string): Promise<any>;
 }

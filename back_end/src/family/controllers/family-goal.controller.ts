@@ -1,13 +1,13 @@
 import { Controller, Get, Post, Body, Param, Delete, Put, UseGuards, Req } from '@nestjs/common';
 import { FamilyGoalService } from '../services/family-goal.service';
-import { AuthGuard } from '../../auth/guards/auth.guard';
+import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { CreateFamilyGoalDto } from '../dto/create-family-goal.dto';
 import { UpdateFamilyGoalDto } from '../dto/update-family-goal.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Family Goals')
 @ApiBearerAuth()
-@UseGuards(AuthGuard)
+@UseGuards(JwtAuthGuard)
 @Controller('family-groups/:groupId/goals')
 export class FamilyGoalController {
   constructor(private readonly familyGoalService: FamilyGoalService) {}

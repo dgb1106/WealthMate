@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["extendedWhereUnique"]
 }
 
 datasource db {
@@ -37,12 +38,6 @@ enum GoalStatus {
   COMPLETED
 }
 
-enum RecommendationType {
-  SAVINGS
-  INVESTMENT
-  EXPENSE_REDUCTION
-}
-
 enum LoanStatus {
   ACTIVE
   PAID
@@ -77,12 +72,12 @@ model Users {
   create_at       DateTime       @db.Date
   updated_at      DateTime       @db.Date
 
-  transactions    Transactions[]
-  recurringTransactions RecurringTransactions[]
-  budgets         Budgets[]
-  goals           Goals[]
-  loans           Loans[]
-  jwtTokens       JWT[]
+  transactions           Transactions[]
+  recurringTransactions  RecurringTransactions[]
+  budgets                Budgets[]
+  goals                  Goals[]
+  loans                  Loans[]
+  jwtTokens              JWT[]
   familyMemberships      FamilyMembers[]
   familyBudgetsCreated   FamilyBudgets[]
   familyGoalsCreated     FamilyGoals[]
@@ -135,7 +130,7 @@ model Categories {
 
   transactions         Transactions[]
   recurringTransactions RecurringTransactions[]
-  budgets              Budgets[]   
+  budgets              Budgets[]
   familyBudgets        FamilyBudgets[]
 
   @@map("Categories")
@@ -308,8 +303,9 @@ model FamilyTransactionContributions {
   groupId         BigInt
   amount          Decimal        @db.Decimal(11, 2)
   contributionType String        @db.VarChar(20) // "BUDGET" or "GOAL"
-  budgetId        BigInt?        // Nullable, chỉ có giá trị khi contributionType = "BUDGET"
-  goalId          BigInt?        // Nullable, chỉ có giá trị khi contributionType = "GOAL"
+  targetId        BigInt        // ID of the budget or goal
+  budgetId        BigInt?        // ID of the budget if contributionType = "BUDGET"
+  goalId          BigInt?        // ID of the goal if contributionType = "GOAL"
   created_at      DateTime       @db.Date
   
   transaction     Transactions   @relation(fields: [transactionId], references: [id], onUpdate: Cascade, onDelete: Cascade)

@@ -1,12 +1,12 @@
 import { Controller, Get, Post, Body, Param, UseGuards, Req } from '@nestjs/common';
 import { FamilyInvitationService } from '../services/family-invitation.service';
-import { AuthGuard } from '../../auth/guards/auth.guard';
+import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { CreateFamilyInvitationDto } from '../dto/create-family-invitation.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Family Invitations')
 @ApiBearerAuth()
-@UseGuards(AuthGuard)
+@UseGuards(JwtAuthGuard)
 @Controller()
 export class FamilyInvitationController {
   constructor(private readonly familyInvitationService: FamilyInvitationService) {}

@@ -22,10 +22,9 @@ export class FamilyTransactionContributionService {
     );
     
     if (!isMember) {
-      throw new BadRequestException('You are not a member of this group');
+      throw new BadRequestException('You do not have permission to add contributions to this group');
     }
-    
-    // The repository method already handles transaction validation and updating targets
+
     return this.familyTransactionContributionRepository.create(userId, createContributionDto);
   }
 
@@ -40,30 +39,7 @@ export class FamilyTransactionContributionService {
   }
 
   async findByTransaction(transactionId: string, userId: string): Promise<FamilyTransactionContribution[]> {
-    // The user should only be able to see contributions for transactions they own
-    // or for groups they are a member of
-    const contributions = await this.familyTransactionContributionRepository.findByTransaction(transactionId);
-    
-    if (contributions.length === 0) {
-      return [];
-    }
-
-    // If the transaction belongs to the user, they can see contributions
-    if (contributions[0].transaction?.userId === userId) {
-      return contributions;
-    }
-
-    // Otherwise, check if they're a member of the group
-    const isMember = await this.familyMemberRepository.isGroupMember(
-      userId, 
-      contributions[0].groupId
-    );
-    
-    if (!isMember) {
-      throw new BadRequestException('You do not have permission to view these contributions');
-    }
-
-    return contributions;
+    return this.familyTransactionContributionRepository.findByTransaction(transactionId, userId);
   }
 
   async findByUser(userId: string, groupId: string): Promise<FamilyTransactionContribution[]> {
@@ -77,15 +53,27 @@ export class FamilyTransactionContributionService {
   }
 
   async remove(id: string, userId: string): Promise<void> {
-    // The repository method already handles permission checks
-    return this.familyTransactionContributionRepository.remove(id, userId);
+    const contribution = await this.familyTransactionContributionRepository.findOne(id);
+    
+    if (!contribution) {
+      throw new NotFoundException(`Contribution with ID ${id} not found`);
+    }
+
+    // Check if user is a member of this group with admin rights or the creator of the contribution
+    const member = await this.familyMemberRepository.findByUserAndGroup(userId, contribution.groupId);
+    
+    if (!member || (!member.isAdmin() && contribution.transaction?.userId !== userId)) {
+      throw new BadRequestException('You do not have permission to delete this contribution');
+    }
+    
+    return this.familyTransactionContributionRepository.remove(id);
   }
 
   async getGroupContributionStats(groupId: string, userId: string): Promise<any> {
     // Check if user is a member of this group
     const isMember = await this.familyMemberRepository.isGroupMember(userId, groupId);
     if (!isMember) {
-      throw new BadRequestException('You do not have permission to view contribution stats for this group');
+      throw new BadRequestException('You do not have permission to view stats for this group');
     }
     
     return this.familyTransactionContributionRepository.getGroupContributionStats(groupId);
