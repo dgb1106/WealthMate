@@ -6,6 +6,8 @@ import { PlusOutlined } from '@ant-design/icons';
 import MainLayout from '@/layouts/MainLayout';
 import BudgetCard from '@/components/budgets/budgetCard';
 import dayjs from 'dayjs';
+import styles from './styles.module.css';
+import CategoryChart from '@/components/budgets/chart';
 
 // Define the Budget interface based on your backend structure
 interface Budget {
@@ -20,7 +22,6 @@ interface Budget {
   spent_amount: number;
   start_date: string;
   end_date: string;
-  name: string;
 }
 
 // This would be replaced with your actual categories from your API
@@ -64,6 +65,8 @@ const BudgetsPage: React.FC = () => {
         endpoint = '/budgets/current';
       } else if (budgetView === 'month') {
         endpoint = '/budgets/current-month';
+      } else if (budgetView === 'all') {
+        endpoint = '/budgets';
       }
       
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
@@ -91,6 +94,22 @@ const BudgetsPage: React.FC = () => {
   useEffect(() => {
     fetchBudgets();
   }, [budgetView]);
+
+  const getCategoryTotals = () => {
+    const categoryTotals: { [key: string]: number } = {};
+    
+    budgets.forEach(budget => {
+        if (!categoryTotals[budget.category.name]) {
+            categoryTotals[budget.category.name] = 0;
+        }
+        categoryTotals[budget.category.name] += budget.spent_amount;
+    });
+
+    return Object.entries(categoryTotals)
+        .map(([name, spent_amount]) => ({ name, spent_amount }))
+        .filter(cat => cat.spent_amount >= 0)
+        .sort((a, b) => b.spent_amount - a.spent_amount);
+  };
 
   const handleAddBudget = async (values: any) => {
     try {
@@ -155,7 +174,6 @@ const BudgetsPage: React.FC = () => {
       }
 
       const payload = {
-        name: budget.name,
         limit_amount: budget.limit_amount,
         categoryId: budget.categoryId,
         start_date: budget.start_date,
@@ -219,9 +237,43 @@ const BudgetsPage: React.FC = () => {
     }, 0);
   };
 
+  const handleEditButton = (budget: Budget) => {
+    setCurrentBudgetId(budget.id);
+    setModalVisible(true);
+    setTimeout(() => {
+      form.setFieldsValue({
+        limit_amount: budget.limit_amount,
+        categoryId: budget.categoryId,
+        start_date: dayjs(budget.start_date).format('YYYY-MM-DD'),
+        end_date: dayjs(budget.end_date).format('YYYY-MM-DD')
+      });
+    }, 0);
+  }
+
+  const handleDeleteButton = (id: string) => {
+    Modal.confirm({
+      title: 'Delete Budget',
+      content: 'Are you sure you want to delete this budget?',
+      okText: 'Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: () => handleDeleteBudget(id)
+    });
+  };
+
   return (
     <MainLayout>
-      <h1>Budgets</h1>
+      <div className={styles.pageHeader}>
+        <h1>Budgets</h1>
+        <Button
+          type="primary"
+          shape="circle"
+          icon={<PlusOutlined />}
+          size="large"
+          onClick={handleAddButton}
+          className={styles.addButton}
+        />
+      </div>
       <Tabs
         activeKey={budgetView}
         onChange={(key) => setBudgetView(key as 'all' | 'current' | 'month')}
@@ -231,35 +283,15 @@ const BudgetsPage: React.FC = () => {
           { key: 'all', label: 'All Budgets' }
         ]}
       />
-      <div className="grid grid-cols-3 gap-6 p-6">
-        {/* Budget Cards Section - Takes 2/3 of the width */}
-        <div className="col-span-2 grid grid-cols-2 gap-4">
+      <div className={styles.budgetsContainer}>
+        <div className={styles.budgetsCardsSection}>
           {budgets.map((budget) => (
-            <BudgetCard key={budget.id} budget={budget} onEdit={() => setCurrentBudgetId(budget.id)} />
+            <BudgetCard key={budget.id} budget={budget} onEdit={handleEditButton} />
           ))}
         </div>
 
-        {/* Right Column */}
-        <div className="col-span-1">
-          <Button
-            type="primary"
-            shape="circle"
-            icon={<PlusOutlined />}
-            size="large"
-            onClick={handleAddButton}
-            style={{
-              position: 'fixed',
-              bottom: '24px',
-              right: '24px',
-              width: '56px',
-              height: '56px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)',
-              zIndex: 1000
-            }}
-          />
+        <div className={styles.rightColumn}>
+          <CategoryChart categories={getCategoryTotals()} />
         </div>
       </div>
 
@@ -276,22 +308,6 @@ const BudgetsPage: React.FC = () => {
           onFinish={currentBudgetId ? handleEditBudget : handleAddBudget}
         >
           <Form.Item
-            name="name"
-            label="Budget Name"
-            rules={[{ required: true, message: "Please enter a budget name" }]}
-          >
-            <Input placeholder="e.g. Monthly Groceries" />
-          </Form.Item>
-
-          <Form.Item
-            name="limit_amount"
-            label="Budget Amount"
-            rules={[{ required: true, message: "Please enter a budget amount" }]}
-          >
-            <Input type="number" placeholder="0.00" />
-          </Form.Item>
-
-          <Form.Item
             name="categoryId"
             label="Category"
             rules={[{ required: true, message: "Please select a category" }]}
@@ -303,6 +319,14 @@ const BudgetsPage: React.FC = () => {
                 </Select.Option>
               ))}
             </Select>
+          </Form.Item>
+          
+          <Form.Item
+            name="limit_amount"
+            label="Budget Amount"
+            rules={[{ required: true, message: "Please enter a budget amount" }]}
+          >
+            <Input type="number" placeholder="0.00" />
           </Form.Item>
 
           <Form.Item
@@ -322,8 +346,12 @@ const BudgetsPage: React.FC = () => {
           </Form.Item>
 
           <Form.Item>
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
-              <Button onClick={() => setModalVisible(false)}>Cancel</Button>
+            <div className={styles.modalFooter}>
+            {currentBudgetId && (
+              <Button danger onClick={() => handleDeleteButton(currentBudgetId)}>
+                Delete
+              </Button>
+              )}
               <Button type="primary" htmlType="submit">
                 {currentBudgetId ? "Save Changes" : "Add Budget"}
               </Button>

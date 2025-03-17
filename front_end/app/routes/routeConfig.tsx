@@ -1,9 +1,13 @@
 import DashBoardPage from "@/pages/dashboard/page";
 import TransactionsPage from "@/pages/transactions/page";
+import GoalsPage from "@/pages/goals/page";
 import BudgetsPage from "@/pages/budgets/page";
 import InvestmentPage from "@/pages/investment/page";
 import AnalyticsPage from "@/pages/analytics/page";
+import LoansPage from "@/pages/loans/page";
+import FamilyPage from "@/pages/family/page";
 import AiAssistantPage from "@/pages/ai_assistant/page";
+import ProfilePage from "@/pages/profile/page";
 
 export type RouteType = {
     path?: string;
@@ -21,6 +25,10 @@ const appRoutes: RouteType[] = [
         element: <TransactionsPage />,
     },
     {
+        path: '/pages/goals',
+        element: <GoalsPage />,
+    },
+    {
         path: '/pages/budgets',
         element: <BudgetsPage />,
     },
@@ -33,8 +41,20 @@ const appRoutes: RouteType[] = [
         element: <AnalyticsPage />,
     },
     {
+        path: '/pages/loans',
+        element: <LoansPage />,
+    },
+    {
+        path: '/pages/family',
+        element: <FamilyPage />,
+    },
+    {
         path: '/pages/ai-assistant',
         element: <AiAssistantPage />,
+    },
+    {
+        path: '/pages/profile',
+        element: <ProfilePage />,
     },
 ];
 

@@ -2,10 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.cdnfonts.com/css/lufga');
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@100;200;300;400;500;600;700;800;900&display=swap');
 @import url('https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-rounded/css/uicons-regular-rounded.css');
 
-/* Reset CSS */
 * {
   margin: 0;
   padding: 0;
@@ -32,7 +31,13 @@ body {
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --font-family-primary: 'Lufga', sans-serif;
+  --font-family-primary: 'Prompt', sans-serif;
+  --font-size-base: 20px;
+  font-size: var(--font-size-base);
+}
+
+h1 {
+  color:#050a30;
 }
 
 @media (prefers-color-scheme: dark) {
