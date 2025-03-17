@@ -133,9 +133,9 @@ export class PrismaFamilyTransactionContributionRepository implements FamilyTran
             increment: createContributionDto.amount
           },
           // Update status if completed
-          status: goal.saved_amount + createContributionDto.amount >= goal.target_amount 
-            ? 'COMPLETED' 
-            : goal.saved_amount === 0 && createContributionDto.amount > 0
+          status: Number(goal.saved_amount) + createContributionDto.amount >= Number(goal.target_amount)
+            ? 'COMPLETED'
+            : Number(goal.saved_amount) === 0 && createContributionDto.amount > 0
               ? 'IN_PROGRESS'
               : undefined
         }

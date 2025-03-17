@@ -22,6 +22,12 @@ const MenuBar: React.FC = () => {
           </Link>
         </li>
         <li>
+          <Link href="/pages/goals" className={styles.menuItem}>
+            <i className="fi fi-rr-bullseye-arrow"></i>
+            <span>Goals</span>
+          </Link>
+        </li>
+        <li>
           <Link href="/pages/budgets" className={styles.menuItem}>
             <i className="fi fi-rr-piggy-bank-budget"></i>
             <span>Budgets</span>
@@ -37,6 +43,18 @@ const MenuBar: React.FC = () => {
           <Link href="/pages/analytics" className={styles.menuItem}>
             <i className="fi fi-rr-chart-histogram"></i>
             <span>Analytics</span>
+          </Link>
+        </li>
+        <li>
+          <Link href="/pages/loans" className={styles.menuItem}>
+            <i className="fi fi-rr-handshake-deal-loan"></i>
+            <span>Loans</span>
+          </Link>
+        </li>
+        <li>
+          <Link href="/pages/family" className={styles.menuItem}>
+            <i className="fi fi-rr-people-roof"></i>
+            <span>Family</span>
           </Link>
         </li>
         <li>
