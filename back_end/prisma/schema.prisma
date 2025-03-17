@@ -49,6 +49,19 @@ enum LoanStatus {
   DEFAULTED
 }
 
+enum FamilyMemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
 model Users {
   id              String         @id @default(uuid())
   name            String         @db.VarChar(255)
@@ -70,7 +83,10 @@ model Users {
   goals           Goals[]
   loans           Loans[]
   jwtTokens       JWT[]
-  aiRecommendations AIRecommendations[]
+  familyMemberships      FamilyMembers[]
+  familyBudgetsCreated   FamilyBudgets[]
+  familyGoalsCreated     FamilyGoals[]
+  familyInvitationsSent  FamilyInvitations[]
 
   @@map("Users")
 }
@@ -85,6 +101,7 @@ model Transactions {
 
   user        Users          @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   category    Categories     @relation(fields: [categoryId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  familyContributions    FamilyTransactionContributions[]
 
   @@index([userId])
   @@index([categoryId])
@@ -119,7 +136,8 @@ model Categories {
   transactions         Transactions[]
   recurringTransactions RecurringTransactions[]
   budgets              Budgets[]   
-   
+  familyBudgets        FamilyBudgets[]
+
   @@map("Categories")
 }
 
@@ -190,16 +208,118 @@ model JWT {
   @@map("JWT")
 }
 
-model AIRecommendations {
-  id                  BigInt         @id @default(autoincrement())
-  userId              String
-  recommendation_text String         @db.VarChar(255)
-  recommendation_type RecommendationType
-  created_at          DateTime       @db.Date
+model FamilyGroups {
+  id                BigInt         @id @default(autoincrement())
+  name              String         @db.VarChar(255)
+  description       String?        @db.VarChar(1000)
+  created_at        DateTime       @db.Date
+  updated_at        DateTime       @db.Date
+  avatar_url        String?        @db.VarChar(500)
+  
+  members           FamilyMembers[]
+  budgets           FamilyBudgets[]
+  goals             FamilyGoals[]
+  invitations       FamilyInvitations[]
+  contributions     FamilyTransactionContributions[]
 
-  user                Users         @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  @@map("FamilyGroups")
+}
 
+model FamilyMembers {
+  id              BigInt         @id @default(autoincrement())
+  groupId         BigInt
+  userId          String
+  role            FamilyMemberRole
+  joined_at       DateTime       @db.Date
+  
+  group           FamilyGroups   @relation(fields: [groupId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  user            Users          @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  
+  @@unique([groupId, userId])
+  @@index([groupId])
   @@index([userId])
-  @@index([recommendation_type])
-  @@map("AIRecommendations")
+  @@map("FamilyMembers")
+}
+
+model FamilyInvitations {
+  id              BigInt         @id @default(autoincrement())
+  groupId         BigInt
+  inviterId       String
+  inviteeEmail    String         @db.VarChar(255)
+  status          InvitationStatus
+  created_at      DateTime       @db.Date
+  expires_at      DateTime       @db.Date
+  
+  group           FamilyGroups   @relation(fields: [groupId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  inviter         Users          @relation(fields: [inviterId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  
+  @@index([groupId])
+  @@index([inviterId])
+  @@index([inviteeEmail])
+  @@map("FamilyInvitations")
+}
+
+model FamilyBudgets {
+  id              BigInt         @id @default(autoincrement())
+  groupId         BigInt
+  categoryId      BigInt
+  limit_amount    Decimal        @db.Decimal(11, 2)
+  spent_amount    Decimal        @db.Decimal(11, 2)
+  start_date      DateTime       @db.Date
+  end_date        DateTime       @db.Date
+  created_at      DateTime       @db.Date
+  created_by      String
+  
+  group           FamilyGroups   @relation(fields: [groupId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  category        Categories     @relation(fields: [categoryId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  creator         Users          @relation(fields: [created_by], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  contributions   FamilyTransactionContributions[]
+  
+  @@index([groupId])
+  @@index([categoryId])
+  @@index([created_by])
+  @@map("FamilyBudgets")
+}
+
+model FamilyGoals {
+  id              BigInt         @id @default(autoincrement())
+  groupId         BigInt
+  name            String         @db.VarChar(255)
+  target_amount   Decimal        @db.Decimal(11, 2)
+  saved_amount    Decimal        @db.Decimal(11, 2)
+  status          GoalStatus
+  due_date        DateTime       @db.Date
+  created_at      DateTime       @db.Date
+  created_by      String
+  
+  group           FamilyGroups   @relation(fields: [groupId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  creator         Users          @relation(fields: [created_by], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  contributions   FamilyTransactionContributions[]
+  
+  @@index([groupId])
+  @@index([created_by])
+  @@index([status])
+  @@map("FamilyGoals")
+}
+
+model FamilyTransactionContributions {
+  id              BigInt         @id @default(autoincrement())
+  transactionId   BigInt
+  groupId         BigInt
+  amount          Decimal        @db.Decimal(11, 2)
+  contributionType String        @db.VarChar(20) // "BUDGET" or "GOAL"
+  budgetId        BigInt?        // Nullable, chỉ có giá trị khi contributionType = "BUDGET"
+  goalId          BigInt?        // Nullable, chỉ có giá trị khi contributionType = "GOAL"
+  created_at      DateTime       @db.Date
+  
+  transaction     Transactions   @relation(fields: [transactionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  group           FamilyGroups   @relation(fields: [groupId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  familyBudget    FamilyBudgets? @relation(fields: [budgetId], references: [id])
+  familyGoal      FamilyGoals?   @relation(fields: [goalId], references: [id])
+  
+  @@index([transactionId])
+  @@index([groupId])
+  @@index([budgetId])
+  @@index([goalId])
+  @@map("FamilyTransactionContributions")
 }
