@@ -63,7 +63,7 @@ export class PrismaBudgetRepository implements BudgetRepository {
           userId,
           categoryId: BigInt(createBudgetDto.categoryId),
           limit_amount: createBudgetDto.limit_amount,
-          spent_amount: initialSpentAmount,
+          spent_amount: Math.abs(initialSpentAmount),
           start_date: startDate,
           end_date: endDate,
         },

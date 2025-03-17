@@ -33,7 +33,7 @@ export class Budget {
     
     const percentage = (this.spent_amount / this.limit_amount) * 100;
     // Round to 1 decimal place and cap at 100%
-    return Math.min(Math.round(percentage * 10) / 10, 100);
+    return Math.round(percentage * 10) / 10;
   }
 
   /**

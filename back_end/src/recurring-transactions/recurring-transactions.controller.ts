@@ -132,8 +132,7 @@ export class RecurringTransactionController {
   @ApiResponse({ status: 200, description: 'Các giao dịch định kỳ đến hạn đã được xử lý thành công' })
   @ApiResponse({ status: 401, description: 'Không được phép truy cập' })
   @HttpCode(HttpStatus.OK)
-  async processDueTransactions() { // Bỏ tham số req không sử dụng
-    // Có thể thêm kiểm tra admin ở đây nếu cần
+  async processDueTransactions() {
     return this.recurringTxService.processDueTransactions();
   }
 }

@@ -116,12 +116,18 @@ export class TransactionService {
         // Update user balance separately
         const updatedUser = await this.usersService.increaseBalance(userId, balanceAdjustment);
 
+        
         if (category.type === TransactionType.EXPENSE) {
-          await this.budgetsService.increaseSpentAmount(
-            userId, 
-            createDto.categoryId, 
-            Math.abs(Number(transactionAmount)),
-          );
+          const budgets = await this.budgetsService.findByCategory(userId, createDto.categoryId);
+          if (budgets && budgets.length > 0) {
+            for (const budget of budgets) {
+              await this.budgetsService.increaseSpentAmount(
+                budget.id,
+                userId,
+                Math.abs(Number(transactionAmount))
+              );
+            }
+          }
         }
 
         // Clear all related caches
