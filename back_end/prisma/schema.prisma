@@ -60,7 +60,7 @@ model Users {
   preferred_mood  PreferredMood
   preferred_goal  PreferredGoal
   hash_password   String         @db.VarChar(255)
-  current_balance Decimal        @db.Decimal(8, 2)
+  current_balance Decimal        @db.Decimal(14, 2)
   create_at       DateTime       @db.Date
   updated_at      DateTime       @db.Date
 
@@ -79,7 +79,7 @@ model Transactions {
   id          BigInt         @id @default(autoincrement())
   userId      String
   categoryId  BigInt
-  amount      Decimal        @db.Decimal(8, 2)
+  amount      Decimal        @db.Decimal(11, 2)
   created_at  DateTime       @db.Date
   description String         @db.VarChar(255)
 
@@ -96,7 +96,7 @@ model RecurringTransactions {
   id             BigInt         @id @default(autoincrement())
   userId         String
   categoryId     BigInt
-  amount         Decimal        @db.Decimal(8, 2)
+  amount         Decimal        @db.Decimal(11, 2)
   frequency      Frequency
   created_at     DateTime       @db.Date
   next_occurence DateTime       @db.Date
@@ -127,10 +127,10 @@ model Budgets {
   id          BigInt         @id @default(autoincrement())
   userId      String
   categoryId  BigInt
-  limit_amount Decimal       @db.Decimal(8, 2)
+  limit_amount Decimal       @db.Decimal(11, 2)
   start_date  DateTime       @db.Date
   end_date    DateTime       @db.Date
-  spent_amount Decimal       @db.Decimal(8, 2)
+  spent_amount Decimal       @db.Decimal(11, 2)
 
   user        Users         @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   category    Categories    @relation(fields: [categoryId], references: [id], onUpdate: Cascade, onDelete: Cascade)
@@ -144,8 +144,8 @@ model Goals {
   id           BigInt         @id @default(autoincrement())
   userId       String
   name         String         @db.VarChar(255)
-  target_amount Decimal       @db.Decimal(8, 2)
-  saved_amount Decimal        @db.Decimal(8, 2)
+  target_amount Decimal       @db.Decimal(11, 2)
+  saved_amount Decimal        @db.Decimal(11, 2)
   status       GoalStatus
   due_date     DateTime       @db.Date
   created_at   DateTime       @db.Date
@@ -164,11 +164,11 @@ model Loans {
   name            String         @db.VarChar(255)
   due_date        DateTime       @db.Date
   created_at      DateTime       @db.Date
-  total_amount    Decimal        @db.Decimal(8, 2)
-  remaining_amount Decimal       @db.Decimal(8, 2)
+  total_amount    Decimal        @db.Decimal(11, 2)
+  remaining_amount Decimal       @db.Decimal(11, 2)
   status          LoanStatus
-  interest_rate   Decimal        @db.Decimal(8, 2)
-  monthly_payment Decimal        @db.Decimal(8, 2)
+  interest_rate   Decimal        @db.Decimal(11, 2)
+  monthly_payment Decimal        @db.Decimal(11, 2)
   description     String         @db.VarChar(255)
 
   user           Users          @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)

@@ -1,27 +1,41 @@
--- CreateEnum
-CREATE TYPE "TransactionType" AS ENUM ('INCOME', 'EXPENSE');
+-- Create tables for enum types
+CREATE TABLE "TransactionType" (
+    "value" NVARCHAR(50) PRIMARY KEY
+);
+INSERT INTO "TransactionType" ("value") VALUES ('INCOME'), ('EXPENSE');
 
--- CreateEnum
-CREATE TYPE "Frequency" AS ENUM ('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY');
+CREATE TABLE "Frequency" (
+    "value" NVARCHAR(50) PRIMARY KEY
+);
+INSERT INTO "Frequency" ("value") VALUES ('DAILY'), ('WEEKLY'), ('MONTHLY'), ('YEARLY');
 
--- CreateEnum
-CREATE TYPE "GoalStatus" AS ENUM ('PENDING', 'IN_PROGRESS', 'COMPLETED');
+CREATE TABLE "GoalStatus" (
+    "value" NVARCHAR(50) PRIMARY KEY
+);
+INSERT INTO "GoalStatus" ("value") VALUES ('PENDING'), ('IN_PROGRESS'), ('COMPLETED');
 
--- CreateEnum
-CREATE TYPE "RecommendationType" AS ENUM ('SAVINGS', 'INVESTMENT', 'EXPENSE_REDUCTION');
+CREATE TABLE "RecommendationType" (
+    "value" NVARCHAR(50) PRIMARY KEY
+);
+INSERT INTO "RecommendationType" ("value") VALUES ('SAVINGS'), ('INVESTMENT'), ('EXPENSE_REDUCTION');
 
--- CreateEnum
-CREATE TYPE "LoanStatus" AS ENUM ('ACTIVE', 'PAID', 'DEFAULTED');
+CREATE TABLE "LoanStatus" (
+    "value" NVARCHAR(50) PRIMARY KEY
+);
+INSERT INTO "LoanStatus" ("value") VALUES ('ACTIVE'), ('PAID'), ('DEFAULTED');
 
--- CreateEnum
-CREATE TYPE "JarType" AS ENUM ('NECESSARY', 'FNIANCIAL_FREEDOM', 'PLAY', 'LONG_TERM_SAVING', 'EDUCATION', 'GIVING', 'INVESTMENT');
+CREATE TABLE "JarType" (
+    "value" NVARCHAR(50) PRIMARY KEY
+);
+INSERT INTO "JarType" ("value") VALUES ('NECESSARY'), ('FNIANCIAL_FREEDOM'), ('PLAY'), ('LONG_TERM_SAVING'), ('EDUCATION'), ('GIVING'), ('INVESTMENT');
 
 -- CreateTable
 CREATE TABLE "Transactions" (
     "id" BIGSERIAL NOT NULL,
     "userId" TEXT NOT NULL,
     "categoryId" BIGINT NOT NULL,
-    "amount" DECIMAL(8,2) NOT NULL,
+    "frequency" NVARCHAR(50) NOT NULL,
+    CONSTRAINT "RecurringTransactions_frequency_fkey" FOREIGN KEY ("frequency") REFERENCES "Frequency"("value"),
     "created_at" DATE NOT NULL,
     "description" VARCHAR(255) NOT NULL,
 
@@ -33,7 +47,8 @@ CREATE TABLE "RecurringTransactions" (
     "id" BIGSERIAL NOT NULL,
     "userId" TEXT NOT NULL,
     "categoryId" BIGINT NOT NULL,
-    "amount" DECIMAL(8,2) NOT NULL,
+    "type" NVARCHAR(50) NOT NULL,
+    CONSTRAINT "Categories_type_fkey" FOREIGN KEY ("type") REFERENCES "TransactionType"("value"),
     "frequency" "Frequency" NOT NULL,
     "created_at" DATE NOT NULL,
     "next_occurence" DATE NOT NULL,
@@ -57,7 +72,8 @@ CREATE TABLE "Budgets" (
     "id" BIGSERIAL NOT NULL,
     "userId" TEXT NOT NULL,
     "categoryId" BIGINT NOT NULL,
-    "limit_amount" DECIMAL(8,2) NOT NULL,
+    "status" NVARCHAR(50) NOT NULL,
+    CONSTRAINT "Goals_status_fkey" FOREIGN KEY ("status") REFERENCES "GoalStatus"("value"),
     "start_date" DATE NOT NULL,
     "end_date" DATE NOT NULL,
     "spent_amount" DECIMAL(8,2) NOT NULL,
@@ -68,7 +84,8 @@ CREATE TABLE "Budgets" (
 -- CreateTable
 CREATE TABLE "Goals" (
     "id" BIGSERIAL NOT NULL,
-    "userId" TEXT NOT NULL,
+    "type" NVARCHAR(50) NOT NULL,
+    CONSTRAINT "Jars_type_fkey" FOREIGN KEY ("type") REFERENCES "JarType"("value"),
     "name" VARCHAR(255) NOT NULL,
     "target_amount" DECIMAL(8,2) NOT NULL,
     "saved_amount" DECIMAL(8,2) NOT NULL,
@@ -82,7 +99,8 @@ CREATE TABLE "Goals" (
 -- CreateTable
 CREATE TABLE "Jars" (
     "id" BIGSERIAL NOT NULL,
-    "name" VARCHAR(255) NOT NULL,
+    "status" NVARCHAR(50) NOT NULL,
+    CONSTRAINT "Loans_status_fkey" FOREIGN KEY ("status") REFERENCES "LoanStatus"("value"),
     "limit_amount" DECIMAL(8,2) NOT NULL,
     "type" "JarType" NOT NULL,
     "allocation_percentage" DECIMAL(8,2) NOT NULL,
@@ -105,8 +123,9 @@ CREATE TABLE "Loans" (
     "description" VARCHAR(255) NOT NULL,
 
     CONSTRAINT "Loans_pkey" PRIMARY KEY ("id")
+    "recommendation_type" NVARCHAR(50) NOT NULL,
+    CONSTRAINT "AIRecommendations_recommendation_type_fkey" FOREIGN KEY ("recommendation_type") REFERENCES "RecommendationType"("value"),
 );
-
 -- CreateTable
 CREATE TABLE "JWT" (
     "id" BIGSERIAL NOT NULL,
@@ -211,7 +230,7 @@ ALTER TABLE "Goals" ADD CONSTRAINT "Goals_userId_fkey" FOREIGN KEY ("userId") RE
 ALTER TABLE "Loans" ADD CONSTRAINT "Loans_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "JWT" ADD CONSTRAINT "JWT_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "JWT" ADD CONSTRAINT "JWT_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users"("id") ON DELETE NO ACTION ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "AIRecommendations" ADD CONSTRAINT "AIRecommendations_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "AIRecommendations" ADD CONSTRAINT "AIRecommendations_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users"("id") ON DELETE NO ACTION ON UPDATE CASCADE;

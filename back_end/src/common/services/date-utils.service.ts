@@ -2,6 +2,13 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class DateUtilsService {
+  getMonthName(month: number): String {
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return months[month];
+  }
   /**
    * Lấy ngày đầu tiên của tháng
    * @param date Ngày tham chiếu (mặc định là ngày hiện tại)

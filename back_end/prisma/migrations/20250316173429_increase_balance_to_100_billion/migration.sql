@@ -1,0 +1,22 @@
+-- AlterTable
+ALTER TABLE "Budgets" ALTER COLUMN "limit_amount" SET DATA TYPE DECIMAL(11,2),
+ALTER COLUMN "spent_amount" SET DATA TYPE DECIMAL(11,2);
+
+-- AlterTable
+ALTER TABLE "Goals" ALTER COLUMN "target_amount" SET DATA TYPE DECIMAL(11,2),
+ALTER COLUMN "saved_amount" SET DATA TYPE DECIMAL(11,2);
+
+-- AlterTable
+ALTER TABLE "Loans" ALTER COLUMN "total_amount" SET DATA TYPE DECIMAL(11,2),
+ALTER COLUMN "remaining_amount" SET DATA TYPE DECIMAL(11,2),
+ALTER COLUMN "interest_rate" SET DATA TYPE DECIMAL(11,2),
+ALTER COLUMN "monthly_payment" SET DATA TYPE DECIMAL(11,2);
+
+-- AlterTable
+ALTER TABLE "RecurringTransactions" ALTER COLUMN "amount" SET DATA TYPE DECIMAL(11,2);
+
+-- AlterTable
+ALTER TABLE "Transactions" ALTER COLUMN "amount" SET DATA TYPE DECIMAL(11,2);
+
+-- AlterTable
+ALTER TABLE "Users" ALTER COLUMN "current_balance" SET DATA TYPE DECIMAL(14,2);

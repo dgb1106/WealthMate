@@ -141,21 +141,7 @@ export class RecurringTransactionService {
     
     return this.recurringTxDomainService.processTransaction(transaction);
   }
-
-  /**
-   * Generate forecast of upcoming transactions over a period
-   */
-  async generateTransactionForecast(userId: string, days: number = 30) {
-    return this.recurringTxDomainService.generateUpcomingTransactions(userId, days);
-  }
-
-  /**
-   * Get statistics about recurring transactions
-   */
-  async getRecurringTransactionStats(userId: string) {
-    return this.recurringTxDomainService.getRecurringTransactionsStats(userId);
-  }
-
+  
   /**
    * Skip the next occurrence of a recurring transaction
    */

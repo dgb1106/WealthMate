@@ -36,7 +36,7 @@ export class CreateBudgetDto {
 
   @ApiProperty({
     description: 'The amount spent so far in this budget',
-    example: 30.00,
+    example: 0.00,
     minimum: 0,
     default: 0
   })
