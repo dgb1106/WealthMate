@@ -3,7 +3,6 @@ import { CreateGoalDto } from './dto/create-goal.dto';
 import { UpdateGoalDto } from './dto/update-goal.dto';
 import { PrismaGoalRepository } from './repositories/prisma-goal.repository';
 import { GoalDomainService } from './services/goal-domain.service';
-import { Goal } from './entities/goal.entity';
 
 @Injectable()
 export class GoalsService {

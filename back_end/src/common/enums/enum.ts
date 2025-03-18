@@ -39,4 +39,21 @@ export enum PreferredMood {
     PAID = "PAID",
     DEFAULTED = "DEFAULTED"
   }
-  
+
+  export enum FamilyMemberRole {
+    OWNER = "OWNER",
+    ADMIN = "ADMIN",
+    MEMBER = "MEMBER"
+  }
+
+  export enum InvitationStatus {
+    PENDING = "PENDING",
+    ACCEPTED = "ACCEPTED",
+    REJECTED = "REJECTED",
+    EXPIRED = "EXPIRED"
+  }
+
+  export enum ContributionType {
+    BUDGET = "BUDGET",
+    GOAL = "GOAL"
+  }

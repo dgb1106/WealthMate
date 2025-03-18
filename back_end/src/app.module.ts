@@ -18,6 +18,7 @@ import { AiUtilsModule } from './ai-utils/ai-utils.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SchedulesModule } from './schedules/schedules.module';
+import { FamilyModule } from './family/family.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { SchedulesModule } from './schedules/schedules.module';
     }),
     ScheduleModule.forRoot(),
     SchedulesModule,
+    FamilyModule,
   ],
   controllers: [AppController],
   providers: [AppService],
