@@ -5,7 +5,7 @@ import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
-@ApiTags('Đóng góp giao dịch gia đình')
+@ApiTags('family-transaction-contribution')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('family/groups/:groupId/contributions')

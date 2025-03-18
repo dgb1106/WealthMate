@@ -40,6 +40,7 @@ async function bootstrap() {
     .addTag('loans', 'Quản lý khoản vay')
     .addTag('family-groups', 'Quản lý nhóm gia đình')
     .addTag('family-members', 'Quản lý thành viên gia đình')
+    .addTag('family-invitations', 'Quản lý danh mục gia đình')
     .addTag('family-budgets', 'Quản lý ngân sách gia đình')
     .addTag('family-goals', 'Quản lý mục tiêu tài chính của gia đình')
     .addTag('family-transaction-contribution', 'Quản lý đóng góp giao dịch cho gia đình')
