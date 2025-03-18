@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import type { Transaction } from '../../types/transaction';
-import { transactionService } from '../../services/transactionService';
+import transactionService from '../../services/transactionService';
 
 interface UseTransactionsReturn {
   transactions: Transaction[];
@@ -19,8 +19,8 @@ export const useTransactions = (): UseTransactionsReturn => {
   useEffect(() => {
     const fetchTransactions = async (): Promise<void> => {
       try {
-        const data = await transactionService.getAll();
-        setTransactions(data);
+        const data = await transactionService.getTransactions();
+        //setTransactions(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch transactions');
       } finally {
