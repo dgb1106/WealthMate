@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { FamilyTransactionContributionModule } from './family-transaction-contribution.module';
+import { FamilyTransactionContributionModule } from './modules/family-transaction-contribution.module';
 import { FamilyGoalModule } from './modules/family-goal.module';
 import { FamilyMemberModule } from './modules/family-member.module';
 import { FamilyBudgetModule } from './modules/family-budget.module';

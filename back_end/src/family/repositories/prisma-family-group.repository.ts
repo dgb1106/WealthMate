@@ -11,6 +11,10 @@ export class PrismaFamilyGroupRepository implements FamilyGroupRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(userId: string, createFamilyGroupDto: CreateFamilyGroupDto): Promise<FamilyGroup> {
+    if (!userId) {
+      throw new BadRequestException('User ID is required to create a family group');
+    }
+  
     return this.prisma.$transaction(async (prisma) => {
       // Create the family group
       const group = await prisma.familyGroups.create({
@@ -22,17 +26,21 @@ export class PrismaFamilyGroupRepository implements FamilyGroupRepository {
           avatar_url: createFamilyGroupDto.avatar_url
         }
       });
-
-      // Add the creator as the owner of the group
+  
+      // Add the creator as the owner of the group using relation syntax
       await prisma.familyMembers.create({
         data: {
-          groupId: group.id,
-          userId,
+          group: {
+            connect: { id: group.id }
+          },
+          user: {
+            connect: { id: userId }
+          },
           role: FamilyMemberRole.OWNER,
           joined_at: new Date()
         }
       });
-
+  
       // Fetch the created group with members
       const createdGroup = await prisma.familyGroups.findUnique({
         where: { id: group.id },
@@ -44,7 +52,7 @@ export class PrismaFamilyGroupRepository implements FamilyGroupRepository {
           }
         }
       });
-
+  
       return FamilyGroup.fromPrisma(createdGroup);
     });
   }

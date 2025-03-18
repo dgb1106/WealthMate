@@ -1,15 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
-import { FamilyTransactionContributionRepository } from '../repositories/family-transaction-contribution-repository.interface';
 import { FamilyTransactionContribution } from '../entities/family-transaction-contribution.entity';
 import { CreateFamilyTransactionContributionDto } from '../dto/create-family-transaction-contribution.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { PrismaFamilyMemberRepository } from '../repositories/prisma-family-member.repository';
+import { PrismaFamilyTransactionContributionRepository } from '../repositories/prisma-family-transaction-contribution.repository';
 
 @Injectable()
 export class FamilyTransactionContributionService {
   constructor(
-    @Inject('FamilyTransactionContributionRepository')
-    private readonly familyTransactionContributionRepository: FamilyTransactionContributionRepository,
+    private readonly familyTransactionContributionRepository: PrismaFamilyTransactionContributionRepository,
     private readonly familyMemberRepository: PrismaFamilyMemberRepository,
   ) {}
 
