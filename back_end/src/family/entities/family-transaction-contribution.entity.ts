@@ -1,9 +1,39 @@
 import { Type } from 'class-transformer';
-import { Transaction } from '../../transactions/entities/transaction.entity';
-import { FamilyGroup } from './family-group.entity';
-import { FamilyBudget } from './family-budget.entity';
-import { FamilyGoal } from './family-goal.entity';
 import { ContributionType } from '../../common/enums/enum';
+
+// Define lightweight interfaces for nested objects to avoid type errors
+interface SimplifiedTransaction {
+  id: string;
+  amount: number;
+  description?: string;
+  userId?: string;
+  created_at?: Date;
+  user?: {
+    id: string;
+    name: string;
+  };
+}
+
+interface SimplifiedGroup {
+  id: string;
+  name: string;
+}
+
+interface SimplifiedCategory {
+  id: string;
+  name: string;
+}
+
+interface SimplifiedBudget {
+  id: string;
+  categoryId: string;
+  category?: SimplifiedCategory;
+}
+
+interface SimplifiedGoal {
+  id: string;
+  name: string;
+}
 
 export class FamilyTransactionContribution {
   id: string;
@@ -14,17 +44,10 @@ export class FamilyTransactionContribution {
   targetId: string;
   created_at: Date;
   
-  @Type(() => Transaction)
-  transaction?: Transaction;
-  
-  @Type(() => FamilyGroup)
-  group?: FamilyGroup;
-  
-  @Type(() => FamilyBudget)
-  familyBudget?: FamilyBudget;
-  
-  @Type(() => FamilyGoal)
-  familyGoal?: FamilyGoal;
+  transaction?: SimplifiedTransaction;
+  group?: SimplifiedGroup;
+  familyBudget?: SimplifiedBudget;
+  familyGoal?: SimplifiedGoal;
   
   constructor(partial: Partial<FamilyTransactionContribution>) {
     Object.assign(this, partial);
@@ -46,9 +69,11 @@ export class FamilyTransactionContribution {
   
   /**
    * Convert a Prisma family transaction contribution to a FamilyTransactionContribution entity
+   * Optimized version to reduce memory usage
    */
   static fromPrisma(prismaContribution: any): FamilyTransactionContribution {
-    return new FamilyTransactionContribution({
+    // Use a lighter approach with conditional property access
+    const contribution = new FamilyTransactionContribution({
       id: String(prismaContribution.id),
       transactionId: String(prismaContribution.transactionId),
       groupId: String(prismaContribution.groupId),
@@ -56,21 +81,52 @@ export class FamilyTransactionContribution {
       contributionType: prismaContribution.contributionType,
       targetId: String(prismaContribution.targetId),
       created_at: new Date(prismaContribution.created_at),
-      transaction: prismaContribution.transaction 
-        ? Transaction.fromPrisma(prismaContribution.transaction)
-        : undefined,
-      group: prismaContribution.group 
-        ? FamilyGroup.fromPrisma(prismaContribution.group)
-        : undefined,
-      familyBudget: prismaContribution.familyBudget && 
-        prismaContribution.contributionType === ContributionType.BUDGET 
-        ? FamilyBudget.fromPrisma(prismaContribution.familyBudget)
-        : undefined,
-      familyGoal: prismaContribution.familyGoal && 
-        prismaContribution.contributionType === ContributionType.GOAL 
-        ? FamilyGoal.fromPrisma(prismaContribution.familyGoal)
-        : undefined
     });
+    
+    // Only add related entities if they exist in the response
+    if (prismaContribution.transaction) {
+      contribution.transaction = {
+        id: String(prismaContribution.transaction.id),
+        amount: Number(prismaContribution.transaction.amount),
+        description: prismaContribution.transaction.description,
+        userId: prismaContribution.transaction.userId,
+        user: prismaContribution.transaction.user ? {
+          id: String(prismaContribution.transaction.user.id),
+          name: prismaContribution.transaction.user.name
+        } : undefined
+      };
+    }
+    
+    if (prismaContribution.group) {
+      contribution.group = {
+        id: String(prismaContribution.group.id),
+        name: prismaContribution.group.name
+      };
+    }
+    
+    // Add only minimal budget data if needed and exists
+    if (prismaContribution.familyBudget && 
+        prismaContribution.contributionType === 'BUDGET') {
+      contribution.familyBudget = {
+        id: String(prismaContribution.familyBudget.id),
+        categoryId: String(prismaContribution.familyBudget.categoryId),
+        category: prismaContribution.familyBudget.category ? {
+          id: String(prismaContribution.familyBudget.category.id),
+          name: prismaContribution.familyBudget.category.name
+        } : undefined
+      };
+    }
+    
+    // Add only minimal goal data if needed and exists
+    if (prismaContribution.familyGoal && 
+        prismaContribution.contributionType === 'GOAL') {
+      contribution.familyGoal = {
+        id: String(prismaContribution.familyGoal.id),
+        name: prismaContribution.familyGoal.name
+      };
+    }
+    
+    return contribution;
   }
   
   /**

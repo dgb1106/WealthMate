@@ -1,28 +1,47 @@
--- CreateEnum
-CREATE TYPE "PreferredMood" AS ENUM ('IRRITATION', 'ENCOURAGEMENT');
+-- Create tables for enum types
+CREATE TABLE "PreferredMood" (
+    "value" VARCHAR(50) PRIMARY KEY
+);
+INSERT INTO "PreferredMood" ("value") VALUES ('IRRITATION'), ('ENCOURAGEMENT');
 
--- CreateEnum
-CREATE TYPE "PreferredGoal" AS ENUM ('SAVING', 'INVESTMENT');
+CREATE TABLE "PreferredGoal" (
+    "value" VARCHAR(50) PRIMARY KEY
+);
+INSERT INTO "PreferredGoal" ("value") VALUES ('SAVING'), ('INVESTMENT');
 
--- CreateEnum
-CREATE TYPE "TransactionType" AS ENUM ('INCOME', 'EXPENSE');
+CREATE TABLE "TransactionType" (
+    "value" VARCHAR(50) PRIMARY KEY
+);
+INSERT INTO "TransactionType" ("value") VALUES ('INCOME'), ('EXPENSE');
 
--- CreateEnum
-CREATE TYPE "Frequency" AS ENUM ('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY', 'BIWEEKLY', 'QUARTERLY');
+CREATE TABLE "Frequency" (
+    "value" VARCHAR(50) PRIMARY KEY
+);
+INSERT INTO "Frequency" ("value") VALUES ('DAILY'), ('WEEKLY'), ('MONTHLY'), ('YEARLY'), ('BIWEEKLY'), ('QUARTERLY');
 
--- CreateEnum
-CREATE TYPE "GoalStatus" AS ENUM ('PENDING', 'IN_PROGRESS', 'COMPLETED');
+CREATE TABLE "GoalStatus" (
+    "value" VARCHAR(50) PRIMARY KEY
+);
+INSERT INTO "GoalStatus" ("value") VALUES ('PENDING'), ('IN_PROGRESS'), ('COMPLETED');
+CREATE TABLE "Users" (
+    "id" TEXT NOT NULL,
+    "name" VARCHAR(255) NOT NULL,
+    "email" VARCHAR(255) NOT NULL,
+    "phone" VARCHAR(255) NOT NULL,
+    "city" VARCHAR(255) NOT NULL,
+    "district" VARCHAR(255) NOT NULL,
+    "job" VARCHAR(255) NOT NULL,
+    "preferred_mood" VARCHAR(50) NOT NULL,
+    "preferred_goal" VARCHAR(50) NOT NULL,
+    "hash_password" VARCHAR(255) NOT NULL,
+    "current_balance" DECIMAL(14,2) NOT NULL,
+    "create_at" DATE NOT NULL,
+    "updated_at" DATE NOT NULL,
 
--- CreateEnum
-CREATE TYPE "LoanStatus" AS ENUM ('ACTIVE', 'PAID', 'DEFAULTED');
-
--- CreateEnum
-CREATE TYPE "FamilyMemberRole" AS ENUM ('OWNER', 'ADMIN', 'MEMBER');
-
--- CreateEnum
-CREATE TYPE "InvitationStatus" AS ENUM ('PENDING', 'ACCEPTED', 'REJECTED', 'EXPIRED');
-
--- CreateTable
+    CONSTRAINT "Users_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "Users_preferred_mood_fkey" FOREIGN KEY ("preferred_mood") REFERENCES "PreferredMood"("value"),
+    CONSTRAINT "Users_preferred_goal_fkey" FOREIGN KEY ("preferred_goal") REFERENCES "PreferredGoal"("value")
+);
 CREATE TABLE "Users" (
     "id" TEXT NOT NULL,
     "name" VARCHAR(255) NOT NULL,
@@ -326,7 +345,7 @@ ALTER TABLE "Budgets" ADD CONSTRAINT "Budgets_userId_fkey" FOREIGN KEY ("userId"
 ALTER TABLE "Budgets" ADD CONSTRAINT "Budgets_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Categories"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Goals" ADD CONSTRAINT "Goals_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Goals" ADD CONSTRAINT "Goals_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users"("id") ON DELETE NO ACTION ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Loans" ADD CONSTRAINT "Loans_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

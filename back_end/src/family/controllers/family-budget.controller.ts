@@ -5,7 +5,7 @@ import { CreateFamilyBudgetDto } from '../dto/create-family-budget.dto';
 import { UpdateFamilyBudgetDto } from '../dto/update-family-budget.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-@ApiTags('Family Budgets')
+@ApiTags('family-budgets')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('family-groups/:groupId/budgets')

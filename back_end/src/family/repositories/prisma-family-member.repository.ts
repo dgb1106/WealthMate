@@ -8,20 +8,61 @@ import { FamilyMemberRole } from '../../common/enums/enum';
 export class PrismaFamilyMemberRepository implements FamilyMemberRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(groupId: string): Promise<FamilyMember[]> {
+  async findAll(groupId: string, options?: { includeDetails?: boolean }): Promise<FamilyMember[]> {
+    const includeDetails = options?.includeDetails ?? false;
+    
     const members = await this.prisma.familyMembers.findMany({
       where: { groupId: BigInt(groupId) },
       include: {
-        user: true,
-        group: true
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          }
+        },
+        group: includeDetails ? true : {
+          select: {
+            id: true, 
+            name: true
+          }
+        }
       },
       orderBy: [
-        { role: 'asc' }, // OWNER first, then ADMIN, then MEMBER
+        { role: 'asc' },
         { joined_at: 'asc' }
       ]
     });
 
-    return FamilyMember.fromPrismaArray(members);
+    // Create FamilyMember instances with properly typed data
+    return members.map(member => {
+      const familyMember = new FamilyMember({
+        id: String(member.id),
+        groupId: String(member.groupId),
+        userId: member.userId,
+        role: member.role as FamilyMemberRole, // Type assertion to resolve enum compatibility
+        joined_at: new Date(member.joined_at)
+      });
+
+      // Add simplified user object
+      if (member.user) {
+        familyMember.user = {
+          id: member.user.id,
+          name: member.user.name,
+          email: member.user.email
+        } as any; // Using 'any' to bypass strict typing for nested objects
+      }
+
+      // Add simplified group object
+      if (member.group) {
+        familyMember.group = {
+          id: String(member.group.id),
+          name: member.group.name
+        } as any; // Using 'any' to bypass strict typing for nested objects
+      }
+
+      return familyMember;
+    });
   }
 
   async findOne(id: string): Promise<FamilyMember | null> {

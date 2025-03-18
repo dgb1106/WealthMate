@@ -4,6 +4,7 @@ import { PrismaFamilyMemberRepository } from '../repositories/prisma-family-memb
 import { FamilyGoal } from '../entities/family-goal.entity';
 import { CreateFamilyGoalDto } from '../dto/create-family-goal.dto';
 import { UpdateFamilyGoalDto } from '../dto/update-family-goal.dto';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 
 @Injectable()
 export class FamilyGoalService {
@@ -27,14 +28,38 @@ export class FamilyGoalService {
     return this.familyGoalRepository.create(groupId, userId, createGoalDto);
   }
 
-  async findAll(groupId: string, userId: string): Promise<FamilyGoal[]> {
+  async findAll(groupId: string, userId: string, paginationDto?: PaginationDto): Promise<{ 
+    data: FamilyGoal[], 
+    total: number,
+    page: number,
+    limit: number,
+    totalPages: number
+  }> {
     // Check if user is a member of this group
     const isMember = await this.familyMemberRepository.isGroupMember(userId, groupId);
     if (!isMember) {
       throw new BadRequestException('You do not have permission to view goals for this group');
     }
+
+    const { data, total } = await this.familyGoalRepository.findAll(
+      groupId, 
+      {
+        page: paginationDto?.page,
+        limit: paginationDto?.limit,
+        includeDetails: paginationDto?.includeDetails 
+      }
+    );
     
-    return this.familyGoalRepository.findAll(groupId);
+    const page = paginationDto?.page || 1;
+    const limit = paginationDto?.limit || 10;
+    
+    return {
+      data,
+      total,
+      page,
+      limit, 
+      totalPages: Math.ceil(total / limit)
+    };
   }
 
   async findOne(id: string, userId: string): Promise<FamilyGoal> {

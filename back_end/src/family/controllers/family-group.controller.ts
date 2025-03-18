@@ -6,7 +6,7 @@ import { UpdateFamilyGroupDto } from '../dto/update-family-group.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RequestWithUser } from '../../common/interfaces/request.interface';
 
-@ApiTags('Family Groups')
+@ApiTags('family-groups')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('family-groups')

@@ -1,7 +1,16 @@
-import { Type } from 'class-transformer';
-import { User } from '../../users/entities/users.entity';
-import { FamilyGroup } from './family-group.entity';
 import { FamilyMemberRole } from '../../common/enums/enum';
+
+// Simplified interfaces for nested objects
+interface SimpleUser {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface SimpleGroup {
+  id: string;
+  name: string;
+}
 
 export class FamilyMember {
   id: string;
@@ -10,11 +19,8 @@ export class FamilyMember {
   role: FamilyMemberRole;
   joined_at: Date;
   
-  @Type(() => FamilyGroup)
-  group?: FamilyGroup;
-  
-  @Type(() => User)
-  user?: User;
+  user?: SimpleUser;
+  group?: SimpleGroup;
   
   constructor(partial: Partial<FamilyMember>) {
     Object.assign(this, partial);
@@ -59,19 +65,30 @@ export class FamilyMember {
    * Convert a Prisma family member to a FamilyMember entity
    */
   static fromPrisma(prismaFamilyMember: any): FamilyMember {
-    return new FamilyMember({
+    const member = new FamilyMember({
       id: String(prismaFamilyMember.id),
       groupId: String(prismaFamilyMember.groupId),
       userId: prismaFamilyMember.userId,
       role: prismaFamilyMember.role,
       joined_at: new Date(prismaFamilyMember.joined_at),
-      group: prismaFamilyMember.group 
-        ? FamilyGroup.fromPrisma(prismaFamilyMember.group)
-        : undefined,
-      user: prismaFamilyMember.user
-        ? new User(prismaFamilyMember.user)
-        : undefined
     });
+    
+    if (prismaFamilyMember.user) {
+      member.user = {
+        id: prismaFamilyMember.user.id,
+        name: prismaFamilyMember.user.name,
+        email: prismaFamilyMember.user.email
+      };
+    }
+    
+    if (prismaFamilyMember.group) {
+      member.group = {
+        id: String(prismaFamilyMember.group.id),
+        name: prismaFamilyMember.group.name
+      };
+    }
+    
+    return member;
   }
   
   /**
