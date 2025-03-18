@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
-import { FamilyTransactionContributionModule } from './family-transaction-contribution.module';
+import { FamilyTransactionContributionModule } from './modules/family-transaction-contribution.module';
 import { FamilyGoalModule } from './modules/family-goal.module';
 import { FamilyMemberModule } from './modules/family-member.module';
 import { FamilyBudgetModule } from './modules/family-budget.module';
 import { FamilyGroupModule } from './modules/family-group.module';
+import { FamilyInvitation } from './entities/family-invitation.entity';
+import { FamilyInvitationModule } from './modules/family-invitation.module';
 
 @Module({
   imports: [
@@ -12,6 +14,7 @@ import { FamilyGroupModule } from './modules/family-group.module';
     FamilyMemberModule,
     FamilyBudgetModule,
     FamilyGroupModule,
+    FamilyInvitationModule,
   ],
   exports: [
     FamilyTransactionContributionModule,
@@ -19,6 +22,7 @@ import { FamilyGroupModule } from './modules/family-group.module';
     FamilyMemberModule,
     FamilyBudgetModule,
     FamilyGroupModule,
+    FamilyInvitationModule,
   ],
 })
 export class FamilyModule {}
