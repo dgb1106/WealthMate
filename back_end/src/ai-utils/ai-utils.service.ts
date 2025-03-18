@@ -1,7 +1,9 @@
+import { CreateTransactionDto } from './../transactions/dto/create-transaction.dto';
 import { Injectable, HttpException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
+import { get } from 'http';
 
 @Injectable()
 export class AiUtilsService {
