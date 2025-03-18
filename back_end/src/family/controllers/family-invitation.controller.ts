@@ -4,7 +4,7 @@ import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { CreateFamilyInvitationDto } from '../dto/create-family-invitation.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-@ApiTags('Family Invitations')
+@ApiTags('family-invitations')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller()

@@ -95,15 +95,6 @@ export class FamilyBudget {
       end_date: new Date(prismaFamilyBudget.end_date),
       created_at: new Date(prismaFamilyBudget.created_at),
       created_by: prismaFamilyBudget.created_by,
-      group: prismaFamilyBudget.group 
-        ? FamilyGroup.fromPrisma(prismaFamilyBudget.group)
-        : undefined,
-      category: prismaFamilyBudget.category
-        ? new Category(prismaFamilyBudget.category)
-        : undefined,
-      creator: prismaFamilyBudget.creator
-        ? new User(prismaFamilyBudget.creator)
-        : undefined
     });
   }
   

@@ -12,10 +12,14 @@ export class PrismaUsersRepository implements UsersRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async createUser(registerDto: RegisterDto, hashedPassword: string): Promise<User> {
-    const { email, preferred_mood, preferred_goal, ...rest } = registerDto;
+    const { name, phone, city, district, job, email, preferred_mood, preferred_goal } = registerDto;
     
     const userData = {
-      ...rest,
+      name,
+      phone,
+      city,
+      district,
+      job,
       email,
       hash_password: hashedPassword,
       preferred_mood: preferred_mood as PreferredMood,

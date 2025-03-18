@@ -1,17 +1,22 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../../prisma/prisma.module';
-import { FamilyGoalController } from '../controllers/family-goal.controller';
-import { FamilyGoalService } from '../services/family-goal.service';
 import { PrismaFamilyGoalRepository } from '../repositories/prisma-family-goal.repository';
-import { FamilyGroupModule } from './family-group.module';
+import { FamilyGoalService } from '../services/family-goal.service';
+import { FamilyGoalController } from '../controllers/family-goal.controller';
+import { PrismaFamilyMemberRepository } from '../repositories/prisma-family-member.repository';
 
 @Module({
-  imports: [PrismaModule, FamilyGroupModule],
+  imports: [PrismaModule],
   controllers: [FamilyGoalController],
   providers: [
     FamilyGoalService,
-    PrismaFamilyGoalRepository
+    {
+      provide: 'FamilyGoalRepository',
+      useClass: PrismaFamilyGoalRepository,
+    },
+    PrismaFamilyGoalRepository,
+    PrismaFamilyMemberRepository,
   ],
-  exports: [FamilyGoalService, PrismaFamilyGoalRepository]
+  exports: [FamilyGoalService],
 })
 export class FamilyGoalModule {}

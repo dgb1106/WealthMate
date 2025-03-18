@@ -6,7 +6,7 @@ import { TransferOwnershipDto } from '../dto/transfer-ownership.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RequestWithUser } from '../../common/interfaces/request.interface';
 
-@ApiTags('Family Members')
+@ApiTags('family-members')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('family-groups/:groupId/members')

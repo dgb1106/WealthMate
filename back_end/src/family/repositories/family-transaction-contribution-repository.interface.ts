@@ -3,7 +3,7 @@ import { CreateFamilyTransactionContributionDto } from '../dto/create-family-tra
 
 export interface FamilyTransactionContributionRepository {
   create(userId: string, createContributionDto: CreateFamilyTransactionContributionDto): Promise<FamilyTransactionContribution>;
-  findAll(groupId: string): Promise<FamilyTransactionContribution[]>;
+  findAll(groupId: string, options?: { page?: number, limit?: number, includeDetails?: boolean }): Promise<{ data: FamilyTransactionContribution[], total: number }>;
   findOne(id: string): Promise<FamilyTransactionContribution | null>;
   findByUser(userId: string, groupId: string): Promise<FamilyTransactionContribution[]>;
   findByTransaction(transactionId: string, userId: string): Promise<FamilyTransactionContribution[]>;

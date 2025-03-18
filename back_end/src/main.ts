@@ -4,6 +4,7 @@ import { BigIntSerializerInterceptor } from './common/serializer/bigint.serializ
 import * as express from 'express';
 import * as cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -22,21 +23,26 @@ async function bootstrap() {
   });
   const reflector = app.get(Reflector);
   app.useGlobalInterceptors(new BigIntSerializerInterceptor(reflector));
+  app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
   const config = new DocumentBuilder()
     .setTitle('WealthMate API')
-    .setDescription('API quản lý tài chính cá nhân')
+    .setDescription('Hệ thống quản lý tài chính cá nhân và gia đình WealthMate')
     .setVersion('1.0')
-    .addTag('auth')
-    .addTag('users')
-    .addTag('transactions')
-    .addTag('categories')
-    .addTag('budgets')
-    .addTag('reports')
-    .addTag('goals')
-    .addTag('recurring-transactions')
-    .addTag('loans')
-    .addTag('ai-recommendations')
+    .addTag('auth', 'Xác thực người dùng')
+    .addTag('users', 'Quản lý người dùng')
+    .addTag('transactions', 'Quản lý giao dịch')
+    .addTag('categories', 'Quản lý danh mục')
+    .addTag('budgets', 'Quản lý ngân sách')
+    .addTag('reports', 'Báo cáo tài chính')
+    .addTag('goals', 'Mục tiêu tài chính cá nhân')
+    .addTag('recurring-transactions', 'Giao dịch định kỳ')
+    .addTag('loans', 'Quản lý khoản vay')
+    .addTag('family-groups', 'Quản lý nhóm gia đình')
+    .addTag('family-members', 'Quản lý thành viên gia đình')
+    .addTag('family-budgets', 'Quản lý ngân sách gia đình')
+    .addTag('family-goals', 'Quản lý mục tiêu tài chính của gia đình')
+    .addTag('family-transaction-contribution', 'Quản lý đóng góp giao dịch cho gia đình')
     .addBearerAuth()
     .build();
 

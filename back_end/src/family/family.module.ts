@@ -1,24 +1,24 @@
 import { Module } from '@nestjs/common';
-import { FamilyGroupModule } from './modules/family-group.module';
-import { FamilyInvitationModule } from './modules/family-invitation.module';
-import { FamilyBudgetModule } from './modules/family-budget.module';
+import { FamilyTransactionContributionModule } from './family-transaction-contribution.module';
 import { FamilyGoalModule } from './modules/family-goal.module';
-import { FamilyTransactionContributionModule } from './modules/family-transaction-contribution.module';
+import { FamilyMemberModule } from './modules/family-member.module';
+import { FamilyBudgetModule } from './modules/family-budget.module';
+import { FamilyGroupModule } from './modules/family-group.module';
 
 @Module({
   imports: [
-    FamilyGroupModule,
-    FamilyInvitationModule,
-    FamilyBudgetModule,
+    FamilyTransactionContributionModule,
     FamilyGoalModule,
-    FamilyTransactionContributionModule
+    FamilyMemberModule,
+    FamilyBudgetModule,
+    FamilyGroupModule,
   ],
   exports: [
-    FamilyGroupModule,
-    FamilyInvitationModule,
-    FamilyBudgetModule,
+    FamilyTransactionContributionModule,
     FamilyGoalModule,
-    FamilyTransactionContributionModule
-  ]
+    FamilyMemberModule,
+    FamilyBudgetModule,
+    FamilyGroupModule,
+  ],
 })
 export class FamilyModule {}
