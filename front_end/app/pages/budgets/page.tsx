@@ -91,10 +91,8 @@ const BudgetsPage: React.FC = () => {
 
   useEffect(() => {
     fetchBudgets();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [budgetView]);
 
-  // Tính tổng spent_amount (theo từng category) để vẽ biểu đồ
   const getCategoryTotals = () => {
     const categoryTotals: { [key: string]: number } = {};
 
@@ -102,8 +100,6 @@ const BudgetsPage: React.FC = () => {
       if (!categoryTotals[budget.category.name]) {
         categoryTotals[budget.category.name] = 0;
       }
-      // Giả sử spent_amount cũng là số "nghìn VNĐ"
-      // Muốn hiển thị ra VNĐ thì * 1000
       categoryTotals[budget.category.name] += budget.spent_amount * 1000;
     });
 
@@ -113,7 +109,6 @@ const BudgetsPage: React.FC = () => {
       .sort((a, b) => b.spent_amount - a.spent_amount);
   };
 
-  // Xử lý thêm mới budget
   const handleAddBudget = async (values: any) => {
     try {
       const token = localStorage.getItem('authToken');
@@ -127,13 +122,12 @@ const BudgetsPage: React.FC = () => {
         message.error('Configuration error: API URL is not defined');
         return;
       }
-
-      // Người dùng nhập limit_amount theo VNĐ -> chia 1000 trước khi gửi
       const payload = {
-        limit_amount: parseFloat(values.limit_amount) / 1000,
         categoryId: values.categoryId,
+        limit_amount: parseFloat(values.limit_amount) / 1000,
         start_date: values.start_date,
         end_date: values.end_date,
+        spent_amount: 0
       };
 
       const baseUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
@@ -240,7 +234,6 @@ const BudgetsPage: React.FC = () => {
     }
   };
 
-  // Khi nhấn nút "Add"
   const handleAddButton = () => {
     setCurrentBudgetId(null);
     setModalVisible(true);
@@ -249,15 +242,12 @@ const BudgetsPage: React.FC = () => {
     }, 0);
   };
 
-  // Khi nhấn nút "Edit"
   const handleEditButton = (budget: Budget) => {
     setCurrentBudgetId(budget.id);
     setModalVisible(true);
-
-    // Lấy dữ liệu budget -> convert ngược sang VNĐ để hiện cho user
     setTimeout(() => {
       form.setFieldsValue({
-        limit_amount: budget.limit_amount * 1000, // Chuyển về VNĐ
+        limit_amount: budget.limit_amount * 1000,
         categoryId: budget.categoryId,
         start_date: dayjs(budget.start_date).format('YYYY-MM-DD'),
         end_date: dayjs(budget.end_date).format('YYYY-MM-DD'),
