@@ -102,7 +102,7 @@ const BudgetsPage: React.FC = () => {
         if (!categoryTotals[budget.category.name]) {
             categoryTotals[budget.category.name] = 0;
         }
-        categoryTotals[budget.category.name] += budget.spent_amount;
+        categoryTotals[budget.category.name] += budget.spent_amount * 1000;
     });
 
     return Object.entries(categoryTotals)
@@ -129,7 +129,7 @@ const BudgetsPage: React.FC = () => {
       
       const payload = {
         name: values.name,
-        limit_amount: parseFloat(values.limit_amount),
+        limit_amount: values.limit_amount / 1000,
         categoryId: values.categoryId,
         start_date: values.start_date,
         end_date: values.end_date
@@ -174,7 +174,7 @@ const BudgetsPage: React.FC = () => {
       }
 
       const payload = {
-        limit_amount: budget.limit_amount,
+        limit_amount: budget.limit_amount / 1000,
         categoryId: budget.categoryId,
         start_date: budget.start_date,
         end_date: budget.end_date
@@ -242,7 +242,7 @@ const BudgetsPage: React.FC = () => {
     setModalVisible(true);
     setTimeout(() => {
       form.setFieldsValue({
-        limit_amount: budget.limit_amount,
+        limit_amount: budget.limit_amount * 1000,
         categoryId: budget.categoryId,
         start_date: dayjs(budget.start_date).format('YYYY-MM-DD'),
         end_date: dayjs(budget.end_date).format('YYYY-MM-DD')

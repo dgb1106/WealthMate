@@ -21,8 +21,10 @@ interface BudgetCardProps {
 
 const BudgetCard: React.FC<BudgetCardProps> = ({ budget, onEdit }) => {
     const { limit_amount, spent_amount, category } = budget;
-    const remaining_amount: number = limit_amount - spent_amount;
-    const percentage = Math.min(Math.max((remaining_amount / limit_amount) * 100, 0), 100);
+    const displayLimitAmount = limit_amount * 1000;
+    const displaySpentAmount = spent_amount * 1000;
+    const remaining_amount: number = displayLimitAmount - displaySpentAmount;
+    const percentage = Math.min(Math.max((remaining_amount / displayLimitAmount) * 100, 0), 100);
 
     const options = {
         chart: {
@@ -61,7 +63,10 @@ const BudgetCard: React.FC<BudgetCardProps> = ({ budget, onEdit }) => {
                         formatter: function() {
                             return `${limit_amount.toLocaleString()} VND`;
                         }*/
-                        show: false
+                        show: false,
+                        formatter: function() {
+                            return `${displayLimitAmount.toLocaleString()} VND`;
+                        }
                     }
                 }
             }
