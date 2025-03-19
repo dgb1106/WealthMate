@@ -22,6 +22,18 @@ const ProfilePage: React.FC = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [updateForm, setUpdateForm] = useState<Partial<UserProfile>>({});
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [updateError, setUpdateError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [updateSuccess, setUpdateSuccess] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -57,6 +69,136 @@ const ProfilePage: React.FC = () => {
 
     fetchProfile();
   }, []);
+
+  useEffect(() => {
+    if (profile) {
+      setUpdateForm({
+        name: profile.name,
+        phone: profile.phone,
+        city: profile.city,
+        district: profile.district,
+        job: profile.job,
+        preferredMood: profile.preferredMood,
+        preferredGoal: profile.preferredGoal,
+      });
+    }
+  }, [profile]);
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUpdateError('');
+    setUpdateSuccess('');
+    
+    try {
+      const authToken = localStorage.getItem('authToken');
+      
+      if (!authToken) {
+        setUpdateError('Vui lòng đăng nhập để cập nhật thông tin');
+        return;
+      }
+      const queryParams = new URLSearchParams();
+      Object.entries(updateForm).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          queryParams.append(key, String(value));
+        }
+      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/users/profile?${queryParams.toString()}`, 
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Không thể cập nhật thông tin');
+      }
+      
+      const updatedProfile = await response.json();
+      setProfile(updatedProfile);
+      setUpdateSuccess('Cập nhật thông tin thành công!');
+      
+      setTimeout(() => {
+        setShowUpdateModal(false);
+        setUpdateSuccess('');
+      }, 2000);
+      
+    } catch (err) {
+      setUpdateError('Đã có lỗi xảy ra khi cập nhật thông tin');
+      console.error(err);
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess('');
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError('Mật khẩu mới không khớp');
+      return;
+    }
+    
+    try {
+      const authToken = localStorage.getItem('authToken');
+      
+      if (!authToken) {
+        setPasswordError('Vui lòng đăng nhập để đổi mật khẩu');
+        return;
+      }
+      
+      const userId = profile?.id;
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}/password`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Không thể đổi mật khẩu');
+      }
+      
+      setPasswordSuccess('Đổi mật khẩu thành công!');
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      
+      setTimeout(() => {
+        setShowPasswordModal(false);
+        setPasswordSuccess('');
+      }, 2000);
+      
+    } catch (err: any) {
+      setPasswordError(err.message || 'Đã có lỗi xảy ra khi đổi mật khẩu');
+      console.error(err);
+    }
+  };
+  const handleUpdateFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setUpdateForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  const handlePasswordFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPasswordForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   if (loading) {
     return (
@@ -164,11 +306,212 @@ const ProfilePage: React.FC = () => {
                     <span className={styles.infoValue}>{profile.preferredMood}</span>
                   </div>
                 </div>
+                
+                {/* Thêm phần buttons cho cập nhật thông tin và đổi mật khẩu */}
+                <div className={styles.actionButtons}>
+                  <button 
+                    className={`${styles.actionButton} ${styles.updateButton}`}
+                    onClick={() => setShowUpdateModal(true)}
+                  >
+                    Cập nhật thông tin
+                  </button>
+                  <button 
+                    className={`${styles.actionButton} ${styles.passwordButton}`}
+                    onClick={() => setShowPasswordModal(true)}
+                  >
+                    Đổi mật khẩu
+                  </button>
+                </div>
               </div>
             </div>
           </div>
           
         </div> {/* end splitWrapper */}
+        
+        {/* Update Profile Modal */}
+        {showUpdateModal && (
+          <div className={styles.modalOverlay}>
+            <div className={styles.modal}>
+              <div className={styles.modalHeader}>
+                <h3>Cập nhật thông tin</h3>
+                <button 
+                  className={styles.closeButton}
+                  onClick={() => setShowUpdateModal(false)}
+                >
+                  &times;
+                </button>
+              </div>
+              
+              <form onSubmit={handleUpdateProfile}>
+                <div className={styles.formGroup}>
+                  <label htmlFor="name">Họ tên:</label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={updateForm.name || ''}
+                    onChange={handleUpdateFormChange}
+                    required
+                  />
+                </div>
+                
+                <div className={styles.formGroup}>
+                  <label htmlFor="phone">Số điện thoại:</label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value={updateForm.phone || ''}
+                    onChange={handleUpdateFormChange}
+                  />
+                </div>
+                
+                <div className={styles.formGroup}>
+                  <label htmlFor="job">Nghề nghiệp:</label>
+                  <input
+                    type="text"
+                    id="job"
+                    name="job"
+                    value={updateForm.job || ''}
+                    onChange={handleUpdateFormChange}
+                  />
+                </div>
+                
+                <div className={styles.formGroup}>
+                  <label htmlFor="city">Thành phố:</label>
+                  <input
+                    type="text"
+                    id="city"
+                    name="city"
+                    value={updateForm.city || ''}
+                    onChange={handleUpdateFormChange}
+                  />
+                </div>
+                
+                <div className={styles.formGroup}>
+                  <label htmlFor="district">Quận/Huyện:</label>
+                  <input
+                    type="text"
+                    id="district"
+                    name="district"
+                    value={updateForm.district || ''}
+                    onChange={handleUpdateFormChange}
+                  />
+                </div>
+                
+                <div className={styles.formGroup}>
+                  <label htmlFor="preferredMood">Tâm trạng ưa thích:</label>
+                  <input
+                    type="text"
+                    id="preferredMood"
+                    name="preferredMood"
+                    value={updateForm.preferredMood || ''}
+                    onChange={handleUpdateFormChange}
+                  />
+                </div>
+                
+                <div className={styles.formGroup}>
+                  <label htmlFor="preferredGoal">Mục tiêu tài chính:</label>
+                  <input
+                    type="text"
+                    id="preferredGoal"
+                    name="preferredGoal"
+                    value={updateForm.preferredGoal || ''}
+                    onChange={handleUpdateFormChange}
+                  />
+                </div>
+                
+                {updateError && <p className={styles.errorMessage}>{updateError}</p>}
+                {updateSuccess && <p className={styles.successMessage}>{updateSuccess}</p>}
+                
+                <div className={styles.modalActions}>
+                  <button type="submit" className={styles.submitButton}>
+                    Cập nhật
+                  </button>
+                  <button 
+                    type="button" 
+                    className={styles.cancelButton}
+                    onClick={() => setShowUpdateModal(false)}
+                  >
+                    Hủy bỏ
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+        
+        {/* Change Password Modal */}
+        {showPasswordModal && (
+          <div className={styles.modalOverlay}>
+            <div className={styles.modal}>
+              <div className={styles.modalHeader}>
+                <h3>Đổi mật khẩu</h3>
+                <button 
+                  className={styles.closeButton}
+                  onClick={() => setShowPasswordModal(false)}
+                >
+                  &times;
+                </button>
+              </div>
+              
+              <form onSubmit={handleChangePassword}>
+                <div className={styles.formGroup}>
+                  <label htmlFor="currentPassword">Mật khẩu hiện tại:</label>
+                  <input
+                    type="password"
+                    id="currentPassword"
+                    name="currentPassword"
+                    value={passwordForm.currentPassword}
+                    onChange={handlePasswordFormChange}
+                    required
+                  />
+                </div>
+                
+                <div className={styles.formGroup}>
+                  <label htmlFor="newPassword">Mật khẩu mới:</label>
+                  <input
+                    type="password"
+                    id="newPassword"
+                    name="newPassword"
+                    value={passwordForm.newPassword}
+                    onChange={handlePasswordFormChange}
+                    required
+                  />
+                </div>
+                
+                <div className={styles.formGroup}>
+                  <label htmlFor="confirmPassword">Xác nhận mật khẩu mới:</label>
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    value={passwordForm.confirmPassword}
+                    onChange={handlePasswordFormChange}
+                    required
+                  />
+                </div>
+                
+                {passwordError && <p className={styles.errorMessage}>{passwordError}</p>}
+                {passwordSuccess && <p className={styles.successMessage}>{passwordSuccess}</p>}
+                
+                <div className={styles.modalActions}>
+                  <button type="submit" className={styles.submitButton}>
+                    Đổi mật khẩu
+                  </button>
+                  <button 
+                    type="button" 
+                    className={styles.cancelButton}
+                    onClick={() => setShowPasswordModal(false)}
+                  >
+                    Hủy bỏ
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+        
       </div>
     </MainLayout>
   );
