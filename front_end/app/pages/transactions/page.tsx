@@ -385,57 +385,73 @@ const TransactionsPage: React.FC = () => {
     input.click();
   };
   
-
   const handleVoiceRecord = async () => {
     try {
       if (!isRecording) {
+        // Start recording
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const mediaRecorder = new MediaRecorder(stream);
+        const mediaRecorder = new MediaRecorder(stream, {
+          mimeType: 'audio/webm', 
+          audioBitsPerSecond: 128000
+        });
+        
         const audioChunks: BlobPart[] = [];
+        
         mediaRecorder.addEventListener('dataavailable', (event) => {
-          audioChunks.push(event.data);
+          if (event.data.size > 0) {
+            audioChunks.push(event.data);
+          }
         });
         
         mediaRecorder.addEventListener('stop', async () => {
-          const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-          const reader = new FileReader();
-          
-          reader.onload = async (event) => {
-            const audioData = event.target?.result as string;
-            try {
-              localStorage.setItem('tempTransactionAudio', audioData);
-              const token = localStorage.getItem('authToken');
-              const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai-utils/speech-to-text`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ audio: audioData }),
-              });
-              if (!response.ok) {
-                throw new Error('Failed to process audio');
-              }
-              const { text } = await response.json();
-              // localStorage.removeItem('tempTransactionAudio');
-              Modal.info({
-                title: 'Transcribed Text',
-                content: text,
-                width: 600,
-                okText: 'Close',
-              });
-              
-              message.success('Audio processed successfully');
-            } catch (error) {
-              console.error('Error processing audio:', error);
-              message.error('Failed to process audio');
-              // localStorage.removeItem('tempTransactionAudio');
+          try {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            
+            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const arrayBuffer = await audioBlob.arrayBuffer();
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            
+            const wavBlob = await audioBufferToWav(audioBuffer);
+            
+            const formData = new FormData();
+            formData.append('file', wavBlob, 'audio.wav');
+            
+            const loadingMessage = message.loading('Processing audio...', 0);
+            
+            console.log('Sending audio file to:', 'https://wealthmate.onrender.com/ai-utils/speech-to-text');
+            
+            const response = await fetch(`https://wealthmate.onrender.com/ai-utils/speech-to-text`, {
+              method: 'POST',
+              body: formData,
+            });
+            
+            loadingMessage();
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.error('Server error response:', errorText);
+              throw new Error(`Failed to process audio: ${response.status}`);
             }
-          };
+
+            const data = await response.json();
+            const text = data.text || data.transcription || data.result || "No text returned";
           
-          reader.readAsDataURL(audioBlob);
+            Modal.info({
+              title: 'Transcribed Text',
+              content: text,
+              width: 600,
+              okText: 'Close',
+            });
+            
+            message.success('Audio processed successfully');
+          } catch (error) {
+            console.error('Error processing audio:', error);
+            message.error('Failed to process audio');
+          }
         });
-        mediaRecorder.start();
+        
+        mediaRecorder.start(10);
+        
         const notification = message.loading('Recording... Press the Voice button again to stop', 0);
         setRecordingNotification(notification);
         (window as any).currentRecorder = mediaRecorder;
@@ -447,6 +463,7 @@ const TransactionsPage: React.FC = () => {
           mediaRecorder.stream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
           (window as any).currentRecorder = null;
         }
+        
         if (recordingNotification) {
           recordingNotification();
         }
@@ -456,8 +473,81 @@ const TransactionsPage: React.FC = () => {
     } catch (error) {
       console.error('Error accessing microphone:', error);
       message.error('Could not access microphone');
+      setIsRecording(false);
     }
   };
+  
+  function audioBufferToWav(buffer: AudioBuffer): Promise<Blob> {
+    return new Promise(resolve => {
+      const numChannels = buffer.numberOfChannels;
+      const sampleRate = buffer.sampleRate;
+      const format = 1; // PCM
+      const bitDepth = 16;
+      
+      const bytesPerSample = bitDepth / 8;
+      const blockAlign = numChannels * bytesPerSample;
+      
+      const dataLength = buffer.length * blockAlign;
+      const bufferLength = 44 + dataLength;
+      
+      const arrayBuffer = new ArrayBuffer(bufferLength);
+      const view = new DataView(arrayBuffer);
+      
+      // RIFF identifier
+      writeString(view, 0, 'RIFF');
+      // RIFF chunk length
+      view.setUint32(4, 36 + dataLength, true);
+      // RIFF type
+      writeString(view, 8, 'WAVE');
+      // format chunk identifier
+      writeString(view, 12, 'fmt ');
+      // format chunk length
+      view.setUint32(16, 16, true);
+      // sample format (raw)
+      view.setUint16(20, format, true);
+      // channel count
+      view.setUint16(22, numChannels, true);
+      // sample rate
+      view.setUint32(24, sampleRate, true);
+      // byte rate (sample rate * block align)
+      view.setUint32(28, sampleRate * blockAlign, true);
+      // block align (channel count * bytes per sample)
+      view.setUint16(32, blockAlign, true);
+      // bits per sample
+      view.setUint16(34, bitDepth, true);
+      // data chunk identifier
+      writeString(view, 36, 'data');
+      // data chunk length
+      view.setUint32(40, dataLength, true);
+      
+      // Write the PCM samples
+      const channels = [];
+      for (let i = 0; i < numChannels; i++) {
+        channels.push(buffer.getChannelData(i));
+      }
+      
+      let offset = 44;
+      for (let i = 0; i < buffer.length; i++) {
+        for (let channel = 0; channel < numChannels; channel++) {
+          // Convert float to int
+          const sample = Math.max(-1, Math.min(1, channels[channel][i]));
+          const value = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+          
+          view.setInt16(offset, value, true);
+          offset += 2;
+        }
+      }
+      
+      const wavBlob = new Blob([view], { type: 'audio/wav' });
+      resolve(wavBlob);
+    });
+  }
+  
+  function writeString(view: DataView, offset: number, string: string) {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  }
 
   return (
     <MainLayout>
