@@ -4,7 +4,7 @@ import MainLayout from '@/layouts/MainLayout/index';
 const AiAssistantPage: React.FC = () => {
   return (
     <MainLayout>
-      <h1>This is AI Assistant</h1>
+      <h1>Trợ Lý Ảo</h1>
     </MainLayout>
   );
 };

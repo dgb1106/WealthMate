@@ -5,8 +5,8 @@ import {RegisterForm} from '@/components/auth/RegisterForm';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Sign Up | WealthMate',
-  description: 'Sign Up to your WealthMate',
+  title: 'Đăng ký | WealthMate',
+  description: 'Đăng ký tài khoản WealthMate',
 };
 
 const RegisterPage: React.FC = () => {
@@ -14,10 +14,10 @@ const RegisterPage: React.FC = () => {
     <>
       <Head>
         <title>Create Account | WealthMate</title>
-        <meta name="description" content="Create a new WealthMate account" />
+        <meta name="description" content="Tạo tài khoản mới" />
       </Head>
       <AuthLayout 
-      title="Create Your Account"
+      title="Tạo tài khoản của bạn"
       imageSrc="/png/14.png"
     >
       <RegisterForm />

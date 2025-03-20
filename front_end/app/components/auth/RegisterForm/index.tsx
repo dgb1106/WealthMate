@@ -76,7 +76,7 @@ export const RegisterForm: React.FC = () => {
         </div>
       )}
 
-      <h3 className={styles.sectionTitle}>Personal Information</h3>
+      <h3 className={styles.sectionTitle}>Thông tin cá nhân</h3>
 
       {/* Full Name chiếm hết chiều rộng (2 cột) */}
       <div>
@@ -108,7 +108,7 @@ export const RegisterForm: React.FC = () => {
       </div>
 
       <div className={styles.formSection}>
-        <h3 className={styles.sectionTitle}>Your Location</h3>
+        <h3 className={styles.sectionTitle}>Địa điểm của bạn</h3>
         <div className={styles.fieldGroup}>
           <Input
             type="text"
@@ -128,7 +128,7 @@ export const RegisterForm: React.FC = () => {
       </div>
 
       <div className={styles.formSection}>
-        <h3 className={styles.sectionTitle}>Professional Information</h3>
+        <h3 className={styles.sectionTitle}>Thông tin chuyên môn</h3>
         <Input
           type="text"
           name="job"
@@ -139,14 +139,14 @@ export const RegisterForm: React.FC = () => {
       </div>
 
       <div className={styles.formSection}>
-        <h3 className={styles.sectionTitle}>Preferences</h3>
+        <h3 className={styles.sectionTitle}>Mong muốn</h3>
         <div className={styles.fieldGroup}>
           <div className={styles.inlineField}>
             <label
               htmlFor="preferred_mood"
               className="text-sm font-medium text-gray-700 whitespace-nowrap"
             >
-              Preferred Feedback Style
+              Phong cách phản hồi mong muốn
             </label>
             <select 
               id="preferred_mood" 
@@ -154,9 +154,9 @@ export const RegisterForm: React.FC = () => {
               className={styles.selectField}
               required
             >
-              <option value="">Select feedback style</option>
-              <option value={PreferredMood.ENCOURAGEMENT}>Encouraging</option>
-              <option value={PreferredMood.IRRITATION}>Direct/Strict</option>
+              <option value="">Chọn phong cách phản hồi</option>
+              <option value={PreferredMood.ENCOURAGEMENT}>Động viên</option>
+              <option value={PreferredMood.IRRITATION}>Nghiêm ngặt</option>
             </select>
           </div>
           <div className={styles.inlineField}>
@@ -164,7 +164,7 @@ export const RegisterForm: React.FC = () => {
               htmlFor="preferred_goal"
               className="text-sm font-medium text-gray-700 whitespace-nowrap"
             >
-              Primary Financial Goal
+              Mục tiêu tài chính chủ yếu
             </label>
             <select 
               id="preferred_goal" 
@@ -172,9 +172,9 @@ export const RegisterForm: React.FC = () => {
               className={styles.selectField}
               required
             >
-              <option value="">Select primary goal</option>
-              <option value={PreferredGoal.SAVING}>Saving Money</option>
-              <option value={PreferredGoal.INVESTMENT}>Growing Investments</option>
+              <option value="">Chọn mục tiêu chính</option>
+              <option value={PreferredGoal.SAVING}>Tiết kiệm chi tiêu</option>
+              <option value={PreferredGoal.INVESTMENT}>Phát triển đầu tư</option>
             </select>
           </div>
         </div>
@@ -205,14 +205,14 @@ export const RegisterForm: React.FC = () => {
         disabled={isLoading}
         className="w-full py-3 mt-3 bg-[#0F1B4C] hover:bg-blue-700 text-white font-medium rounded-lg"
       >
-        {isLoading ? 'Creating Account...' : 'Create Account'}
+        {isLoading ? 'Đang tạo tài khoản...' : 'Tạo tài khoản'}
       </Button>
 
       <div className="text-center mt-4">
         <p className="text-sm text-gray-600">
-          Already have an account?{' '}
+          Đã có tài khoản?{' '}
           <Link href="/pages/auth/login" className="text-[#0F1B4C] hover:text-blue-700 font-medium">
-            Sign in
+            Đăng nhập
           </Link>
         </p>
       </div>

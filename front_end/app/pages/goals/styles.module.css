@@ -1,0 +1,104 @@
+.pageHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.headerButtons {
+    display: flex;
+    gap: 16px;
+  }
+
+.filterContainer {
+    margin-bottom: 16px;
+    display: flex;
+    gap: 8px;
+}
+  
+.filters {
+    display: flex;
+    gap: 16px;
+    border-radius: 20px;
+}
+
+  .filterSelect {
+    min-width: 100px;
+    border-radius: 20px;
+  }
+  
+  .goalsContainer {
+    margin-top: 24px;
+  }
+  
+  .contentWrapper {
+    display: flex;
+    gap: 24px;
+    width: 100%;
+    padding: 1rem;
+  }
+  
+  .goalsCardsSection {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+  
+  .rightColumn {
+    width: 300px;
+    flex-shrink: 0;
+  }
+  
+  .deadlineCard {
+    position: sticky;
+    top: 24px;
+    padding: 0.5rem;
+    height: fit-content;
+    border-radius: 8px;
+  }
+  
+  .deadlineItem {
+    padding: 12px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .deadlineItem:last-child {
+    border-bottom: none;
+  }
+  
+  .deadlineGoalName {
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+  
+  .deadlineInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 14px;
+  }
+  
+  .deadlineDate {
+    color: #ff4d4f;
+  }
+  
+  .deadlineAmount {
+    color: #666;
+  }
+    
+  .addButton {
+    background-color: #004aad;
+  }
+  
+  .loading, .noData {
+    text-align: center;
+    padding: 48px;
+    color: #666;
+  }
+    
+  .modalFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }

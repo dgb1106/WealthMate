@@ -12,66 +12,66 @@ const MenuBar: React.FC = () => {
         <li>
           <Link href="/pages/dashboard" className={styles.menuItem}>
             <i className="fi fi-rr-apps"></i>
-            <span>Dashboard</span>
+            <span>Tổng Quan</span>
           </Link>
         </li>
         <li>
           <Link href="/pages/transactions" className={styles.menuItem}>
             <i className="fi fi-rr-exchange"></i>
-            <span>Transactions</span>
+            <span>Giao Dịch</span>
           </Link>
         </li>
         <li>
           <Link href="/pages/goals" className={styles.menuItem}>
             <i className="fi fi-rr-bullseye-arrow"></i>
-            <span>Goals</span>
+            <span>Mục Tiêu</span>
           </Link>
         </li>
         <li>
           <Link href="/pages/budgets" className={styles.menuItem}>
             <i className="fi fi-rr-piggy-bank-budget"></i>
-            <span>Budgets</span>
+            <span>Ngân Sách</span>
           </Link>
         </li>
         <li>
           <Link href="/pages/investment" className={styles.menuItem}>
             <i className="fi fi-rr-plant-seed-invest"></i>
-            <span>Investment</span>
+            <span>Đầu Tư</span>
           </Link>
         </li>
         <li>
           <Link href="/pages/analytics" className={styles.menuItem}>
             <i className="fi fi-rr-chart-histogram"></i>
-            <span>Analytics</span>
+            <span>Thống Kê</span>
           </Link>
         </li>
         <li>
           <Link href="/pages/loans" className={styles.menuItem}>
             <i className="fi fi-rr-handshake-deal-loan"></i>
-            <span>Loans</span>
+            <span>Khoản Nợ</span>
           </Link>
         </li>
         <li>
           <Link href="/pages/family" className={styles.menuItem}>
             <i className="fi fi-rr-people-roof"></i>
-            <span>Family</span>
+            <span>Gia Đình</span>
           </Link>
         </li>
         <li>
           <Link href="/pages/ai_assistant" className={styles.menuItem}>
             <i className="fi fi-rr-message-bot"></i>
-            <span>AI Assistant</span>
+            <span>Trợ Lý Ảo</span>
           </Link>
         </li>
         <li>
           <Link href="/pages/profile" className={styles.menuItem}>
             <i className="fi fi-rr-user"></i>
-            <span>Profile</span>
+            <span>Cá Nhân</span>
           </Link>
         </li>
         <li>
           <Link href="/pages/auth/login" className={`${styles.menuItem} ${styles.logoutItem}`}>
-            <span>Log out</span>
+            <span>Đăng Xuất</span>
           </Link>
         </li>
       </ul>

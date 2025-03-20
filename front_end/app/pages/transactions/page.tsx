@@ -30,30 +30,30 @@ interface Transaction {
 interface Category {
   id: string;
   name: string;
-  type: "EXPENSE" | "INCOME";
+  type: "Chi phí" | "Thu nhập";
 }
 
 const predefinedCategories: Category[] = [
-  { id: "1", name: "Ăn uống", type: "EXPENSE" },
-  { id: "2", name: "Nhà ở", type: "EXPENSE" },
-  { id: "3", name: "Di chuyển", type: "EXPENSE" },
-  { id: "4", name: "Giáo dục", type: "EXPENSE" },
-  { id: "5", name: "Quà tặng", type: "EXPENSE" },
-  { id: "6", name: "Hoá đơn & Tiện ích", type: "EXPENSE" },
-  { id: "7", name: "Mua sắm", type: "EXPENSE" },
-  { id: "8", name: "Làm đẹp", type: "EXPENSE" },
-  { id: "9", name: "Gia đình", type: "EXPENSE" },
-  { id: "10", name: "Vật nuôi", type: "EXPENSE" },
-  { id: "11", name: "Sức khoẻ", type: "EXPENSE" },
-  { id: "12", name: "Giải trí", type: "EXPENSE" },
-  { id: "13", name: "Công việc", type: "EXPENSE" },
-  { id: "14", name: "Bảo hiểm", type: "EXPENSE" },
-  { id: "15", name: "Các chi phí khác", type: "EXPENSE" },
-  { id: "16", name: "Trả nợ", type: "EXPENSE" },
-  { id: "17", name: "Thể thao", type: "EXPENSE" },
-  { id: "18", name: "Đầu tư", type: "EXPENSE" },
-  { id: "19", name: "Lương", type: "INCOME" },
-  { id: "20", name: "Thu nhập khác", type: "INCOME" },
+  { id: "1", name: "Ăn uống", type: "Chi phí" },
+  { id: "2", name: "Nhà ở", type: "Chi phí" },
+  { id: "3", name: "Di chuyển", type: "Chi phí" },
+  { id: "4", name: "Giáo dục", type: "Chi phí" },
+  { id: "5", name: "Quà tặng", type: "Chi phí" },
+  { id: "6", name: "Hoá đơn & Tiện ích", type: "Chi phí" },
+  { id: "7", name: "Mua sắm", type: "Chi phí" },
+  { id: "8", name: "Làm đẹp", type: "Chi phí" },
+  { id: "9", name: "Gia đình", type: "Chi phí" },
+  { id: "10", name: "Vật nuôi", type: "Chi phí" },
+  { id: "11", name: "Sức khoẻ", type: "Chi phí" },
+  { id: "12", name: "Giải trí", type: "Chi phí" },
+  { id: "13", name: "Công việc", type: "Chi phí" },
+  { id: "14", name: "Bảo hiểm", type: "Chi phí" },
+  { id: "15", name: "Các chi phí khác", type: "Chi phí" },
+  { id: "16", name: "Trả nợ", type: "Chi phí" },
+  { id: "17", name: "Thể thao", type: "Chi phí" },
+  { id: "18", name: "Đầu tư", type: "Chi phí" },
+  { id: "19", name: "Lương", type: "Thu nhập" },
+  { id: "20", name: "Thu nhập khác", type: "Thu nhập" },
 ];
 
 const TransactionsPage: React.FC = () => {
@@ -107,13 +107,13 @@ const TransactionsPage: React.FC = () => {
         },
       });
       if (!response.ok) {
-        throw new Error('Failed to fetch transactions');
+        throw new Error('Lấy thông tin thất bại');
       }
       const data = await response.json();
       setTransactions(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch transactions:', error);
-      message.error('Failed to load transactions');
+      message.error('Lấy thông tin thất bại');
       setTransactions([]);
     } finally {
       setLoading(false);
@@ -130,7 +130,7 @@ const TransactionsPage: React.FC = () => {
     try {
       const category = predefinedCategories.find(c => c.id === values.categoryId);
       const amount = parseInt(values.amount, 10);
-      const signedAmount = category?.type === "EXPENSE" ? Math.abs(amount)/1000 : Math.abs(amount)/1000;
+      const signedAmount = category?.type === "Chi phí" ? Math.abs(amount)/1000 : Math.abs(amount)/1000;
       const requestData = {
         categoryId: values.categoryId,
         amount: signedAmount,
@@ -152,16 +152,16 @@ const TransactionsPage: React.FC = () => {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Server error:', errorText);
-        throw new Error('Failed to add transaction');
+        throw new Error('Thêm Giao dịch thất bại');
       }
       
-      message.success('Transaction added successfully');
+      message.success('Thêm Giao dịch thành công');
       setModalVisible(false);
       form.resetFields();
       fetchTransactions();
     } catch (error) {
       console.error('Failed to add transaction:', error);
-      message.error('Failed to add transaction');
+      message.error('Thêm Giao dịch thất bại');
     }
   };
 
@@ -176,13 +176,13 @@ const TransactionsPage: React.FC = () => {
   
   const columns = [
     {
-      title: 'Date',
+      title: 'Ngày',
       dataIndex: 'created_at',
       key: 'created_at',
       render: (text: string) => dayjs(text).format('DD MMM'),
     },
     {
-      title: 'Amount',
+      title: 'Lượng tiền',
       dataIndex: 'amount',
       key: 'amount',
       render: (amount: number) => {
@@ -194,12 +194,12 @@ const TransactionsPage: React.FC = () => {
       },
     },
     {
-      title: 'Description',
+      title: 'Mô tả',
       dataIndex: 'description',
       key: 'description',
     },
     {
-      title: 'Category',
+      title: 'Danh mục',
       dataIndex: ['category', 'name'],
       key: 'category',
     },
@@ -229,12 +229,12 @@ const TransactionsPage: React.FC = () => {
 
   const typeOptions = [
     { value: 'all', label: 'All' },
-    { value: 'income', label: 'Income' },
-    { value: 'expenses', label: 'Expenses' },
+    { value: 'income', label: 'Thu nhập' },
+    { value: 'expenses', label: 'Chi phí' },
   ];
 
   const categoryOptions = [
-    { value: 'all', label: 'All Categories' },
+    { value: 'all', label: 'Tất cả Danh mục' },
     ...predefinedCategories.map(category => ({
       value: category.id,
       label: category.name
@@ -266,7 +266,7 @@ const TransactionsPage: React.FC = () => {
       // Số nguyên người dùng nhập vào (vd: 500000)
       const amount = parseInt(values.amount, 10);
       // Chuyển đổi sang giá trị lưu trữ (vd: 500) và xác định dấu dựa trên loại giao dịch
-      const signedAmount = category?.type === "EXPENSE" ? Math.abs(amount) / 1000 : Math.abs(amount) / 1000;
+      const signedAmount = category?.type === "Chi phí" ? Math.abs(amount) / 1000 : Math.abs(amount) / 1000;
       
       const requestData = {
         categoryId: values.categoryId,
@@ -285,15 +285,15 @@ const TransactionsPage: React.FC = () => {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to update transaction');
+        throw new Error('Chỉnh sửa Giao dịch thất bại');
       }
       
-      message.success('Transaction updated successfully');
+      message.success('Chỉnh sửa Giao dịch thành công');
       setEditModalVisible(false);
       fetchTransactions();
     } catch (error) {
       console.error('Failed to update transaction:', error);
-      message.error('Failed to update transaction');
+      message.error('Chỉnh sửa Giao dịch thất bại');
     }
   };
 
@@ -310,25 +310,25 @@ const TransactionsPage: React.FC = () => {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to delete transaction');
+        throw new Error('Xoá Giao dịch thất bại');
       }
       
-      message.success('Transaction deleted successfully');
+      message.success('Xoá Giao dịch thành công');
       setDetailModalVisible(false);
       fetchTransactions();
     } catch (error) {
       console.error('Failed to delete transaction:', error);
-      message.error('Failed to delete transaction');
+      message.error('Xoá Giao dịch thất bại');
     }
   };
 
   const confirmDelete = () => {
     Modal.confirm({
-      title: 'Are you sure you want to delete this transaction?',
-      content: 'This action cannot be undone.',
-      okText: 'Yes, Delete',
+      title: 'Bạn chắc chắn muốn xoá Giao dịch này không?',
+      content: 'Hành động này không thể hồi lại',
+      okText: 'Xoá',
       okType: 'danger',
-      cancelText: 'Cancel',
+      cancelText: 'Huỷ',
       onOk: handleDeleteTransaction
     });
   };
@@ -336,7 +336,7 @@ const TransactionsPage: React.FC = () => {
   return (
     <MainLayout>
       <div className={styles.header}>
-        <h1>Transactions</h1>
+        <h1>Giao Dịch</h1>
         <Button 
           type="primary" 
           shape="circle" 
@@ -381,7 +381,7 @@ const TransactionsPage: React.FC = () => {
             filterOption={(input, option) => 
               (option?.label as string).toLowerCase().includes(input.toLowerCase())
             }
-            placeholder="Select category"
+            placeholder="Chọn Danh mục"
           />
         </div>
 
@@ -400,7 +400,7 @@ const TransactionsPage: React.FC = () => {
       </div>
 
       <Modal
-        title="Adding a New Transaction"
+        title="Thêm Giao dịch mới"
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
@@ -413,20 +413,20 @@ const TransactionsPage: React.FC = () => {
         >
           <Form.Item
             name="description"
-            label="Description"
+            label="Mô tả"
             rules={[
-              { required: true, message: 'Description is required' },
-              { max: 255, message: 'Description cannot exceed 255 characters' }
+              { required: true, message: 'Mô tả là bắt buộc' },
+              { max: 255, message: 'Mô tả không thể vượt quá 255 kí tự' }
             ]}
           >
-            <Input placeholder="Transaction description" />
+            <Input placeholder="Mô tả Giao dịch" />
           </Form.Item>
 
           <Form.Item
             name="amount"
-            label="Amount"
+            label="Lượng"
             rules={[
-              { required: true, message: 'Amount is required' },
+              { required: true, message: 'Lượng là bắt buộc' },
               { 
                 validator: (_, value) => {
                   if (!value) return Promise.resolve();
@@ -435,34 +435,34 @@ const TransactionsPage: React.FC = () => {
                     const numValue = parseInt(value, 10);
                     
                     if (isNaN(numValue)) {
-                      return Promise.reject('Amount must be a valid number');
+                      return Promise.reject('Lượng phải là một số hợp lệ');
                     }  
                     if (numValue <= 0) {
-                      return Promise.reject('Amount must be a positive integer');
+                      return Promise.reject('Lượng phải là một số nguyên dương');
                     }
                     if (numValue.toString() !== value.toString()) {
-                      return Promise.reject('Amount must be a whole number');
+                      return Promise.reject('Lượng phải là một số nguyên');
                     }
                     
                     return Promise.resolve();
                   } catch (err) {
-                    return Promise.reject('Invalid amount format');
+                    return Promise.reject('Format không hợp lệ');
                   }
                 }
               }
             ]}
-            help="Enter a positive integer amount"
+            help="Vui lòng nhập một lượng là số nguyên dương"
           >
-            <Input type="number" min="1" step="1" placeholder="Amount" />
+            <Input type="number" min="1" step="1" placeholder="Lượng" />
           </Form.Item>
 
           <Form.Item
             name="categoryId"
-            label="Category"
-            rules={[{ required: true, message: 'Category is required' }]}
+            label="Danh mục"
+            rules={[{ required: true, message: 'Danh mục là bắt buộc' }]}
           >
             <Select 
-              placeholder="Select category"
+              placeholder="Chọn danh mục"
               showSearch
               optionFilterProp="children"
               filterOption={(input, option) => 
@@ -470,21 +470,21 @@ const TransactionsPage: React.FC = () => {
               }
               options={predefinedCategories.map(category => ({
                 value: category.id,
-                label: `${category.name} (${category.type === "INCOME" ? "Thu nhập" : "Chi phí"})`
+                label: `${category.name} (${category.type === "Thu nhập" ? "Thu nhập" : "Chi phí"})`
               }))}
             />
           </Form.Item>
 
           <Form.Item>
             <Button type="primary" htmlType="submit" block>
-              Add Transaction
+              Tạo
             </Button>
           </Form.Item>
         </Form>
       </Modal>
 
       <Modal
-        title="Transaction Details"
+        title="Chi tiết Giao dịch"
         open={detailModalVisible}
         onCancel={() => setDetailModalVisible(false)}
         footer={[
@@ -502,34 +502,34 @@ const TransactionsPage: React.FC = () => {
         {selectedTransaction && (
           <div className={styles.transactionDetails}>
             <p>
-              <strong>Date:</strong> {dayjs(selectedTransaction.created_at).format('MMMM D, YYYY')}
+              <strong>Thời gian:</strong> {dayjs(selectedTransaction.created_at).format('MMMM D, YYYY')}
             </p>
             <p>
-              <strong>Amount:</strong>{' '}
+              <strong>Lượng:</strong>{' '}
               <span className={selectedTransaction.amount < 0 ? styles.negativeAmount : styles.positiveAmount}>
                 {selectedTransaction.amount < 0 ? '-' : '+'}
                 {new Intl.NumberFormat('en-US').format(Math.abs(selectedTransaction.amount * 1000))}
               </span>
             </p>
             <p>
-              <strong>Description:</strong> {selectedTransaction.description}
+              <strong>Mô tả:</strong> {selectedTransaction.description}
             </p>
             <p>
-              <strong>Category:</strong> {selectedTransaction.category.name}
+              <strong>Danh mục:</strong> {selectedTransaction.category.name}
             </p>
             <p>
-              <strong>Type:</strong>{' '}
-              {selectedTransaction.amount < 0 ? 'Expense' : 'Income'}
+              <strong>Loại:</strong>{' '}
+              {selectedTransaction.amount < 0 ? 'Chi phí' : 'Thu nhập'}
             </p>
             <p>
-              <strong>Transaction ID:</strong> {selectedTransaction.id}
+              <strong>ID Giao dịch:</strong> {selectedTransaction.id}
             </p>
           </div>
         )}
       </Modal>
 
       <Modal
-        title="Edit Transaction"
+        title="Chỉnh sửa Giao dịch"
         open={editModalVisible}
         onCancel={() => setEditModalVisible(false)}
         footer={null}
@@ -542,20 +542,20 @@ const TransactionsPage: React.FC = () => {
         >
           <Form.Item
             name="description"
-            label="Description"
+            label="Mô tả"
             rules={[
-              { required: true, message: 'Description is required' },
-              { max: 255, message: 'Description cannot exceed 255 characters' }
+              { required: true, message: 'Mô tả là bắt buộc' },
+              { max: 255, message: 'Mô tả không thể vượt quá 255 kí tự' }
             ]}
           >
-            <Input placeholder="Transaction description" />
+            <Input placeholder="Mô tả Giao dịch" />
           </Form.Item>
 
           <Form.Item
             name="amount"
-            label="Amount"
+            label="Lượng"
             rules={[
-              { required: true, message: 'Amount is required' },
+              { required: true, message: 'Lượng là bắt buộc' },
               { 
                 validator: (_, value) => {
                   if (!value) return Promise.resolve();
@@ -564,34 +564,34 @@ const TransactionsPage: React.FC = () => {
                     const numValue = parseInt(value, 10);
                     
                     if (isNaN(numValue)) {
-                      return Promise.reject('Amount must be a valid number');
+                      return Promise.reject('Lượng phải là một số hợp lệ');
                     }  
                     if (numValue <= 0) {
-                      return Promise.reject('Amount must be a positive integer');
+                      return Promise.reject('Lượng phải là một số nguyên dương');
                     }
                     if (numValue.toString() !== value.toString()) {
-                      return Promise.reject('Amount must be a whole number');
+                      return Promise.reject('Lượng phải là một số nguyên');
                     }
                     
                     return Promise.resolve();
                   } catch (err) {
-                    return Promise.reject('Invalid amount format');
+                    return Promise.reject('Format không hợp lệ');
                   }
                 }
               }
             ]}
-            help="Enter a positive integer amount"
+            help="Vui lòng nhập một lượng là số nguyên dương"
           >
-            <Input type="number" min="1" step="1" placeholder="Amount" />
+            <Input type="number" min="1" step="1" placeholder="Lượng" />
           </Form.Item>
 
           <Form.Item
             name="categoryId"
-            label="Category"
-            rules={[{ required: true, message: 'Category is required' }]}
+            label="Danh mục"
+            rules={[{ required: true, message: 'Danh mục là bắt buộc' }]}
           >
             <Select 
-              placeholder="Select category"
+              placeholder="Chọn danh mục"
               showSearch
               optionFilterProp="children"
               filterOption={(input, option) => 
@@ -599,14 +599,14 @@ const TransactionsPage: React.FC = () => {
               }
               options={predefinedCategories.map(category => ({
                 value: category.id,
-                label: `${category.name} (${category.type === "INCOME" ? "Thu nhập" : "Chi phí"})`
+                label: `${category.name} (${category.type === "Thu nhập" ? "Thu nhập" : "Chi phí"})`
               }))}
             />
           </Form.Item>
 
           <Form.Item>
             <Button type="primary" htmlType="submit" block>
-              Update Transaction
+              Chỉnh sửa
             </Button>
           </Form.Item>
         </Form>

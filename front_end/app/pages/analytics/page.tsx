@@ -4,7 +4,7 @@ import MainLayout from '@/layouts/MainLayout/index';
 const AnalyticsPage: React.FC = () => {
   return (
     <MainLayout>
-      <h1>This is Analytics</h1>
+      <h1>Thống Kê</h1>
     </MainLayout>
   );
 };
