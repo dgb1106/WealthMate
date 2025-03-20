@@ -1,4 +1,3 @@
-import { Transaction } from './../../../../front_end/app/types/transaction';
 import { IsNotEmpty, IsString, IsNumber, IsDateString, IsPositive, MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
