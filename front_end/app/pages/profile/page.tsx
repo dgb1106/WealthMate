@@ -329,11 +329,19 @@ const ProfilePage: React.FC = () => {
                   <h3 className={styles.sectionTitle}>Financial Information</h3>
                   <div className={styles.infoItem}>
                     <span className={styles.infoLabel}>Primary Financial Goal:</span>
-                    <span className={styles.infoValue}>{profile.preferredGoal}</span>
+                    <span className={styles.infoValue}>
+                      {profile.preferredGoal === PreferredGoal.SAVING ? 'Saving Money' : 
+                       profile.preferredGoal === PreferredGoal.INVESTMENT ? 'Growing Investments' : 
+                       profile.preferredGoal}
+                    </span>
                   </div>
                   <div className={styles.infoItem}>
                     <span className={styles.infoLabel}>Preferred Feedback Style:</span>
-                    <span className={styles.infoValue}>{profile.preferredMood}</span>
+                    <span className={styles.infoValue}>
+                      {profile.preferredMood === PreferredMood.ENCOURAGEMENT ? 'Encouraging' : 
+                       profile.preferredMood === PreferredMood.IRRITATION ? 'Direct/Strict' : 
+                       profile.preferredMood}
+                    </span>
                   </div>
                 </div>
                 

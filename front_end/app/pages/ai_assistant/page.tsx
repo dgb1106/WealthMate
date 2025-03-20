@@ -17,7 +17,6 @@ const AiAssistantPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const chatBoxRef = useRef<HTMLDivElement>(null);
 
-  // Tự động cuộn xuống khi có tin nhắn mới
   useEffect(() => {
     if (chatBoxRef.current) {
       chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
