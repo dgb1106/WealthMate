@@ -69,6 +69,8 @@ const TransactionsPage: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingNotification, setRecordingNotification] = useState<any>(null);
 
   const fetchTransactions = async () => {
     setLoading(true);
@@ -333,6 +335,130 @@ const TransactionsPage: React.FC = () => {
     });
   };
 
+  const handleUploadImage = async () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    
+    input.onchange = async (e: any) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          const imageData = event.target?.result as string;
+          
+          try {
+            // Lưu ảnh vào localStorage
+            localStorage.setItem('tempTransactionImage', imageData);
+            const token = localStorage.getItem('authToken');
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai-utils/image-to-transaction`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ image: imageData }),
+            });
+
+            if (!response.ok) {
+              throw new Error('Failed to process image');
+            }
+
+            const transactionData = await response.json();
+            form.setFieldsValue({
+              description: transactionData.description,
+              amount: transactionData.amount,
+              categoryId: transactionData.categoryId
+            });
+            // localStorage.removeItem('tempTransactionImage'); nếu mà xử lí xong thì xoá
+            setModalVisible(true);
+            message.success('Image processed successfully');
+          } catch (error) {
+            console.error('Error processing image:', error);
+            message.error('Failed to process image');
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    
+    input.click();
+  };
+  
+
+  const handleVoiceRecord = async () => {
+    try {
+      if (!isRecording) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mediaRecorder = new MediaRecorder(stream);
+        const audioChunks: BlobPart[] = [];
+        mediaRecorder.addEventListener('dataavailable', (event) => {
+          audioChunks.push(event.data);
+        });
+        
+        mediaRecorder.addEventListener('stop', async () => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+          const reader = new FileReader();
+          
+          reader.onload = async (event) => {
+            const audioData = event.target?.result as string;
+            try {
+              localStorage.setItem('tempTransactionAudio', audioData);
+              const token = localStorage.getItem('authToken');
+              const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai-utils/speech-to-text`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ audio: audioData }),
+              });
+              if (!response.ok) {
+                throw new Error('Failed to process audio');
+              }
+              const { text } = await response.json();
+              // localStorage.removeItem('tempTransactionAudio');
+              Modal.info({
+                title: 'Transcribed Text',
+                content: text,
+                width: 600,
+                okText: 'Close',
+              });
+              
+              message.success('Audio processed successfully');
+            } catch (error) {
+              console.error('Error processing audio:', error);
+              message.error('Failed to process audio');
+              // localStorage.removeItem('tempTransactionAudio');
+            }
+          };
+          
+          reader.readAsDataURL(audioBlob);
+        });
+        mediaRecorder.start();
+        const notification = message.loading('Recording... Press the Voice button again to stop', 0);
+        setRecordingNotification(notification);
+        (window as any).currentRecorder = mediaRecorder;
+        setIsRecording(true);
+      } else {
+        const mediaRecorder = (window as any).currentRecorder;
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop();
+          mediaRecorder.stream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
+          (window as any).currentRecorder = null;
+        }
+        if (recordingNotification) {
+          recordingNotification();
+        }
+        
+        setIsRecording(false);
+      }
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      message.error('Could not access microphone');
+    }
+  };
+
   return (
     <MainLayout>
       <div className={styles.header}>
@@ -347,17 +473,17 @@ const TransactionsPage: React.FC = () => {
           </Button>
           <Button 
             icon={<UploadOutlined />}
-            onClick={() => message.info('Upload image functionality coming soon')}
+            onClick={handleUploadImage}
             className={styles.headerButton}
           >
             Upload
           </Button>
           <Button 
             icon={<AudioOutlined />}
-            onClick={() => message.info('Voice input functionality coming soon')}
-            className={styles.headerButton}
+            onClick={handleVoiceRecord}
+            className={`${styles.headerButton} ${isRecording ? styles.recordingButton : ''}`}
           >
-            Voice
+            {isRecording ? 'Stop' : 'Voice'}
           </Button>
           <Button 
             type="primary" 

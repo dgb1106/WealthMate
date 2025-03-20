@@ -57,3 +57,26 @@
     min-width: 100px;
     border-radius: 20px;
   }
+
+  .recordingButton {
+    background-color: #ff4d4f;
+    color: white;
+    animation: pulse 1.5s infinite;
+  }
+
+  .recordingButton:hover {
+    background-color: #ff7875;
+    color: white;
+  }
+
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 5px rgba(255, 77, 79, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);
+    }
+  }
