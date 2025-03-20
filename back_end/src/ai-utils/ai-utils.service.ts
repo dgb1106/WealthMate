@@ -72,6 +72,7 @@ export class AiUtilsService {
             });
             const response = await firstValueFrom(
                 this.httpService.post(`${this.baseUrl}/speech_transcribe`, formData, {
+                    timeout: 60000,
                     headers: {
                         ...formData.getHeaders(),
                     }
@@ -112,6 +113,7 @@ export class AiUtilsService {
             });
             const response = await firstValueFrom(
                 this.httpService.post(`${this.baseUrl}/scan_bills`, formData, {
+                    timeout: 60000,
                     headers: {
                         ...formData.getHeaders(),
                     }
