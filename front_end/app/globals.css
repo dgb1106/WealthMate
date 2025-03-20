@@ -32,7 +32,7 @@ body {
   --background: #ffffff;
   --foreground: #171717;
   --font-family-primary: 'Prompt', sans-serif;
-  --font-size-base: 20px;
+  --font-size-base: 17px;
   font-size: var(--font-size-base);
 }
 

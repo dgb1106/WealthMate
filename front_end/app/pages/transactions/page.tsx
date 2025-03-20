@@ -420,7 +420,7 @@ const TransactionsPage: React.FC = () => {
             
             console.log('Sending audio file to:', 'https://wealthmate.onrender.com/ai-utils/speech-to-text');
             
-            const response = await fetch(`https://wealthmate.onrender.com/ai-utils/speech-to-text`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai-utils/speech-to-text`, {
               method: 'POST',
               body: formData,
             });

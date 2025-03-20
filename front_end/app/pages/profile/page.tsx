@@ -4,6 +4,16 @@ import React, { useState, useEffect } from 'react';
 import MainLayout from '@/layouts/MainLayout/index';
 import styles from './styles.module.css';
 
+enum PreferredMood {
+  ENCOURAGEMENT = 'ENCOURAGEMENT',
+  IRRITATION = 'IRRITATION'
+}
+
+enum PreferredGoal {
+  SAVING = 'SAVING',
+  INVESTMENT = 'INVESTMENT'
+}
+
 interface UserProfile {
   id: string;
   name: string;
@@ -420,25 +430,33 @@ const ProfilePage: React.FC = () => {
                 </div>
                 
                 <div className={styles.formGroup}>
-                  <label htmlFor="preferredMood">Preferred Mood:</label>
-                  <input
-                    type="text"
+                  <label htmlFor="preferredMood">Preferred Feedback Style:</label>
+                  <select
                     id="preferredMood"
                     name="preferredMood"
                     value={updateForm.preferredMood || ''}
                     onChange={handleUpdateFormChange}
-                  />
+                    className={styles.selectField}
+                  >
+                    <option value="">Select feedback style</option>
+                    <option value={PreferredMood.ENCOURAGEMENT}>Encouraging</option>
+                    <option value={PreferredMood.IRRITATION}>Direct/Strict</option>
+                  </select>
                 </div>
-                
+
                 <div className={styles.formGroup}>
-                  <label htmlFor="preferredGoal">Financial Goal:</label>
-                  <input
-                    type="text"
+                  <label htmlFor="preferredGoal">Primary Financial Goal:</label>
+                  <select
                     id="preferredGoal"
                     name="preferredGoal"
                     value={updateForm.preferredGoal || ''}
                     onChange={handleUpdateFormChange}
-                  />
+                    className={styles.selectField}
+                  >
+                    <option value="">Select primary goal</option>
+                    <option value={PreferredGoal.SAVING}>Saving Money</option>
+                    <option value={PreferredGoal.INVESTMENT}>Growing Investments</option>
+                  </select>
                 </div>
                 
                 {updateError && <p className={styles.errorMessage}>{updateError}</p>}
