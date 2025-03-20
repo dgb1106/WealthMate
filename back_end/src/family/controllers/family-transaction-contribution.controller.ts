@@ -1,43 +1,40 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseGuards, Request, Query } from '@nestjs/common';
 import { FamilyTransactionContributionService } from '../services/family-transaction-contribution.service';
-import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { CreateFamilyTransactionContributionDto } from '../dto/create-family-transaction-contribution.dto';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 
-@ApiTags('Family Contributions')
+@ApiTags('family-transaction-contribution')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller()
+@Controller('family/groups/:groupId/contributions')
 export class FamilyTransactionContributionController {
-  constructor(
-    private readonly familyTransactionContributionService: FamilyTransactionContributionService,
-  ) {}
+  constructor(private readonly familyTransactionContributionService: FamilyTransactionContributionService) {}
 
-  @Post('family-transactions/contributions')
-  @ApiOperation({ summary: 'Create a new transaction contribution' })
-  async create(@Body() createContributionDto: CreateFamilyTransactionContributionDto, @Req() req) {
-    const userId = req.user.id;
-    const contribution = await this.familyTransactionContributionService.create(
-      userId,
-      createContributionDto,
-    );
-    return { success: true, data: contribution.toResponseFormat() };
+  @Post()
+  @ApiOperation({ summary: 'Tạo đóng góp giao dịch mới cho nhóm gia đình' })
+  create(@Request() req, @Body() createContributionDto: CreateFamilyTransactionContributionDto) {
+    return this.familyTransactionContributionService.create(req.user.id, createContributionDto);
   }
 
-  @Get('family-groups/:groupId/contributions')
-  @ApiOperation({ summary: 'Get all contributions for a family group' })
-  async findAll(@Param('groupId') groupId: string, @Req() req) {
-    const userId = req.user.id;
-    const contributions = await this.familyTransactionContributionService.findAll(groupId, userId);
-    return { 
-      success: true, 
-      data: contributions.map(contribution => contribution.toResponseFormat()) 
+  @Get()
+  @ApiOperation({ summary: 'Lấy tất cả đóng góp giao dịch của nhóm gia đình' })
+  async findAll(
+    @Param('groupId') groupId: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    const result = await this.familyTransactionContributionService.findAll(groupId, paginationDto);
+    
+    return {
+      ...result,
+      data: result.data.map(contribution => contribution.toResponseFormat())
     };
   }
 
-  @Get('family-groups/:groupId/contributions/my')
-  @ApiOperation({ summary: 'Get all contributions by the current user in a group' })
-  async findByUser(@Param('groupId') groupId: string, @Req() req) {
+  @Get('my')
+  @ApiOperation({ summary: 'Lấy tất cả đóng góp của người dùng hiện tại trong nhóm' })
+  async findByUser(@Param('groupId') groupId: string, @Request() req) {
     const userId = req.user.id;
     const contributions = await this.familyTransactionContributionService.findByUser(userId, groupId);
     return { 
@@ -46,17 +43,17 @@ export class FamilyTransactionContributionController {
     };
   }
 
-  @Get('family-groups/:groupId/contributions/stats')
-  @ApiOperation({ summary: 'Get contribution statistics for a family group' })
-  async getGroupContributionStats(@Param('groupId') groupId: string, @Req() req) {
+  @Get('stats')
+  @ApiOperation({ summary: 'Lấy thống kê đóng góp của nhóm gia đình' })
+  async getGroupContributionStats(@Param('groupId') groupId: string, @Request() req) {
     const userId = req.user.id;
     const stats = await this.familyTransactionContributionService.getGroupContributionStats(groupId, userId);
     return { success: true, data: stats };
   }
 
-  @Get('transactions/:transactionId/contributions')
-  @ApiOperation({ summary: 'Get all contributions for a specific transaction' })
-  async findByTransaction(@Param('transactionId') transactionId: string, @Req() req) {
+  @Get('transactions/:transactionId')
+  @ApiOperation({ summary: 'Lấy tất cả đóng góp cho một giao dịch cụ thể' })
+  async findByTransaction(@Param('transactionId') transactionId: string, @Request() req) {
     const userId = req.user.id;
     const contributions = await this.familyTransactionContributionService.findByTransaction(transactionId, userId);
     return { 
@@ -65,9 +62,9 @@ export class FamilyTransactionContributionController {
     };
   }
 
-  @Delete('family-transactions/contributions/:id')
-  @ApiOperation({ summary: 'Delete a contribution' })
-  async remove(@Param('id') id: string, @Req() req) {
+  @Delete(':id')
+  @ApiOperation({ summary: 'Xóa một đóng góp' })
+  async remove(@Param('id') id: string, @Request() req) {
     const userId = req.user.id;
     await this.familyTransactionContributionService.remove(id, userId);
     return { success: true, message: 'Contribution deleted successfully' };

@@ -2,7 +2,7 @@ import { FamilyMember } from '../entities/family-member.entity';
 import { FamilyMemberRole } from '../../common/enums/enum';
 
 export interface FamilyMemberRepository {
-  findAll(groupId: string): Promise<FamilyMember[]>;
+  findAll(groupId: string, options?: { includeDetails?: boolean }): Promise<FamilyMember[]>;
   findOne(id: string): Promise<FamilyMember | null>;
   findByUserAndGroup(userId: string, groupId: string): Promise<FamilyMember | null>;
   addMember(groupId: string, userId: string, role: FamilyMemberRole): Promise<FamilyMember>;

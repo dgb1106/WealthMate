@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaFamilyTransactionContributionRepository } from '../repositories/prisma-family-transaction-contribution.repository';
-import { PrismaFamilyMemberRepository } from '../repositories/prisma-family-member.repository';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
 import { FamilyTransactionContribution } from '../entities/family-transaction-contribution.entity';
 import { CreateFamilyTransactionContributionDto } from '../dto/create-family-transaction-contribution.dto';
+import { PaginationDto } from '../../common/dto/pagination.dto';
+import { PrismaFamilyMemberRepository } from '../repositories/prisma-family-member.repository';
+import { PrismaFamilyTransactionContributionRepository } from '../repositories/prisma-family-transaction-contribution.repository';
 
 @Injectable()
 export class FamilyTransactionContributionService {
@@ -28,14 +29,32 @@ export class FamilyTransactionContributionService {
     return this.familyTransactionContributionRepository.create(userId, createContributionDto);
   }
 
-  async findAll(groupId: string, userId: string): Promise<FamilyTransactionContribution[]> {
-    // Check if user is a member of this group
-    const isMember = await this.familyMemberRepository.isGroupMember(userId, groupId);
-    if (!isMember) {
-      throw new BadRequestException('You do not have permission to view contributions for this group');
-    }
+  async findAll(groupId: string, paginationDto?: PaginationDto): Promise<{ 
+    data: FamilyTransactionContribution[], 
+    total: number,
+    page: number,
+    limit: number,
+    totalPages: number
+  }> {
+    const { data, total } = await this.familyTransactionContributionRepository.findAll(
+      groupId, 
+      {
+        page: paginationDto?.page,
+        limit: paginationDto?.limit,
+        includeDetails: paginationDto?.includeDetails
+      }
+    );
     
-    return this.familyTransactionContributionRepository.findAll(groupId);
+    const page = paginationDto?.page || 1;
+    const limit = paginationDto?.limit || 10;
+    
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    };
   }
 
   async findByTransaction(transactionId: string, userId: string): Promise<FamilyTransactionContribution[]> {

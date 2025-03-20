@@ -5,6 +5,7 @@ import { FamilyGoal } from '../entities/family-goal.entity';
 import { CreateFamilyGoalDto } from '../dto/create-family-goal.dto';
 import { UpdateFamilyGoalDto } from '../dto/update-family-goal.dto';
 import { FamilyMemberRole, GoalStatus } from '../../common/enums/enum';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class PrismaFamilyGoalRepository implements FamilyGoalRepository {
@@ -65,33 +66,65 @@ export class PrismaFamilyGoalRepository implements FamilyGoalRepository {
     return FamilyGoal.fromPrisma(goalData);
   }
 
-  async findAll(groupId: string): Promise<FamilyGoal[]> {
-    const goals = await this.prisma.familyGoals.findMany({
-      where: { groupId: BigInt(groupId) },
-      include: {
-        creator: true,
-        group: true
-      },
-      orderBy: { created_at: 'desc' }
-    });
+  async findAll(groupId: string, options?: { page?: number, limit?: number, includeDetails?: boolean }): Promise<{ data: FamilyGoal[], total: number }> {
+    const page = options?.page ?? 1;
+    const limit = options?.limit ?? 10;
+    const skip = (page - 1) * limit;
+    const includeDetails = options?.includeDetails ?? false;
 
-    return FamilyGoal.fromPrismaArray(goals);
+    // Use Promise.all for parallel execution and count
+    const [goals, total] = await Promise.all([
+      this.prisma.familyGoals.findMany({
+        where: { groupId: BigInt(groupId) },
+        include: {
+          creator: includeDetails ? true : {
+            select: { id: true, name: true }
+          },
+          // Only include minimal group data to reduce payload
+          group: includeDetails ? true : {
+            select: { id: true, name: true }
+          }
+        },
+        orderBy: { created_at: 'desc' },
+        skip,
+        take: limit
+      }),
+      this.prisma.familyGoals.count({
+        where: { groupId: BigInt(groupId) }
+      })
+    ]);
+
+    return {
+      data: FamilyGoal.fromPrismaArray(goals),
+      total
+    };
   }
 
   async findOne(id: string): Promise<FamilyGoal | null> {
-    const goal = await this.prisma.familyGoals.findUnique({
-      where: { id: BigInt(id) },
-      include: {
-        creator: true,
-        group: true
+    try {
+      const goal = await this.prisma.familyGoals.findUnique({
+        where: { id: BigInt(id) },
+        include: {
+          creator: {
+            select: { id: true, name: true, email: true }
+          },
+          group: {
+            select: { id: true, name: true }
+          }
+        }
+      });
+
+      return goal ? FamilyGoal.fromPrisma(goal) : null;
+    } catch (error) {
+      // Proper error handling
+      if (error instanceof PrismaClientKnownRequestError) {
+        // Handle specific Prisma errors
+        if (error.code === 'P2023') { // Invalid ID format
+          return null;
+        }
       }
-    });
-
-    if (!goal) {
-      return null;
+      throw error;
     }
-
-    return FamilyGoal.fromPrisma(goal);
   }
 
   async update(id: string, userId: string, updateGoalDto: UpdateFamilyGoalDto): Promise<FamilyGoal> {

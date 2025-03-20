@@ -148,27 +148,65 @@ export class PrismaFamilyTransactionContributionRepository implements FamilyTran
     }
   }
 
-  async findAll(groupId: string): Promise<FamilyTransactionContribution[]> {
-    const contributions = await this.prisma.familyTransactionContributions.findMany({
-      where: { groupId: BigInt(groupId) },
-      include: {
-        transaction: {
-          include: {
-            user: true
-          }
-        },
-        group: true,
-        familyBudget: {
-          include: {
-            category: true
-          }
-        },
-        familyGoal: true
-      },
-      orderBy: { created_at: 'desc' }
-    });
+  async findAll(groupId: string, options?: { page?: number, limit?: number, includeDetails?: boolean }): Promise<{ data: FamilyTransactionContribution[], total: number }> {
+    const page = options?.page ?? 1;
+    const limit = options?.limit ?? 10;
+    const skip = (page - 1) * limit;
 
-    return FamilyTransactionContribution.fromPrismaArray(contributions);
+    // Split into two queries for better performance
+    const [contributions, total] = await Promise.all([
+      this.prisma.familyTransactionContributions.findMany({
+        where: { groupId: BigInt(groupId) },
+        include: {
+          transaction: {
+            include: {
+              // Only include essential user fields
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true
+                }
+              }
+            }
+          },
+          // Don't include full group data, just necessary fields
+          group: {
+            select: {
+              id: true,
+              name: true
+            }
+          },
+          familyBudget: options?.includeDetails ? {
+            include: {
+              category: true
+            }
+          } : {
+            select: {
+              id: true,
+              categoryId: true
+            }
+          },
+          familyGoal: options?.includeDetails ? true : {
+            select: {
+              id: true,
+              name: true
+            }
+          }
+        },
+        orderBy: { created_at: 'desc' },
+        skip,
+        take: limit
+      }),
+      this.prisma.familyTransactionContributions.count({
+        where: { groupId: BigInt(groupId) }
+      })
+    ]);
+
+    return {
+      data: FamilyTransactionContribution.fromPrismaArray(contributions),
+      total
+    };
   }
 
   async findOne(id: string): Promise<FamilyTransactionContribution | null> {
