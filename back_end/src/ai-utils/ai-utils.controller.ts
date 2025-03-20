@@ -3,6 +3,8 @@ import { AiUtilsService } from './ai-utils.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
+import { ChatDto } from './dto/chat.dto';
+import { TransactionClassificationDto } from './dto/transaction-classification.dto';
 
 @ApiTags('ai-utils')
 @Controller('ai-utils')
@@ -36,9 +38,9 @@ export class AiUtilsController {
     @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ.' })
     @ApiResponse({ status: 500, description: 'Lỗi server.' })
     async getTransactionClassification(
-        @Body('prompt') prompt: string
+        @Body() transactionClassification: TransactionClassificationDto
     ) {
-        return this.aiUtilsService.getTransactionClassification(prompt);
+        return this.aiUtilsService.getTransactionClassification(transactionClassification.prompt);
     }
 
     @Post('chat')
@@ -47,10 +49,9 @@ export class AiUtilsController {
     @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ.' })
     @ApiResponse({ status: 500, description: 'Lỗi server.' })
     async getChatResponse(
-        @Body('mood') mood: string,
-        @Body('message') message: string
+        @Body() chatDto: ChatDto
     ) {
-        return this.aiUtilsService.getChatResponse(mood, message);
+        return this.aiUtilsService.getChatResponse(chatDto.mood, chatDto.message);
     }
 
     @Post('speech-to-text')
