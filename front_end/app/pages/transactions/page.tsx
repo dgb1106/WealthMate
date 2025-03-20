@@ -12,7 +12,7 @@ import {
   Select,
   message 
 } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, DownloadOutlined, UploadOutlined, AudioOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import styles from './styles.module.css';
 
@@ -337,14 +337,37 @@ const TransactionsPage: React.FC = () => {
     <MainLayout>
       <div className={styles.header}>
         <h1>Transactions</h1>
-        <Button 
-          type="primary" 
-          shape="circle" 
-          icon={<PlusOutlined />} 
-          size="large"
-          onClick={() => setModalVisible(true)}
-          className={styles.addButton}
-        />
+        <div className={styles.headerButtons}>
+          <Button 
+            icon={<DownloadOutlined />}
+            onClick={() => message.info('Export functionality coming soon')}
+            className={styles.headerButton}
+          >
+            Export
+          </Button>
+          <Button 
+            icon={<UploadOutlined />}
+            onClick={() => message.info('Upload image functionality coming soon')}
+            className={styles.headerButton}
+          >
+            Upload
+          </Button>
+          <Button 
+            icon={<AudioOutlined />}
+            onClick={() => message.info('Voice input functionality coming soon')}
+            className={styles.headerButton}
+          >
+            Voice
+          </Button>
+          <Button 
+            type="primary" 
+            shape="circle" 
+            icon={<PlusOutlined />} 
+            size="large"
+            onClick={() => setModalVisible(true)}
+            className={styles.addButton}
+          />
+        </div>
       </div>
 
       <div className={styles.container}>
