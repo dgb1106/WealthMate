@@ -91,7 +91,7 @@ const TransactionsPage: React.FC = () => {
         } else if (selectedType === 'expenses') {
           endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/expenses/month?month=${adjustedMonth}&year=${selectedYear}`;
         } else {
-          endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/summary/month?month=${adjustedMonth}&year=${selectedYear}`;
+          endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/month?month=${adjustedMonth}&year=${selectedYear}`;
         }
       } 
       else if (selectedType === 'income') {
