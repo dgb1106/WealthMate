@@ -1,13 +1,15 @@
-import { Controller, Get, Post, Body, UseInterceptors, UploadedFile, Request, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseInterceptors, UploadedFile, Request, Query, UseGuards } from '@nestjs/common';
 import { AiUtilsService } from './ai-utils.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
 import { ChatDto } from './dto/chat.dto';
 import { TransactionClassificationDto } from './dto/transaction-classification.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @ApiTags('ai-utils')
 @Controller('ai-utils')
+@UseGuards(JwtAuthGuard)
 export class AiUtilsController {
     constructor(private readonly aiUtilsService: AiUtilsService) {}
 
