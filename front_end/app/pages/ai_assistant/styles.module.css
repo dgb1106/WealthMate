@@ -1,0 +1,131 @@
+.mainContent {
+    flex: 1;
+    padding: 20px;
+    background-color: #f9fafb;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  
+  .suggestions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .suggestionButton {
+    background-color: #e0e7ff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    cursor: pointer;
+    color: #1f2937;
+    font-weight: 500;
+  }
+  
+  .suggestionButton:hover {
+    background-color: #c7d2fe;
+  }
+  
+  .chatBox {
+    background-color: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    flex: 1;
+    overflow-y: auto;
+    margin: 20px auto;
+    max-height: 750px;
+    width: 100%;
+    color: black !important;
+  }
+  
+  .chatBox p {
+    color: black !important;
+    margin: 8px 0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    word-break: break-word;
+    font-weight: normal;
+  }
+  
+
+  .chatBox p:nth-child(odd) {
+    background-color: #e6f7ff;
+    align-self: flex-end;
+    color: black !important;
+  }
+  
+  /* Styling for bot messages */
+  .chatBox p:nth-child(even) {
+    background-color: #f0f0f0;
+    align-self: flex-start;
+    color: black !important;
+  }
+  
+  /* Khi chưa có tin nhắn nào */
+  .emptyChat {
+    color: #888;
+    text-align: center;
+    margin-top: 30px;
+  }
+  
+  /* Ô nhập tin nhắn và nút gửi */
+  .inputContainer {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .inputContainer input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 5px;
+  }
+  
+  .inputContainer button {
+    background-color: #3b82f6;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    padding: 0 20px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  
+  .inputContainer button:hover {
+    background-color: #2563eb;
+  }
+
+  .messageContainer {
+    display: flex;
+    margin-bottom: 10px;
+    width: 100%;
+  }
+
+  .userMessage {
+    justify-content: flex-end;
+  }
+
+  .botMessage {
+    justify-content: flex-start;
+  }
+
+  .messageContent {
+    max-width: 70%;
+    padding: 10px 15px;
+    border-radius: 12px;
+    word-break: break-word;
+  }
+
+  .userMessage .messageContent {
+    background-color: #0084ff;
+    color: white;
+    border-top-right-radius: 4px;
+  }
+
+  .botMessage .messageContent {
+    background-color: #f0f0f0;
+    color: #333;
+    border-top-left-radius: 4px;
+  }
