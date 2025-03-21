@@ -193,39 +193,63 @@ export class PrismaGoalRepository implements GoalRepository {
   ): Promise<{ sourceGoal: Goal; targetGoal: Goal }> {
     // Execute the transfer in a transaction
     return this.prisma.$transaction(async (prisma) => {
-      // Reduce amount from source goal
+      // Get the current goals first to calculate new status
+      const sourceGoal = await prisma.goals.findUnique({
+        where: { id: BigInt(sourceGoalId) }
+      });
+      
+      const targetGoal = await prisma.goals.findUnique({
+        where: { id: BigInt(targetGoalId) }
+      });
+      
+      if (!sourceGoal || !targetGoal) {
+        throw new NotFoundException("One or both goals not found");
+      }
+      
+      // Check if source goal has enough funds
+      if (Number(sourceGoal.saved_amount) < amount) {
+        throw new BadRequestException(`Insufficient funds in source goal. Available: ${sourceGoal.saved_amount}, Required: ${amount}`);
+      }
+      
+      // Create entity objects to handle status logic
+      const sourceGoalEntity = Goal.fromPrisma(sourceGoal);
+      const targetGoalEntity = Goal.fromPrisma(targetGoal);
+      
+      // Update entities
+      sourceGoalEntity.withdrawFunds(amount);
+      targetGoalEntity.addFunds(amount);
+      
+      // Update source goal with new amount and status
       const updatedSourceGoal = await prisma.goals.update({
         where: { 
           id: BigInt(sourceGoalId),
           userId
         },
         data: {
-          saved_amount: {
-            decrement: amount
-          }
+          saved_amount: sourceGoalEntity.saved_amount,
+          status: sourceGoalEntity.status
         }
       });
       
-      // Add amount to target goal
+      // Update target goal with new amount and status
       const updatedTargetGoal = await prisma.goals.update({
         where: {
           id: BigInt(targetGoalId),
           userId
         },
         data: {
-          saved_amount: {
-            increment: amount
-          }
+          saved_amount: targetGoalEntity.saved_amount,
+          status: targetGoalEntity.status
         }
       });
-
+  
       return { 
         sourceGoal: Goal.fromPrisma(updatedSourceGoal), 
         targetGoal: Goal.fromPrisma(updatedTargetGoal) 
       };
     });
   }
-
+  
   async findActiveGoals(userId: string): Promise<Goal[]> {
     const today = new Date();
     
