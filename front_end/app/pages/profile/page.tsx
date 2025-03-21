@@ -4,6 +4,16 @@ import React, { useState, useEffect } from 'react';
 import MainLayout from '@/layouts/MainLayout/index';
 import styles from './styles.module.css';
 
+enum PreferredMood {
+  ENCOURAGEMENT = 'ENCOURAGEMENT',
+  IRRITATION = 'IRRITATION'
+}
+
+enum PreferredGoal {
+  SAVING = 'SAVING',
+  INVESTMENT = 'INVESTMENT'
+}
+
 interface UserProfile {
   id: string;
   name: string;
@@ -41,7 +51,7 @@ const ProfilePage: React.FC = () => {
         const authToken = localStorage.getItem('authToken');
         
         if (!authToken) {
-          setError('Vui lòng đăng nhập để xem thông tin');
+          setError('Please log in to view information');
           setLoading(false);
           return;
         }
@@ -54,13 +64,13 @@ const ProfilePage: React.FC = () => {
         });
         
         if (!response.ok) {
-          throw new Error('Không thể lấy thông tin người dùng');
+          throw new Error('Unable to retrieve user information');
         }
         
         const data = await response.json();
         setProfile(data);
       } catch (err) {
-        setError('Đã có lỗi xảy ra khi lấy thông tin');
+        setError('An error occurred while retrieving information');
         console.error(err);
       } finally {
         setLoading(false);
@@ -93,42 +103,61 @@ const ProfilePage: React.FC = () => {
       const authToken = localStorage.getItem('authToken');
       
       if (!authToken) {
-        setUpdateError('Vui lòng đăng nhập để cập nhật thông tin');
+        setUpdateError('Please log in to update information');
         return;
       }
-      const queryParams = new URLSearchParams();
-      Object.entries(updateForm).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          queryParams.append(key, String(value));
-        }
-      });
+
+      if (!profile?.id) {
+        setUpdateError('User information not found');
+        return;
+      }
+      const updatePayload: Partial<UserProfile> = {};
+      if (updateForm.name !== profile.name) updatePayload.name = updateForm.name;
+      if (updateForm.phone !== profile.phone) updatePayload.phone = updateForm.phone;
+      if (updateForm.city !== profile.city) updatePayload.city = updateForm.city;
+      if (updateForm.district !== profile.district) updatePayload.district = updateForm.district;
+      if (updateForm.job !== profile.job) updatePayload.job = updateForm.job;
+      if (updateForm.preferredMood !== profile.preferredMood) updatePayload.preferredMood = updateForm.preferredMood;
+      if (updateForm.preferredGoal !== profile.preferredGoal) updatePayload.preferredGoal = updateForm.preferredGoal;
+      console.log('Sending update with data:', updatePayload);
+      
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/profile?${queryParams.toString()}`, 
+        `${process.env.NEXT_PUBLIC_API_URL}/users/${profile.id}`, 
         {
-          method: 'GET',
+          method: 'PATCH',
           headers: {
             'Authorization': `Bearer ${authToken}`,
             'Content-Type': 'application/json'
-          }
+          },
+          body: JSON.stringify(updatePayload)
         }
       );
       
       if (!response.ok) {
-        throw new Error('Không thể cập nhật thông tin');
+        let errorMessage = 'Unable to update information';
+        try {
+          const errorData = await response.json();
+          console.error('Server error response:', errorData);
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch (e) {
+          console.error('Error status:', response.status, response.statusText);
+        }
+        throw new Error(errorMessage);
       }
       
       const updatedProfile = await response.json();
       setProfile(updatedProfile);
-      setUpdateSuccess('Cập nhật thông tin thành công!');
+      setUpdateSuccess('Information updated successfully!');
       
       setTimeout(() => {
         setShowUpdateModal(false);
         setUpdateSuccess('');
-      }, 2000);
+      }, 1000);
       
-    } catch (err) {
-      setUpdateError('Đã có lỗi xảy ra khi cập nhật thông tin');
-      console.error(err);
+    } catch (err: any) {
+      const errorMessage = err.message || 'An error occurred while updating information';
+      setUpdateError(errorMessage);
+      console.error('Update profile error:', err);
     }
   };
 
@@ -137,7 +166,7 @@ const ProfilePage: React.FC = () => {
     setPasswordError('');
     setPasswordSuccess('');
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setPasswordError('Mật khẩu mới không khớp');
+      setPasswordError('New passwords do not match');
       return;
     }
     
@@ -145,7 +174,7 @@ const ProfilePage: React.FC = () => {
       const authToken = localStorage.getItem('authToken');
       
       if (!authToken) {
-        setPasswordError('Vui lòng đăng nhập để đổi mật khẩu');
+        setPasswordError('Please log in to change password');
         return;
       }
       
@@ -165,10 +194,10 @@ const ProfilePage: React.FC = () => {
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Không thể đổi mật khẩu');
+        throw new Error(errorData.message || 'Unable to change password');
       }
       
-      setPasswordSuccess('Đổi mật khẩu thành công!');
+      setPasswordSuccess('Password changed successfully!');
       setPasswordForm({
         currentPassword: '',
         newPassword: '',
@@ -178,13 +207,14 @@ const ProfilePage: React.FC = () => {
       setTimeout(() => {
         setShowPasswordModal(false);
         setPasswordSuccess('');
-      }, 2000);
+      }, 500);
       
     } catch (err: any) {
-      setPasswordError(err.message || 'Đã có lỗi xảy ra khi đổi mật khẩu');
+      setPasswordError(err.message || 'An error occurred while changing password');
       console.error(err);
     }
   };
+
   const handleUpdateFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setUpdateForm(prev => ({
@@ -280,30 +310,38 @@ const ProfilePage: React.FC = () => {
               
               <div className={styles.profileContent}>
                 <div className={styles.infoGroup}>
-                  <h3 className={styles.sectionTitle}>Thông tin liên hệ</h3>
+                  <h3 className={styles.sectionTitle}>Contact Information</h3>
                   <div className={styles.infoItem}>
                     <span className={styles.infoLabel}>Email:</span>
                     <span className={styles.infoValue}>{profile.email}</span>
                   </div>
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>Số điện thoại:</span>
+                    <span className={styles.infoLabel}>Phone Number:</span>
                     <span className={styles.infoValue}>{profile.phone}</span>
                   </div>
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>Địa chỉ:</span>
+                    <span className={styles.infoLabel}>Address:</span>
                     <span className={styles.infoValue}>{profile.district}, {profile.city}</span>
                   </div>
                 </div>
                 
                 <div className={styles.infoGroup}>
-                  <h3 className={styles.sectionTitle}>Thông tin tài chính</h3>
+                  <h3 className={styles.sectionTitle}>Financial Information</h3>
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>Mục tiêu:</span>
-                    <span className={styles.infoValue}>{profile.preferredGoal}</span>
+                    <span className={styles.infoLabel}>Primary Financial Goal:</span>
+                    <span className={styles.infoValue}>
+                      {profile.preferredGoal === PreferredGoal.SAVING ? 'Saving Money' : 
+                       profile.preferredGoal === PreferredGoal.INVESTMENT ? 'Growing Investments' : 
+                       profile.preferredGoal}
+                    </span>
                   </div>
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>Tâm trạng ưa thích:</span>
-                    <span className={styles.infoValue}>{profile.preferredMood}</span>
+                    <span className={styles.infoLabel}>Preferred Feedback Style:</span>
+                    <span className={styles.infoValue}>
+                      {profile.preferredMood === PreferredMood.ENCOURAGEMENT ? 'Encouraging' : 
+                       profile.preferredMood === PreferredMood.IRRITATION ? 'Direct/Strict' : 
+                       profile.preferredMood}
+                    </span>
                   </div>
                 </div>
                 
@@ -313,13 +351,13 @@ const ProfilePage: React.FC = () => {
                     className={`${styles.actionButton} ${styles.updateButton}`}
                     onClick={() => setShowUpdateModal(true)}
                   >
-                    Cập nhật thông tin
+                    Update information
                   </button>
                   <button 
                     className={`${styles.actionButton} ${styles.passwordButton}`}
                     onClick={() => setShowPasswordModal(true)}
                   >
-                    Đổi mật khẩu
+                    Change password
                   </button>
                 </div>
               </div>
@@ -333,7 +371,7 @@ const ProfilePage: React.FC = () => {
           <div className={styles.modalOverlay}>
             <div className={styles.modal}>
               <div className={styles.modalHeader}>
-                <h3>Cập nhật thông tin</h3>
+                <h3>Update Information</h3>
                 <button 
                   className={styles.closeButton}
                   onClick={() => setShowUpdateModal(false)}
@@ -344,7 +382,7 @@ const ProfilePage: React.FC = () => {
               
               <form onSubmit={handleUpdateProfile}>
                 <div className={styles.formGroup}>
-                  <label htmlFor="name">Họ tên:</label>
+                  <label htmlFor="name">Full Name:</label>
                   <input
                     type="text"
                     id="name"
@@ -356,7 +394,7 @@ const ProfilePage: React.FC = () => {
                 </div>
                 
                 <div className={styles.formGroup}>
-                  <label htmlFor="phone">Số điện thoại:</label>
+                  <label htmlFor="phone">Phone Number:</label>
                   <input
                     type="tel"
                     id="phone"
@@ -367,7 +405,7 @@ const ProfilePage: React.FC = () => {
                 </div>
                 
                 <div className={styles.formGroup}>
-                  <label htmlFor="job">Nghề nghiệp:</label>
+                  <label htmlFor="job">Occupation:</label>
                   <input
                     type="text"
                     id="job"
@@ -378,7 +416,7 @@ const ProfilePage: React.FC = () => {
                 </div>
                 
                 <div className={styles.formGroup}>
-                  <label htmlFor="city">Thành phố:</label>
+                  <label htmlFor="city">City:</label>
                   <input
                     type="text"
                     id="city"
@@ -389,7 +427,7 @@ const ProfilePage: React.FC = () => {
                 </div>
                 
                 <div className={styles.formGroup}>
-                  <label htmlFor="district">Quận/Huyện:</label>
+                  <label htmlFor="district">District:</label>
                   <input
                     type="text"
                     id="district"
@@ -400,25 +438,33 @@ const ProfilePage: React.FC = () => {
                 </div>
                 
                 <div className={styles.formGroup}>
-                  <label htmlFor="preferredMood">Tâm trạng ưa thích:</label>
-                  <input
-                    type="text"
+                  <label htmlFor="preferredMood">Preferred Feedback Style:</label>
+                  <select
                     id="preferredMood"
                     name="preferredMood"
                     value={updateForm.preferredMood || ''}
                     onChange={handleUpdateFormChange}
-                  />
+                    className={styles.selectField}
+                  >
+                    <option value="">Select feedback style</option>
+                    <option value={PreferredMood.ENCOURAGEMENT}>Encouraging</option>
+                    <option value={PreferredMood.IRRITATION}>Direct/Strict</option>
+                  </select>
                 </div>
-                
+
                 <div className={styles.formGroup}>
-                  <label htmlFor="preferredGoal">Mục tiêu tài chính:</label>
-                  <input
-                    type="text"
+                  <label htmlFor="preferredGoal">Primary Financial Goal:</label>
+                  <select
                     id="preferredGoal"
                     name="preferredGoal"
                     value={updateForm.preferredGoal || ''}
                     onChange={handleUpdateFormChange}
-                  />
+                    className={styles.selectField}
+                  >
+                    <option value="">Select primary goal</option>
+                    <option value={PreferredGoal.SAVING}>Saving Money</option>
+                    <option value={PreferredGoal.INVESTMENT}>Growing Investments</option>
+                  </select>
                 </div>
                 
                 {updateError && <p className={styles.errorMessage}>{updateError}</p>}
@@ -426,14 +472,14 @@ const ProfilePage: React.FC = () => {
                 
                 <div className={styles.modalActions}>
                   <button type="submit" className={styles.submitButton}>
-                    Cập nhật
+                    Update
                   </button>
                   <button 
                     type="button" 
                     className={styles.cancelButton}
                     onClick={() => setShowUpdateModal(false)}
                   >
-                    Hủy bỏ
+                    Cancel
                   </button>
                 </div>
               </form>
@@ -446,7 +492,7 @@ const ProfilePage: React.FC = () => {
           <div className={styles.modalOverlay}>
             <div className={styles.modal}>
               <div className={styles.modalHeader}>
-                <h3>Đổi mật khẩu</h3>
+                <h3>Change password</h3>
                 <button 
                   className={styles.closeButton}
                   onClick={() => setShowPasswordModal(false)}
@@ -457,7 +503,7 @@ const ProfilePage: React.FC = () => {
               
               <form onSubmit={handleChangePassword}>
                 <div className={styles.formGroup}>
-                  <label htmlFor="currentPassword">Mật khẩu hiện tại:</label>
+                  <label htmlFor="currentPassword">Current Password:</label>
                   <input
                     type="password"
                     id="currentPassword"
@@ -469,7 +515,7 @@ const ProfilePage: React.FC = () => {
                 </div>
                 
                 <div className={styles.formGroup}>
-                  <label htmlFor="newPassword">Mật khẩu mới:</label>
+                  <label htmlFor="newPassword">New Password:</label>
                   <input
                     type="password"
                     id="newPassword"
@@ -481,7 +527,7 @@ const ProfilePage: React.FC = () => {
                 </div>
                 
                 <div className={styles.formGroup}>
-                  <label htmlFor="confirmPassword">Xác nhận mật khẩu mới:</label>
+                  <label htmlFor="confirmPassword">Confirm New Password:</label>
                   <input
                     type="password"
                     id="confirmPassword"
@@ -504,7 +550,7 @@ const ProfilePage: React.FC = () => {
                     className={styles.cancelButton}
                     onClick={() => setShowPasswordModal(false)}
                   >
-                    Hủy bỏ
+                    Cancel
                   </button>
                 </div>
               </form>
