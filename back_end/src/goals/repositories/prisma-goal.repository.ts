@@ -4,7 +4,7 @@ import { CreateGoalDto } from '../dto/create-goal.dto';
 import { UpdateGoalDto } from '../dto/update-goal.dto';
 import { Goal } from '../entities/goal.entity';
 import { GoalStatus } from '../../common/enums/enum';
-
+import { TransactionService } from '../../transactions/transactions.service';
 export interface GoalRepository {
   create(userId: string, createGoalDto: CreateGoalDto): Promise<Goal>;
   findAll(userId: string): Promise<Goal[]>;
@@ -18,11 +18,15 @@ export interface GoalRepository {
   findOverdueGoals(userId: string): Promise<Goal[]>;
   findGoalsNearingDeadline(userId: string, daysThreshold: number): Promise<Goal[]>;
   transferFundsBetweenGoals(sourceGoalId: string, targetGoalId: string, userId: string, amount: number): Promise<{ sourceGoal: Goal; targetGoal: Goal }>;
+  withdrawFundsFromGoal(id: string, userId: string, amount: number): Promise<Goal>;
 }
 
 @Injectable()
 export class PrismaGoalRepository implements GoalRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly transactionService: TransactionService
+  ) {}
 
   async create(userId: string, createGoalDto: CreateGoalDto): Promise<Goal> {
     const goal = Goal.create({
@@ -148,6 +152,23 @@ export class PrismaGoalRepository implements GoalRepository {
         throw new BadRequestException(`Insufficient balance. Available: ${currentBalance}, Required: ${amount}`);
       }
 
+      const currentGoal = await prisma.goals.findUnique({
+        where: { id: BigInt(id) }
+      });
+
+      if (!currentGoal) {
+        throw new NotFoundException(`Goal with ID ${id} not found`);
+      }
+
+      const goalEntity = Goal.fromPrisma(currentGoal);
+      goalEntity.addFunds(amount);
+
+      await this.transactionService.createTransaction(userId, {
+        categoryId: '20', // '20' is the category ID for goal contributions
+        amount: amount,
+        description: `Thêm tiền vào mục tiêu: ${currentGoal.name}`,
+      });
+
       // Add funds to goal
       const updatedGoal = await prisma.goals.update({
         where: {
@@ -155,18 +176,11 @@ export class PrismaGoalRepository implements GoalRepository {
           userId
         },
         data: {
-          saved_amount: {
-            increment: amount
-          }
+          saved_amount: goalEntity.saved_amount,
+          status: goalEntity.status
         }
       });
       
-      // Update user balance
-      await prisma.users.update({
-        where: { id: userId },
-        data: { current_balance: { decrement: amount } }
-      });
-
       return Goal.fromPrisma(updatedGoal);
     });
   }
@@ -273,4 +287,50 @@ export class PrismaGoalRepository implements GoalRepository {
     
     return Goal.fromPrismaArray(goals);
   }
+
+  async withdrawFundsFromGoal(id: string, userId: string, amount: number): Promise<Goal> {
+    // Thực hiện trong transaction để đảm bảo tính nhất quán
+    return this.prisma.$transaction(async (prisma) => {
+      // Xác minh goal tồn tại và thuộc về người dùng
+      const currentGoal = await prisma.goals.findFirst({
+        where: { 
+          id: BigInt(id),
+          userId 
+        }
+      });
+  
+      if (!currentGoal) {
+        throw new NotFoundException(`Goal with ID ${id} not found or does not belong to user`);
+      }
+  
+      // Chuyển đổi sang entity để xử lý logic nghiệp vụ
+      const goalEntity = Goal.fromPrisma(currentGoal);
+      
+      try {
+        // Thực hiện rút tiền và cập nhật status
+        goalEntity.withdrawFunds(amount);
+      } catch (error) {
+        throw new BadRequestException(error.message);
+      }
+  
+      
+      await this.transactionService.createTransaction(userId, {
+        categoryId: '21', // ID của danh mục "Thu nhập khác"
+        amount: amount,
+        description: `Rút tiền từ mục tiêu: ${currentGoal.name}`
+      });
+
+      // Cập nhật goal trong database
+      const updatedGoal = await prisma.goals.update({
+        where: { id: BigInt(id) },
+        data: {
+          saved_amount: goalEntity.saved_amount,
+          status: goalEntity.status
+        }
+      });
+      
+      return Goal.fromPrisma(updatedGoal);
+    });
+  }
+
 }

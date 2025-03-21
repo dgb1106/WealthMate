@@ -225,4 +225,21 @@ export class GoalsService {
     const goals = await this.goalRepository.findGoalsNearingDeadline(userId, daysThreshold);
     return goals.map(goal => goal.toResponseFormat());
   }
+
+  async withdrawFundsFromGoal(id: string, userId: string, amount: number) {
+    try {
+      // Validate the amount
+      this.goalDomainService.validateWithdrawFunds(amount);
+      
+      // Use repository to withdraw funds
+      const goal = await this.goalRepository.withdrawFundsFromGoal(id, userId, amount);
+      
+      return goal.toResponseFormat();
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException('Không thể rút tiền từ mục tiêu: ' + error.message);
+    }
+  }
 }
