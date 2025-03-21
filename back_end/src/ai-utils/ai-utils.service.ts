@@ -16,7 +16,7 @@ export class AiUtilsService {
         // this.baseUrl = this.configService.get('AI_UTILS_BASE_URL') || 'https://wealthmate-ai-services.onrender.com';
         // this.baseUrl = 'https://wealthmate-ai-services.onrender.com';
         // this.baseUrl = 'http://127.0.0.1:5000';
-        this.baseUrl = 'https://kennethduong-wealthmate.hf.space';
+        this.baseUrl = `${process.env.AI_UTILS_ONLINE_URL}`;
     }
 
     async getExpenseForecast(income: number, interestRate: number, inflationRate: number, holidays: number): Promise<number> {
