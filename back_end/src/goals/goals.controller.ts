@@ -3,7 +3,7 @@ import { GoalsService } from './goals.service';
 import { CreateGoalDto } from './dto/create-goal.dto';
 import { UpdateGoalDto } from './dto/update-goal.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { RequestWithUser } from '../common/interfaces/request-with-user.interface';
 
 @ApiTags('goals')
@@ -60,6 +60,7 @@ export class GoalsController {
 
   @Post('transfer')
   @ApiOperation({ summary: 'Chuyển tiền giữa các mục tiêu' })
+  @ApiBody({ type: [String], description: 'sourceGoalId: ID của mục tiêu nguồn, targetGoalId: ID của mục tiêu đích, amount: số tiền cần chuyển' })
   @ApiResponse({ status: 200, description: 'Chuyển tiền thành công.' })
   @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ.' })
   async transferFunds(
@@ -80,8 +81,8 @@ export class GoalsController {
   @ApiQuery({ name: 'amount', type: Number, description: 'Số tiền cần rút' })
   @ApiResponse({ status: 200, description: 'Rút tiền thành công.' })
   @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ.' })
-  async withdrawFunds(@Request() req: RequestWithUser, @Query('goalId') goalId: string, @Query('amount') amount: number) {
-    return this.goalsService.withdrawFundsFromGoal(goalId, req.user.userId, amount);
+  async withdrawFunds(@Request() req: RequestWithUser, @Param('id') id: string, @Query('amount') amount: number) {
+    return this.goalsService.withdrawFundsFromGoal(id, req.user.userId, amount);
   }
 
   @Get(':id')
