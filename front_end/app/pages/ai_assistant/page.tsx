@@ -139,6 +139,7 @@ const AiAssistantPage: React.FC = () => {
 
   return (
     <MainLayout>
+      <h1>Trợ Lý Ảo</h1>
       <div className={styles.mainContent}>
         {/* Các nút gợi ý */}
         <div className={styles.suggestions}>

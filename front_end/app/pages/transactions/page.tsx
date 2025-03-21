@@ -553,37 +553,14 @@ const TransactionsPage: React.FC = () => {
     <MainLayout>
       <div className={styles.header}>
         <h1>Giao Dịch</h1>
-        <div className={styles.headerButtons}>
-          <Button 
-            icon={<DownloadOutlined />}
-            onClick={() => message.info('Export functionality coming soon')}
-            className={styles.headerButton}
-          >
-            Export
-          </Button>
-          <Button 
-            icon={<UploadOutlined />}
-            onClick={handleUploadImage}
-            className={styles.headerButton}
-          >
-            Upload
-          </Button>
-          <Button 
-            icon={<AudioOutlined />}
-            onClick={handleVoiceRecord}
-            className={`${styles.headerButton} ${isRecording ? styles.recordingButton : ''}`}
-          >
-            {isRecording ? 'Stop' : 'Voice'}
-          </Button>
-          <Button 
-            type="primary" 
-            shape="circle" 
-            icon={<PlusOutlined />} 
-            size="large"
-            onClick={() => setModalVisible(true)}
-            className={styles.addButton}
-          />
-        </div>
+        <Button 
+          type="primary" 
+          shape="circle" 
+          icon={<PlusOutlined />} 
+          size="large"
+          onClick={() => setModalVisible(true)}
+          className={styles.addButton}
+        />
       </div>
 
       <div className={styles.container}>
