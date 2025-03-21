@@ -36,6 +36,7 @@ enum GoalStatus {
   PENDING
   IN_PROGRESS
   COMPLETED
+  OVER_DUE
 }
 
 enum LoanStatus {

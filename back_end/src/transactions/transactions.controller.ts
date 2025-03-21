@@ -8,7 +8,6 @@ import {
   Param, 
   Query,
   ParseIntPipe,
-  BadRequestException,
   Patch,
   Delete,
   HttpCode,

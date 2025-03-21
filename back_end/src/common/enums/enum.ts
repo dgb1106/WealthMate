@@ -25,7 +25,8 @@ export enum PreferredMood {
   export enum GoalStatus {
     PENDING = "PENDING",
     IN_PROGRESS = "IN_PROGRESS",
-    COMPLETED = "COMPLETED"
+    COMPLETED = "COMPLETED",
+    OVER_DUE = "OVER_DUE"
   }
   
   export enum RecommendationType {

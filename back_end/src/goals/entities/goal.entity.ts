@@ -73,6 +73,7 @@ export class Goal {
   }
   
   isCompleted(): boolean {
+    if (this.status === GoalStatus.COMPLETED) return true;
     return this.saved_amount >= this.target_amount;
   }
   
@@ -83,9 +84,36 @@ export class Goal {
     return Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   }
   
+  /**
+   * Add funds to the goal
+   * @param amount Amount to add
+   */
   addFunds(amount: number): void {
     this.saved_amount += amount;
     this.updateStatus();
+  }
+
+  /**
+   * Withdraw funds from the goal
+   * @param amount Amount to withdraw
+   */
+  withdrawFunds(amount: number): void {
+    if (amount <= 0) {
+      throw new Error('Withdrawal amount must be positive');
+    }
+    
+    if (amount > this.saved_amount) {
+      throw new Error(`Cannot withdraw more than available. Available: ${this.saved_amount}, Requested: ${amount}`);
+    }
+    
+    this.saved_amount -= amount;
+    
+    // Cập nhật status sau khi rút tiền
+    if (this.saved_amount <= 0) {
+      this.status = GoalStatus.PENDING;
+    } else if (this.saved_amount < this.target_amount && this.status === GoalStatus.COMPLETED) {
+      this.status = GoalStatus.IN_PROGRESS;
+    }
   }
   
   updateSavedAmount(newAmount: number): void {
@@ -96,6 +124,10 @@ export class Goal {
   private updateStatus(): void {
     if (this.isCompleted()) {
       this.status = GoalStatus.COMPLETED;
+    }
+    else if(this.isOverdue())
+    {
+      this.status = GoalStatus.OVER_DUE;
     } else if (this.saved_amount > 0) {
       this.status = GoalStatus.IN_PROGRESS;
     } else {
@@ -153,7 +185,7 @@ export class Goal {
    * @returns Status label for the goal
    */
   getStatus(): 'excellent' | 'good' | 'warning' | 'danger' | 'overdue' | 'completed' {
-    if (this.status === GoalStatus.COMPLETED) return 'completed';
+    if (this.isCompleted()) return 'completed';
     if (this.isOverdue()) return 'overdue';
     
     const percentage = this.getProgressPercentage();
@@ -169,6 +201,7 @@ export class Goal {
     
     return 'danger';
   }
+
   
   /**
    * Format the goal for API responses
@@ -191,8 +224,6 @@ export class Goal {
       monthlySavingNeeded: Math.round(this.getMonthlyPaymentNeeded() * 100) / 100,
       timeRemaining: this.getTimeRemainingText(),
       daysRemaining: this.getDaysRemaining(),
-      isOverdue: this.isOverdue(),
-      isCompleted: this.isCompleted()
     };
   }
   
