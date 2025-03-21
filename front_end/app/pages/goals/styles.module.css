@@ -7,33 +7,33 @@
 
 .headerButtons {
     display: flex;
-    gap: 16px;
+    gap: 1rem;
   }
 
 .filterContainer {
     margin-bottom: 16px;
     display: flex;
-    gap: 8px;
+    gap: 0.5rem;
 }
   
 .filters {
     display: flex;
-    gap: 16px;
-    border-radius: 20px;
+    gap: 1rem;
+    border-radius: 1.25rem;
 }
 
   .filterSelect {
-    min-width: 100px;
-    border-radius: 20px;
+    min-width: 6.25rem;
+    border-radius: 1.25rem;
   }
   
   .goalsContainer {
-    margin-top: 24px;
+    margin-top: 1.5rem;
   }
   
   .contentWrapper {
     display: flex;
-    gap: 24px;
+    gap: 1.5rem;
     width: 100%;
     padding: 1rem;
   }
@@ -41,25 +41,25 @@
   .goalsCardsSection {
     flex: 1;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(18.75rem, 1fr));
+    gap: 1rem;
   }
   
   .rightColumn {
-    width: 300px;
+    width: 18.75rem;
     flex-shrink: 0;
   }
   
   .deadlineCard {
     position: sticky;
-    top: 24px;
+    top: 1.5rem;
     padding: 0.5rem;
     height: fit-content;
-    border-radius: 8px;
+    border-radius: 0.5rem;
   }
   
   .deadlineItem {
-    padding: 12px;
+    padding: 0.75rem;
     border-bottom: 1px solid #f0f0f0;
   }
   
@@ -69,14 +69,14 @@
   
   .deadlineGoalName {
     font-weight: 500;
-    margin-bottom: 8px;
+    margin-bottom: 0.5rem;
   }
   
   .deadlineInfo {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    font-size: 14px;
+    gap: 0.25rem;
+    font-size: 0.875rem;
   }
   
   .deadlineDate {
@@ -93,12 +93,12 @@
   
   .loading, .noData {
     text-align: center;
-    padding: 48px;
+    padding: 3rem;
     color: #666;
   }
     
   .modalFooter {
     display: flex;
     justify-content: flex-end;
-    gap: 8px;
+    gap: 0.5rem;
   }

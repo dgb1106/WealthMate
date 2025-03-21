@@ -12,7 +12,7 @@ interface Goal {
   name: string;
   target_amount: number;
   saved_amount: number;
-  status: 'active' | 'completed' | 'overdue';//having mismatches with backend
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
   due_date: Date;
   created_at: Date;
 }
@@ -29,7 +29,7 @@ const GoalsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [currentGoal, setCurrentGoal] = useState<Goal | null>(null);
-  const [goalView, setGoalView] = useState<'active' | 'completed' | 'overdue' | 'nearing-deadline'>('active');
+  const [goalView, setGoalView] = useState<'OVERDUE'| 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'>('IN_PROGRESS');
   const [selectedDeadline, setSelectedDeadline] = useState<string>('all');
   const [form] = Form.useForm();
   const [addFundsModalVisible, setAddFundsModalVisible] = useState(false);
@@ -41,13 +41,15 @@ const GoalsPage: React.FC = () => {
       const token = localStorage.getItem('authToken');
       let endpoint = '/goals';
 
-      if (goalView === 'active') {
+      if (goalView === 'IN_PROGRESS') {
         endpoint = '/goals/active';
-      } else if (goalView === 'completed') {
+      } else if (goalView === 'COMPLETED') {
         endpoint = '/goals/completed';
-      } else if (goalView === 'overdue') {
+      } else if (goalView === 'OVERDUE') {
         endpoint = '/goals/overdue';
-      } 
+      } else if (goalView === 'PENDING') {
+        endpoint = '/goals/pending';
+      }
 
       // Add deadline days parameter if selected
       if (selectedDeadline !== 'all') {
@@ -267,9 +269,10 @@ const GoalsPage: React.FC = () => {
             value={goalView}
             onChange={(value) => setGoalView(value)}
             options={[
-              { value: 'active', label: 'Hiện tại' },
-              { value: 'completed', label: 'Hoàn thành' },
-              { value: 'overdue', label: 'Quá hạn' },
+              { value: 'IN_PROGRESS', label: 'Hiện tại' },
+              { value: 'COMPLETED', label: 'Hoàn thành' },
+              { value: 'OVERDUE', label: 'Quá hạn' },
+              { value: 'PENDING', label: 'Chưa bắt đầu' },
             ]}
             className={styles.filterSelect}
             style={{ width: 150 }}
@@ -300,17 +303,9 @@ const GoalsPage: React.FC = () => {
               <Card title="Nhắc nhở" className={styles.deadlineCard}>
                 {goals
                   .filter(goal => {
-                    // Add console.log to debug the filtering
-                    console.log('Checking goal:', {
-                      name: goal.name,
-                      status: goal.status,
-                      daysLeft: dayjs(goal.due_date).diff(dayjs(), 'day'),
-                      progress: goal.saved_amount / goal.target_amount
-                    });
-      
                     const daysUntilDue = dayjs(goal.due_date).diff(dayjs(), 'day');
                     return (
-                      goal.status === 'active' &&
+                      (goal.status === 'PENDING' || goal.status === 'IN_PROGRESS') &&
                       daysUntilDue >= 0 && 
                       daysUntilDue <= 30 && 
                       goal.saved_amount < goal.target_amount
@@ -332,8 +327,7 @@ const GoalsPage: React.FC = () => {
                   ))}
                 {goals.filter(goal => {
                   const daysUntilDue = dayjs(goal.due_date).diff(dayjs(), 'day');
-                  return (
-                    goal.status === 'active' && 
+                  return ( 
                     daysUntilDue >= 0 && 
                     daysUntilDue <= 30 && 
                     goal.saved_amount < goal.target_amount
