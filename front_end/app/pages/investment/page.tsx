@@ -4,7 +4,7 @@ import MainLayout from '@/layouts/MainLayout/index';
 const InvestmentPage: React.FC = () => {
   return (
     <MainLayout>
-      <h1>This is Investment</h1>
+      <h1>Đầu Tư</h1>
     </MainLayout>
   );
 };

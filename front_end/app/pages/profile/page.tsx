@@ -262,8 +262,8 @@ const ProfilePage: React.FC = () => {
 
   return (
     <MainLayout>
+      <h1>Thông tin cá nhân</h1>
       <div className={styles.profileContainer}>
-        <h1 className={styles.profileTitle}>Personal information</h1>
         
         {/* 
           .splitWrapper: Chia 2 cột 
