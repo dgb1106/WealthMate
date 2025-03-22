@@ -4,7 +4,7 @@ import { CreateGoalDto } from '../dto/create-goal.dto';
 import { UpdateGoalDto } from '../dto/update-goal.dto';
 import { Goal } from '../entities/goal.entity';
 import { GoalStatus } from '../../common/enums/enum';
-
+import { TransactionService } from '../../transactions/transactions.service';
 export interface GoalRepository {
   create(userId: string, createGoalDto: CreateGoalDto): Promise<Goal>;
   findAll(userId: string): Promise<Goal[]>;
@@ -18,11 +18,15 @@ export interface GoalRepository {
   findOverdueGoals(userId: string): Promise<Goal[]>;
   findGoalsNearingDeadline(userId: string, daysThreshold: number): Promise<Goal[]>;
   transferFundsBetweenGoals(sourceGoalId: string, targetGoalId: string, userId: string, amount: number): Promise<{ sourceGoal: Goal; targetGoal: Goal }>;
+  withdrawFundsFromGoal(id: string, userId: string, amount: number): Promise<Goal>;
 }
 
 @Injectable()
 export class PrismaGoalRepository implements GoalRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly transactionService: TransactionService
+  ) {}
 
   async create(userId: string, createGoalDto: CreateGoalDto): Promise<Goal> {
     const goal = Goal.create({
@@ -148,6 +152,23 @@ export class PrismaGoalRepository implements GoalRepository {
         throw new BadRequestException(`Insufficient balance. Available: ${currentBalance}, Required: ${amount}`);
       }
 
+      const currentGoal = await prisma.goals.findUnique({
+        where: { id: BigInt(id) }
+      });
+
+      if (!currentGoal) {
+        throw new NotFoundException(`Goal with ID ${id} not found`);
+      }
+
+      const goalEntity = Goal.fromPrisma(currentGoal);
+      goalEntity.addFunds(amount);
+
+      await this.transactionService.createTransaction(userId, {
+        categoryId: '20', // '20' is the category ID for goal contributions
+        amount: amount,
+        description: `Thêm tiền vào mục tiêu: ${currentGoal.name}`,
+      });
+
       // Add funds to goal
       const updatedGoal = await prisma.goals.update({
         where: {
@@ -155,18 +176,11 @@ export class PrismaGoalRepository implements GoalRepository {
           userId
         },
         data: {
-          saved_amount: {
-            increment: amount
-          }
+          saved_amount: goalEntity.saved_amount,
+          status: goalEntity.status
         }
       });
       
-      // Update user balance
-      await prisma.users.update({
-        where: { id: userId },
-        data: { current_balance: { decrement: amount } }
-      });
-
       return Goal.fromPrisma(updatedGoal);
     });
   }
@@ -179,39 +193,63 @@ export class PrismaGoalRepository implements GoalRepository {
   ): Promise<{ sourceGoal: Goal; targetGoal: Goal }> {
     // Execute the transfer in a transaction
     return this.prisma.$transaction(async (prisma) => {
-      // Reduce amount from source goal
+      // Get the current goals first to calculate new status
+      const sourceGoal = await prisma.goals.findUnique({
+        where: { id: BigInt(sourceGoalId) }
+      });
+      
+      const targetGoal = await prisma.goals.findUnique({
+        where: { id: BigInt(targetGoalId) }
+      });
+      
+      if (!sourceGoal || !targetGoal) {
+        throw new NotFoundException("One or both goals not found");
+      }
+      
+      // Check if source goal has enough funds
+      if (Number(sourceGoal.saved_amount) < amount) {
+        throw new BadRequestException(`Insufficient funds in source goal. Available: ${sourceGoal.saved_amount}, Required: ${amount}`);
+      }
+      
+      // Create entity objects to handle status logic
+      const sourceGoalEntity = Goal.fromPrisma(sourceGoal);
+      const targetGoalEntity = Goal.fromPrisma(targetGoal);
+      
+      // Update entities
+      sourceGoalEntity.withdrawFunds(amount);
+      targetGoalEntity.addFunds(amount);
+      
+      // Update source goal with new amount and status
       const updatedSourceGoal = await prisma.goals.update({
         where: { 
           id: BigInt(sourceGoalId),
           userId
         },
         data: {
-          saved_amount: {
-            decrement: amount
-          }
+          saved_amount: sourceGoalEntity.saved_amount,
+          status: sourceGoalEntity.status
         }
       });
       
-      // Add amount to target goal
+      // Update target goal with new amount and status
       const updatedTargetGoal = await prisma.goals.update({
         where: {
           id: BigInt(targetGoalId),
           userId
         },
         data: {
-          saved_amount: {
-            increment: amount
-          }
+          saved_amount: targetGoalEntity.saved_amount,
+          status: targetGoalEntity.status
         }
       });
-
+  
       return { 
         sourceGoal: Goal.fromPrisma(updatedSourceGoal), 
         targetGoal: Goal.fromPrisma(updatedTargetGoal) 
       };
     });
   }
-
+  
   async findActiveGoals(userId: string): Promise<Goal[]> {
     const today = new Date();
     
@@ -245,7 +283,7 @@ export class PrismaGoalRepository implements GoalRepository {
     const goals = await this.prisma.goals.findMany({
       where: {
         userId,
-        status: { not: GoalStatus.COMPLETED },
+        status: { not: GoalStatus.OVER_DUE },
         due_date: { lt: today }
       },
       orderBy: { due_date: 'asc' }
@@ -273,4 +311,50 @@ export class PrismaGoalRepository implements GoalRepository {
     
     return Goal.fromPrismaArray(goals);
   }
+
+  async withdrawFundsFromGoal(id: string, userId: string, amount: number): Promise<Goal> {
+    // Thực hiện trong transaction để đảm bảo tính nhất quán
+    return this.prisma.$transaction(async (prisma) => {
+      // Xác minh goal tồn tại và thuộc về người dùng
+      const currentGoal = await prisma.goals.findFirst({
+        where: { 
+          id: BigInt(id),
+          userId 
+        }
+      });
+  
+      if (!currentGoal) {
+        throw new NotFoundException(`Goal with ID ${id} not found or does not belong to user`);
+      }
+  
+      // Chuyển đổi sang entity để xử lý logic nghiệp vụ
+      const goalEntity = Goal.fromPrisma(currentGoal);
+      
+      try {
+        // Thực hiện rút tiền và cập nhật status
+        goalEntity.withdrawFunds(amount);
+      } catch (error) {
+        throw new BadRequestException(error.message);
+      }
+  
+      
+      await this.transactionService.createTransaction(userId, {
+        categoryId: '21', // ID của danh mục "Thu nhập khác"
+        amount: amount,
+        description: `Rút tiền từ mục tiêu: ${currentGoal.name}`
+      });
+
+      // Cập nhật goal trong database
+      const updatedGoal = await prisma.goals.update({
+        where: { id: BigInt(id) },
+        data: {
+          saved_amount: goalEntity.saved_amount,
+          status: goalEntity.status
+        }
+      });
+      
+      return Goal.fromPrisma(updatedGoal);
+    });
+  }
+
 }
