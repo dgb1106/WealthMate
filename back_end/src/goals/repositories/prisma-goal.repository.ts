@@ -283,7 +283,7 @@ export class PrismaGoalRepository implements GoalRepository {
     const goals = await this.prisma.goals.findMany({
       where: {
         userId,
-        status: { not: GoalStatus.COMPLETED },
+        status: { not: GoalStatus.OVER_DUE },
         due_date: { lt: today }
       },
       orderBy: { due_date: 'asc' }
