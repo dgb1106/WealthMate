@@ -3,19 +3,26 @@ import React, { useEffect, useState } from "react";
 import { Card, Spin } from "antd";
 import axios from "axios";
 import { PieChart, Pie, Tooltip, Legend, Cell, ResponsiveContainer } from "recharts";
+import styles from "./styles.module.css";
 
-const COLORS = ["#82ca9d", "#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
+const COLORS = ["#0088FE", "#FF4D4F", "#82ca9d"];
 
-const IncomeBySourceChart: React.FC = () => {
-  const [data, setData] = useState([]);
+interface BudgetData {
+    name: string;
+    value: number;
+  }
+
+const BudgetSummaryPieChart: React.FC = () => {
+  const [data, setData] = useState<BudgetData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchBudgetSummary = async () => {
       const token = localStorage.getItem("authToken");
+
       try {
         const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/reports/category-analysis`,
+          `${process.env.NEXT_PUBLIC_API_URL}/reports/budget-report`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -24,24 +31,24 @@ const IncomeBySourceChart: React.FC = () => {
           }
         );
 
-        const incomeData = res.data.data.incomeBySource.map((item: any) => ({
-          name: item.sourceName,
-          value: item.amount * 1000,
-        }));
+        const summaryData = res.data.data.summary;
 
-        setData(incomeData);
+        setData([
+          { name: "Đã chi", value: summaryData.totalSpent * 1000 },
+          { name: "Còn lại", value: summaryData.totalRemaining * 1000 },
+        ]);
       } catch (error) {
-        console.error("Error fetching income data:", error);
+        console.error("Error fetching budget summary:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchBudgetSummary();
   }, []);
 
   return (
-    <Card title="Income by Source">
+    <Card title="Tổng quan ngân sách tháng này" className={styles.card}>
       {loading ? (
         <Spin />
       ) : (
@@ -61,4 +68,4 @@ const IncomeBySourceChart: React.FC = () => {
   );
 };
 
-export default IncomeBySourceChart;
+export default BudgetSummaryPieChart;

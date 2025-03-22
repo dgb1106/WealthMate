@@ -3,19 +3,21 @@ import React, { useEffect, useState } from "react";
 import { Card, Spin } from "antd";
 import axios from "axios";
 import { PieChart, Pie, Tooltip, Legend, Cell, ResponsiveContainer } from "recharts";
+import styles from "./styles.module.css";
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#FF4D4F", "#82ca9d"];
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 
-const ExpenseByCategoryChart: React.FC = () => {
+const MostSpentCategoriesChart: React.FC = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchMostSpentCategories = async () => {
       const token = localStorage.getItem("authToken");
+
       try {
         const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/reports/category-analysis`,
+          `${process.env.NEXT_PUBLIC_API_URL}/reports/most-spent-categories/current`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -24,24 +26,24 @@ const ExpenseByCategoryChart: React.FC = () => {
           }
         );
 
-        const expenseData = res.data.data.expenseByCategory.map((item: any) => ({
-          name: item.categoryName,
-          value: item.amount * 1000,
-        }));
+        const categories = res.data.data.topCategories.map((item: any) => ({
+            name: item.category.name,
+            value: Math.abs(Number(item.totalAmount.d[0])) * 1000,
+          }));          
 
-        setData(expenseData);
+        setData(categories);
       } catch (error) {
-        console.error("Error fetching expense data:", error);
+        console.error("Error fetching most spent categories:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchMostSpentCategories();
   }, []);
 
   return (
-    <Card title="Expense by Category">
+    <Card title="Các danh mục chi tiêu nhiều nhất trong tháng vừa rồi" className={styles.card}>
       {loading ? (
         <Spin />
       ) : (
@@ -61,4 +63,4 @@ const ExpenseByCategoryChart: React.FC = () => {
   );
 };
 
-export default ExpenseByCategoryChart;
+export default MostSpentCategoriesChart;
