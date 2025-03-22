@@ -47,9 +47,9 @@ const MostSpentCategoriesChart: React.FC = () => {
       {loading ? (
         <Spin />
       ) : (
-        <ResponsiveContainer width="100%" height={250}>
+        <ResponsiveContainer width="100%" height={400}>
           <PieChart>
-            <Pie data={data} dataKey="value" nameKey="name" outerRadius={80}>
+            <Pie data={data} dataKey="value" nameKey="name" outerRadius={120}>
               {data.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
