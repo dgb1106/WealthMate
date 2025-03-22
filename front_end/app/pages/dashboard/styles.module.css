@@ -1,0 +1,22 @@
+.parent {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    grid-template-rows: auto auto 1fr;
+    gap: 16px;
+    height: calc(100vh - 80px); /* Chiều cao màn hình trừ đi chiều cao header */
+    padding: 16px;
+    box-sizing: border-box;
+  }
+  
+  .div1 { grid-column: 1 / span 2; grid-row: 1; }
+  .div2 { grid-column: 1 / 2; grid-row: 2; }
+  .div4 { grid-column: 2 / 3; grid-row: 2; }
+  .div3 { grid-column: 1 / 2; grid-row: 3; }
+  .div5 { grid-column: 2 / 3; grid-row: 3; }
+
+  /* Thêm style chung cho tất cả các div con */
+  .parent > div {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }

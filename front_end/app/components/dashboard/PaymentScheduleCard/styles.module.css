@@ -1,0 +1,39 @@
+.card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  /* Tuỳ chỉnh width, v.v. nếu muốn cố định to nhỏ */
+  width: 300px;
+}
+
+.title {
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #000;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.listItem {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.txName {
+  flex: 1;
+}
+
+.txAmount {
+  font-weight: 500;
+}
+
+.txSchedule {
+  color: #666;
+}
