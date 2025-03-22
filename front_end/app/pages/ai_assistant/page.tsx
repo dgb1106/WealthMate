@@ -292,12 +292,11 @@ const AiAssistantPage: React.FC = () => {
     }
   };
 
-  // --- Hàm phụ trợ chuyển AudioBuffer sang WAV ---
   function audioBufferToWav(buffer: AudioBuffer): Promise<Blob> {
     return new Promise(resolve => {
       const numChannels = buffer.numberOfChannels;
       const sampleRate = buffer.sampleRate;
-      const format = 1; // PCM
+      const format = 1;
       const bitDepth = 16;
       
       const bytesPerSample = bitDepth / 8;
@@ -308,35 +307,19 @@ const AiAssistantPage: React.FC = () => {
       
       const arrayBuffer = new ArrayBuffer(bufferLength);
       const view = new DataView(arrayBuffer);
-      
-      // RIFF identifier
       writeString(view, 0, 'RIFF');
-      // RIFF chunk length
       view.setUint32(4, 36 + dataLength, true);
-      // RIFF type
       writeString(view, 8, 'WAVE');
-      // format chunk identifier
       writeString(view, 12, 'fmt ');
-      // format chunk length
       view.setUint32(16, 16, true);
-      // sample format (raw)
       view.setUint16(20, format, true);
-      // channel count
       view.setUint16(22, numChannels, true);
-      // sample rate
       view.setUint32(24, sampleRate, true);
-      // byte rate (sample rate * block align)
       view.setUint32(28, sampleRate * blockAlign, true);
-      // block align (channel count * bytes per sample)
       view.setUint16(32, blockAlign, true);
-      // bits per sample
       view.setUint16(34, bitDepth, true);
-      // data chunk identifier
       writeString(view, 36, 'data');
-      // data chunk length
       view.setUint32(40, dataLength, true);
-      
-      // Ghi dữ liệu PCM
       const channels = [];
       for (let i = 0; i < numChannels; i++) {
         channels.push(buffer.getChannelData(i));
@@ -432,7 +415,7 @@ const AiAssistantPage: React.FC = () => {
                       li: ({ node, ...props }) => <li style={{ margin: '4px 0' }} {...props} />,
                     }}>
                       {msg.content}
-                    </ReactMarkdown>
+                    </ReactMarkdown> as React.ReactElement
                   ) : (
                     msg.content
                   )}
