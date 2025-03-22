@@ -12,7 +12,7 @@ interface Goal {
   name: string;
   target_amount: number;
   saved_amount: number;
-  status: 'active' | 'completed' | 'overdue';//having mismatches with backend
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'OVER_DUE';
   due_date: Date;
   created_at: Date;
 }
@@ -29,7 +29,7 @@ const GoalsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [currentGoal, setCurrentGoal] = useState<Goal | null>(null);
-  const [goalView, setGoalView] = useState<'active' | 'completed' | 'overdue' | 'nearing-deadline'>('active');
+  const [goalView, setGoalView] = useState<'OVER_DUE'| 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'>('IN_PROGRESS');
   const [selectedDeadline, setSelectedDeadline] = useState<string>('all');
   const [form] = Form.useForm();
   const [addFundsModalVisible, setAddFundsModalVisible] = useState(false);
@@ -41,16 +41,16 @@ const GoalsPage: React.FC = () => {
       const token = localStorage.getItem('authToken');
       let endpoint = '/goals';
 
-      if (goalView === 'active') {
+      if (goalView === 'IN_PROGRESS') {
         endpoint = '/goals/active';
-      } else if (goalView === 'completed') {
+      } else if (goalView === 'COMPLETED') {
         endpoint = '/goals/completed';
-      } else if (goalView === 'overdue') {
+      } else if (goalView === 'OVER_DUE') {
         endpoint = '/goals/overdue';
       } 
 
       // Add deadline days parameter if selected
-      if (selectedDeadline !== 'all') {
+      if (selectedDeadline !== 'all' && goalView === 'IN_PROGRESS') {
         endpoint = `/goals/nearing-deadline?days=${selectedDeadline}`;
       }
 
@@ -165,38 +165,28 @@ const GoalsPage: React.FC = () => {
     }
   };
 
-  const handleAddFunds = async (goalId: string, amount: number) => {
+  const handleAddFunds = async (id: string, amount: number) => {
     try {
       const token = localStorage.getItem('authToken');
-      const amountInUnits = amount / 1000;
-      //balance checking
-      //const balanceResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/profile`, {
-        //headers: {
-          //Authorization: `Bearer ${token}`,
-        //}, 
-      //});
+      const amountInUnits = Number(amount); // Ensure it's a valid number
+      const payload = {
+        amount: amountInUnits / 1000,
+      };
 
-      //if (!balanceResponse.ok) {
-        //throw new Error('Lấy thông tin thất bại');
-      //}
+      console.log('Sending payload:', payload);
       
-      //const profileData = await balanceResponse.json();
-      //if (profileData.currentBalance < amountInUnits / 1000) {
-        //message.error('Số dư không đủ');
-        //return;
-      //}
-      
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/goals/${goalId}/add-funds`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/goals/${id}/add-funds`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ amount: amountInUnits }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        throw new Error('Thêm Tiết kiệm thất bại');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Thêm Tiết kiệm thất bại');
       }
 
       message.success('Thêm Tiết kiệm thành công');
@@ -267,9 +257,9 @@ const GoalsPage: React.FC = () => {
             value={goalView}
             onChange={(value) => setGoalView(value)}
             options={[
-              { value: 'active', label: 'Hiện tại' },
-              { value: 'completed', label: 'Hoàn thành' },
-              { value: 'overdue', label: 'Quá hạn' },
+              { value: 'IN_PROGRESS', label: 'Hiện tại' },
+              { value: 'COMPLETED', label: 'Hoàn thành' },
+              { value: 'OVER_DUE', label: 'Quá hạn' },
             ]}
             className={styles.filterSelect}
             style={{ width: 150 }}
@@ -300,17 +290,9 @@ const GoalsPage: React.FC = () => {
               <Card title="Nhắc nhở" className={styles.deadlineCard}>
                 {goals
                   .filter(goal => {
-                    // Add console.log to debug the filtering
-                    console.log('Checking goal:', {
-                      name: goal.name,
-                      status: goal.status,
-                      daysLeft: dayjs(goal.due_date).diff(dayjs(), 'day'),
-                      progress: goal.saved_amount / goal.target_amount
-                    });
-      
                     const daysUntilDue = dayjs(goal.due_date).diff(dayjs(), 'day');
                     return (
-                      goal.status === 'active' &&
+                      (goal.status === 'PENDING' || goal.status === 'IN_PROGRESS') &&
                       daysUntilDue >= 0 && 
                       daysUntilDue <= 30 && 
                       goal.saved_amount < goal.target_amount
@@ -332,8 +314,7 @@ const GoalsPage: React.FC = () => {
                   ))}
                 {goals.filter(goal => {
                   const daysUntilDue = dayjs(goal.due_date).diff(dayjs(), 'day');
-                  return (
-                    goal.status === 'active' && 
+                  return ( 
                     daysUntilDue >= 0 && 
                     daysUntilDue <= 30 && 
                     goal.saved_amount < goal.target_amount
@@ -417,11 +398,16 @@ const GoalsPage: React.FC = () => {
           form={addFundsForm}
           layout="vertical"
           onFinish={(values) => {
-            handleAddFunds(values.id, values.amount);
+            const amount = Number(values.amount);
+            if (isNaN(amount) || amount <= 0) {
+              message.error('Vui lòng nhập số hợp lệ');
+              return;
+            }
+            handleAddFunds(values.id, amount);
           }}
         >
           <Form.Item
-            name="goalId"
+            name="id"
             label="Chọn Mục tiêu"
             rules={[{ required: true, message: 'Vui lòng chọn Mục tiêu' }]}
           >
