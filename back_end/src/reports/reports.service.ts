@@ -124,7 +124,7 @@ export class ReportsService {
       currentYear.toString()
     );
     const expenseCategories = summary
-      .filter(item => item.type === 'EXPENSE')
+      .filter(item => item.category?.type === 'EXPENSE')
       .sort((a, b) => Math.abs(Number(b.totalAmount)) - Math.abs(Number(a.totalAmount)))
       .slice(0, limit);
 
