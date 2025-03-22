@@ -186,6 +186,31 @@ const useTransactions = () => {
     }
   };
 
+  const addRecurringTransaction = async (transactionData: any) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/recurring-transactions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(transactionData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Đã xảy ra lỗi khi tạo giao dịch định kỳ');
+      }
+
+      message.success('Tạo giao dịch định kỳ thành công');
+      fetchTransactions('all', 'all', 'all', 'all');
+    } catch (error: any) {
+      console.error('Error adding recurring transaction:', error);
+      message.error(error.message || 'Đã xảy ra lỗi khi tạo giao dịch định kỳ');
+    }
+  };
+
   return {
     transactions,
     loading,
@@ -193,6 +218,7 @@ const useTransactions = () => {
     addTransaction,
     updateTransaction,
     deleteTransaction,
+    addRecurringTransaction,
   };
 };
 
