@@ -59,6 +59,8 @@ async function main() {
         "Trả nợ",
         "Thể thao",
         "Đầu tư",
+        "Gửi tiết kiệm",
+        "Quỹ dự phòng",
     ];
     const incomeCategories = [
         "Lương",

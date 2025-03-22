@@ -34,6 +34,17 @@ export class GoalDomainService {
       throw new BadRequestException('Amount must be greater than 0');
     }
   }
+
+  /**
+   * Validates withdrawing funds operation
+   * @param amount Amount to withdraw
+   * @throws BadRequestException if validation fails
+   */
+  validateWithdrawFunds(amount: number): void {
+    if (amount <= 0) {
+      throw new BadRequestException('Amount must be greater than 0');
+    }
+  }
   
   /**
    * Validates updating saved amount
