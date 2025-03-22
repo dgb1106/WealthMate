@@ -5,7 +5,7 @@ import axios from "axios";
 import { PieChart, Pie, Tooltip, Legend, Cell, ResponsiveContainer } from "recharts";
 import styles from "./styles.module.css";
 
-const COLORS = ["#FF4D4F", "#82ca9d", "#82ca9d"];
+const COLORS = ["#d7e1ff", "#004aad", "#004aad"];
 
 interface BudgetData {
     name: string;

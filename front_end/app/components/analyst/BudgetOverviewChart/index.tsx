@@ -55,9 +55,9 @@ const BudgetOverviewChart: React.FC = () => {
             <YAxis tickFormatter={formatter} />
             <Tooltip formatter={formatter} />
             <Legend />
-            <Bar dataKey="Ngân sách" fill="#8884D8" />
-            <Bar dataKey="Đã chi" fill="#FF4D4F" />
-            <Bar dataKey="Còn lại" fill="#82ca9d" />
+            <Bar dataKey="Ngân sách" fill="#6ce5e8" />
+            <Bar dataKey="Đã chi" fill="#454692" />
+            <Bar dataKey="Còn lại" fill="#41b8d5" />
           </BarChart>
         </ResponsiveContainer>
       )}

@@ -5,7 +5,7 @@ import axios from "axios";
 import { PieChart, Pie, Tooltip, Legend, Cell, ResponsiveContainer } from "recharts";
 import styles from "./styles.module.css";
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
+const COLORS = ["#6ce5e8", "#41b8d5", "#2d8bba", "#2f5f98", "#31356e"];
 
 const MostSpentCategoriesChart: React.FC = () => {
   const [data, setData] = useState([]);
