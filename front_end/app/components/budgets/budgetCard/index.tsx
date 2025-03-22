@@ -104,7 +104,7 @@ const BudgetCard: React.FC<BudgetCardProps> = ({ budget, onEdit }) => {
                         height={260}
                     />
                     <div className={styles.chartOverlay}>
-                        <span className={styles.label}>Left:</span>
+                        <span className={styles.label}>Còn:</span>
                         <span className={styles.value}>{remaining_amount.toLocaleString()} VND</span>
                     </div>
                 </div>

@@ -89,14 +89,14 @@ export const LoginForm: React.FC = () => {
         disabled={isLoading}
         className="w-full py-3 bg-[#0F1B4C] hover:bg-blue-700 text-white font-medium rounded-lg"
       >
-        {isLoading ? 'Signing in...' : 'Sign In'}
+        {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
       </Button>
 
       <div className="text-center mt-4">
         <p className="text-sm text-gray-600">
-          Don't have an account?{' '}
+          Chưa có tài khoản?{' '}
           <Link href="/pages/auth/register" className="text-[#0F1B4C] hover:text-blue-700 font-medium">
-            Create account
+            Tạo tài khoản
           </Link>
         </p>
       </div>
