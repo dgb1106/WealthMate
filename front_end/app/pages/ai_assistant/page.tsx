@@ -5,6 +5,7 @@ import MainLayout from '@/layouts/MainLayout/index';
 import styles from './styles.module.css';
 import { Button, Modal, message } from 'antd';
 import { AudioOutlined, UploadOutlined } from '@ant-design/icons';
+import ReactMarkdown from 'react-markdown';
 
 type ChatMessage = {
   type: 'user' | 'bot';
@@ -423,7 +424,18 @@ const AiAssistantPage: React.FC = () => {
                 className={`${styles.messageContainer} ${msg.type === 'user' ? styles.userMessage : styles.botMessage} ${msg.isLoading ? styles.loading : ''}`}
               >
                 <div className={styles.messageContent}>
-                  {msg.content}
+                  {msg.type === 'bot' && /[#_*~`]/.test(msg.content) ? (
+                    <ReactMarkdown components={{
+                      p: ({ node, ...props }) => <p style={{ margin: 0 }} {...props} />,
+                      strong: ({ node, ...props }) => <strong style={{ fontWeight: 'bold' }} {...props} />,
+                      ul: ({ node, ...props }) => <ul style={{ margin: '8px 0', paddingLeft: '20px' }} {...props} />,
+                      li: ({ node, ...props }) => <li style={{ margin: '4px 0' }} {...props} />,
+                    }}>
+                      {msg.content}
+                    </ReactMarkdown>
+                  ) : (
+                    msg.content
+                  )}
                 </div>
               </div>
             ))
