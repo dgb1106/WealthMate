@@ -1,166 +1,176 @@
 .mainContent {
-    flex: 1;
-    padding: 20px;
-    background-color: #f9fafb;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-  }
-  
-  .suggestions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  
-  .suggestionButton {
-    background-color: #f0f2f5;
-    border: none;
-    border-radius: 18px;
-    padding: 8px 16px;
-    font-size: 14px;
-    color: #1c1e21;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  .suggestionButton:hover {
-    background-color: #e4e6eb;
-  }
-  
-  .suggestionButton:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-  
-  .chatBox {
-    max-height: 750px;
-    overflow-y: auto;
-    padding: 15px;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    background-color: #f9f9f9;
-    margin-bottom: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .chatBox p {
-    color: black !important;
-    margin: 8px 0;
-    padding: 8px 12px;
-    border-radius: 6px;
-    word-break: break-word;
-    font-weight: normal;
-  }
-  
+  flex: 1;
+  padding: 20px;
+  background-color: #f9fafb;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
 
-  .chatBox p:nth-child(odd) {
-    background-color: #e6f7ff;
-    align-self: flex-end;
-    color: black !important;
-  }
-  
-  /* Styling for bot messages */
-  .chatBox p:nth-child(even) {
-    background-color: #f0f0f0;
-    align-self: flex-start;
-    color: black !important;
-  }
-  
-  /* Khi chưa có tin nhắn nào */
-  .emptyChat {
-    color: #888;
-    text-align: center;
-    font-style: italic;
-    padding: 30px 0;
-  }
-  
-  /* Ô nhập tin nhắn và nút gửi */
-  .inputContainer {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-  }
-  
-  .inputContainer input {
-    flex: 1;
-    padding: 12px 16px;
-    border-radius: 24px;
-    border: 1px solid #ccc;
-    font-size: 16px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  
-  .inputContainer input:focus {
-    border-color: #0084ff;
-  }
-  
-  .inputContainer button {
-    padding: 12px 24px;
-    background-color: #0084ff;
-    color: white;
-    border: none;
-    border-radius: 24px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  .inputContainer button:hover {
-    background-color: #0077e6;
-  }
-  
-  .inputContainer button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-  }
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
 
-  .messageContainer {
-    display: flex;
-    margin-bottom: 10px;
-    width: 100%;
-    animation: fadeIn 0.3s ease;
-  }
+.suggestionButton {
+  background-color: #f0f2f5;
+  border: none;
+  border-radius: 18px;
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #1c1e21;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+.suggestionButton:hover {
+  background-color: #e4e6eb;
+}
 
-  .userMessage {
-    justify-content: flex-end;
-  }
+.suggestionButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
-  .botMessage {
-    justify-content: flex-start;
-  }
+.chatBox {
+  height: 700px;
+  overflow-y: auto;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
-  .messageContent {
-    max-width: 70%;
-    padding: 12px 16px;
-    border-radius: 18px;
-    word-break: break-word;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-  }
+.messageContainer {
+  display: flex;
+  width: 100%;
+  animation: fadeIn 0.3s ease;
+}
 
-  .userMessage .messageContent {
-    background-color: #0084ff;
-    color: white;
-    border-bottom-right-radius: 4px;
-  }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
-  .botMessage .messageContent {
-    background-color: #f0f0f0;
-    color: #333;
-    border-bottom-left-radius: 4px;
-  }
+.messageContent {
+  padding: 10px 14px;
+  border-radius: 16px;
+  max-width: 75%;
+  word-break: break-word;
+  line-height: 1.4;
+  font-size: 15px;
+}
 
-  .loading .messageContent {
-    background-color: #e0e0e0;
-    color: #777;
-    font-style: italic;
-  }
+.userMessage {
+  justify-content: flex-end;
+}
+
+.botMessage {
+  justify-content: flex-start;
+}
+
+.userMessage .messageContent {
+  background-color: #0084ff;
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.botMessage .messageContent {
+  background-color: #f0f0f0;
+  color: #333;
+  border-bottom-left-radius: 4px;
+}
+
+.loading .messageContent {
+  background-color: #e0e0e0;
+  color: #777;
+  font-style: italic;
+}
+
+.emptyChat {
+  color: #888;
+  text-align: center;
+  font-style: italic;
+  padding: 30px 0;
+}
+
+.inputContainer {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.inputContainer input {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 24px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.inputContainer input:focus {
+  border-color: #0084ff;
+}
+
+.inputContainer button {
+  padding: 12px 24px;
+  background-color: #0084ff;
+  color: white;
+  border: none;
+  border-radius: 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.inputContainer button:hover {
+  background-color: #0077e6;
+}
+
+.inputContainer button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.recordingButton {
+  background-color: #ff4d4f;
+  color: white;
+  animation: pulse 1.5s infinite;
+}
+
+.recordingButton:hover {
+  background-color: #ff7875;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.7); }
+  70% { box-shadow: 0 0 0 5px rgba(255, 77, 79, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 77, 79, 0); }
+}
+
+/* Custom styles for markdown content */
+.messageContent p {
+  margin: 0;
+}
+
+.messageContent ul,
+.messageContent ol {
+  padding-left: 20px;
+  margin: 4px 0;
+}
+
+.messageContent strong {
+  font-weight: bold;
+}
+
+.messageContent li {
+  margin: 2px 0;
+}
