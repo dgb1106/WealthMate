@@ -9,6 +9,7 @@ import TotalBalanceCard from '@/components/dashboard/TotalBalanceCard';
 import IncomeExpenseCard from '@/components/dashboard/IncomeExpenseCard';
 import PaymentScheduleCard from '@/components/dashboard/PaymentScheduleCard';
 import MostSpentCategoriesCard from '@/components/dashboard/MostSpentCategoriesCard';
+import NearingDeadlineGoalsCard from '@/components/dashboard/NearingDeadlineGoalsCard';
 
 export default function DashboardPage() {
   return (
@@ -19,6 +20,7 @@ export default function DashboardPage() {
         <div className={styles.div9}><IncomeExpenseCard /></div>
         <div className={styles.div7}><PaymentScheduleCard /></div>
         <div className={styles.div8}><MostSpentCategoriesCard /></div>
+        <div className={styles.div4}><NearingDeadlineGoalsCard /></div>
       </div>
     </MainLayout>
   );
