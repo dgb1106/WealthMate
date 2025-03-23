@@ -32,7 +32,7 @@ const TotalBalanceCard = () => {
           throw new Error('Failed to fetch user profile');
         }
         const data = await res.json();
-        setBalance(data.currentBalance || 0);
+        setBalance(data.currentBalance * 1000 || 0);
       } catch (err: any) {
         setError(err.message);
       } finally {
