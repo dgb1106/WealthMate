@@ -168,20 +168,15 @@ const GoalsPage: React.FC = () => {
   const handleAddFunds = async (id: string, amount: number) => {
     try {
       const token = localStorage.getItem('authToken');
-      const amountInUnits = Number(amount) / 1000;
+      const amountInUnits = Number(amount) / 1000; // Ensure it's a valid number
       
-      console.log('Adding funds:', { id, amount: amountInUnits });
-      
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/goals/${id}/add-funds?amount=${amountInUnits}`, 
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          }
-        }
-      );
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/goals/${id}/add-funds?amount=${amountInUnits}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
