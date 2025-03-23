@@ -7,9 +7,10 @@ import TransactionForm from '@/components/transactions/TransactionForm';
 import TransactionDetailModal from '@/components/transactions/TransactionDetailModal';
 import TransactionFilters from '@/components/transactions/TransactionFilters';
 import useTransactions from '@/hooks/useTransactions';
-import { Button, Form, Modal, message } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Button, Form, Modal, message, Dropdown, Menu } from 'antd';
+import { PlusOutlined, DownOutlined } from '@ant-design/icons';
 import styles from './styles.module.css';
+import RecurringTransactionForm from '@/components/transactions/RecurringTransactionForm';
 
 interface Transaction {
   id: string;
@@ -61,6 +62,7 @@ const TransactionsPage: React.FC = () => {
     addTransaction,
     updateTransaction,
     deleteTransaction,
+    addRecurringTransaction,
   } = useTransactions();
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -73,6 +75,8 @@ const TransactionsPage: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [recurringModalVisible, setRecurringModalVisible] = useState(false);
+  const [recurringForm] = Form.useForm();
 
   const monthOptions = Array.from({ length: 12 }, (_, i) => ({
     label: `Tháng ${i+1}`,
@@ -119,23 +123,47 @@ const TransactionsPage: React.FC = () => {
     }
   };
 
+  const handleAddRecurringTransaction = async (values: any) => {
+    await addRecurringTransaction(values);
+    setRecurringModalVisible(false);
+    recurringForm.resetFields();
+  };
+
   const onFinishFailed = (errorInfo: any) => {
     console.log('Failed:', errorInfo);
     message.error('Có lỗi xảy ra khi gửi biểu mẫu.');
   };
 
+  const addButtonMenu = (
+    <Menu
+      items={[
+        {
+          key: '1',
+          label: 'Tạo giao dịch thường mới',
+          onClick: () => setModalVisible(true),
+        },
+        {
+          key: '2',
+          label: 'Tạo giao dịch định kì mới',
+          onClick: () => setRecurringModalVisible(true),
+        },
+      ]}
+    />
+  );
+
   return (
     <MainLayout>
       <div className={styles.header}>
         <h1>Giao Dịch</h1>
-        <Button 
-          type="primary" 
-          shape="circle" 
-          icon={<PlusOutlined />} 
-          size="large"
-          onClick={() => setModalVisible(true)}
-          className={styles.addButton}
-        />
+        <Dropdown overlay={addButtonMenu} trigger={['click']} placement="bottomRight">
+          <Button 
+            type="primary" 
+            shape="circle" 
+            icon={<PlusOutlined />} 
+            size="large"
+            className={styles.addButton}
+          />
+        </Dropdown>
       </div>
 
       <TransactionFilters 
@@ -193,6 +221,24 @@ const TransactionsPage: React.FC = () => {
         <TransactionForm 
           form={form}
           onFinish={handleAddTransaction}
+          onFinishFailed={onFinishFailed}
+          isEdit={false}
+        />
+      </Modal>
+
+      {/* Modal thêm giao dịch định kỳ */}
+      <Modal
+        visible={recurringModalVisible}
+        title="Thêm giao dịch định kỳ mới"
+        onCancel={() => {
+          setRecurringModalVisible(false);
+          recurringForm.resetFields();
+        }}
+        footer={null}
+      >
+        <RecurringTransactionForm 
+          form={recurringForm}
+          onFinish={handleAddRecurringTransaction}
           onFinishFailed={onFinishFailed}
           isEdit={false}
         />

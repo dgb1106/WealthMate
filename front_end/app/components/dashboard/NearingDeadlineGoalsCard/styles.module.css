@@ -1,0 +1,44 @@
+.card {
+    height:260px;
+    width: 660px;
+  }
+  
+  .cardTitle {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+  }
+  
+  .titleIcon {
+    margin-right: 8px;
+    color: #ff4d4f;
+    font-size: 18px;
+  }
+  
+  .loadingContainer {
+    padding: 24px;
+    text-align: center;
+  }
+  
+  .tableContainer {
+    overflow-y: auto;
+    max-height: 300px;
+  }
+  
+  /* Add these new styles for text sizes */
+  .card :global(.ant-table) {
+    font-size: 14px;
+  }
+  
+  .card :global(.ant-table-thead > tr > th) {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  
+  .card :global(.ant-table-tbody > tr > td) {
+    font-size: 13px;
+  }
+  
+  .card :global(.ant-typography) {
+    font-size: 15px;
+  }

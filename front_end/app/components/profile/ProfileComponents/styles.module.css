@@ -1,0 +1,33 @@
+.profileContainer {
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+  }
+  
+  .loadingContainer,
+  .errorContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+    font-size: 18px;
+  }
+  
+  .errorContainer {
+    color: #e53935;
+  }
+  
+  .splitWrapper {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between; 
+    gap: 32px;
+    margin-top: 24px;
+  }
+  
+  @media (max-width: 768px) {
+    .splitWrapper {
+      flex-direction: column;
+      align-items: center;
+    }
+  }

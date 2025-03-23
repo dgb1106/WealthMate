@@ -1,0 +1,39 @@
+/* Existing styles */
+
+.chartCard {
+    width: 100%;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .errorMessage {
+    color: #f5222d;
+    text-align: center;
+    padding: 20px;
+  }
+  
+
+  .incomeColor {
+    color: #41b8d5;
+  }
+  
+  .expenseColor {
+    color: #454692;
+  }
+  
+  .netColor {
+    color: #6ce5e8;
+  }
+  
+  .legendItem {
+    display: flex;
+    align-items: center;
+    margin-right: 16px;
+  }
+  
+  .legendColor {
+    width: 12px;
+    height: 12px;
+    margin-right: 8px;
+    border-radius: 50%;
+  }

@@ -168,20 +168,14 @@ const GoalsPage: React.FC = () => {
   const handleAddFunds = async (id: string, amount: number) => {
     try {
       const token = localStorage.getItem('authToken');
-      const amountInUnits = Number(amount); // Ensure it's a valid number
-      const payload = {
-        amount: amountInUnits / 1000,
-      };
-
-      console.log('Sending payload:', payload);
+      const amountInUnits = Number(amount) / 1000; // Ensure it's a valid number
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/goals/${id}/add-funds`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/goals/${id}/add-funds?amount=${amountInUnits}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
