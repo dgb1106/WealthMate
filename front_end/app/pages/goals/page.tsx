@@ -170,7 +170,7 @@ const GoalsPage: React.FC = () => {
   const handleAddFunds = async (id: string, amount: number) => {
     try {
       const token = localStorage.getItem('authToken');
-      const amountInUnits = Number(amount) / 1000; // Ensure it's a valid number
+      const amountInUnits = Number(amount) / 1000;
       
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/goals/${id}/add-funds?amount=${amountInUnits}`, {
         method: 'PATCH',
@@ -198,10 +198,10 @@ const GoalsPage: React.FC = () => {
   const handleWithdraw = async (id: string, amount: number) => {
     try {
       const token = localStorage.getItem('authToken');
-      const amountInUnits = Number(amount) / 1000; // Ensure it's a valid number
+      const amountInUnits = Number(amount) / 1000;
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/goals/${id}/withdraw?amount=${amountInUnits}`, {
-        method: 'POST',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
