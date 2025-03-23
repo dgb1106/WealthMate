@@ -1,0 +1,19 @@
+.card {
+  width: 250px; /* Thu nhỏ card */
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+
+.title {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #000;
+}
+
+.balance {
+  font-size: 1.2rem;
+  color: #0066cc;
+  word-wrap: break-word;
+}

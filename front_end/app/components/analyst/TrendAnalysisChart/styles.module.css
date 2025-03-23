@@ -1,0 +1,40 @@
+.chartCard {
+    width: 100%;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    height: 100%;
+  }
+  
+  .errorMessage {
+    color: #ff4d4f;
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .statisticsContainer {
+    padding: 10px;
+  }
+  
+  .statisticsTitle {
+    text-align: center;
+    margin-bottom: 24px;
+    color: #262626;
+  }
+  
+  .statisticsRow {
+    margin-top: 20px;
+  }
+  
+  .statCard {
+    text-align: center;
+    height: 100%;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 16px;
+    transition: all 0.3s;
+  }
+  
+  .statCard:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-3px);
+  }

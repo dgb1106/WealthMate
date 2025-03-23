@@ -51,7 +51,7 @@ const BudgetsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [currentBudgetId, setCurrentBudgetId] = useState<string | null>(null);
-  const [budgetView, setBudgetView] = useState<'all' | 'current' | 'month'>('current');
+  const [budgetView, setBudgetView] = useState<'Tất cả' | 'Hiện tại' | 'Theo tháng'>('Hiện tại');
   const [form] = Form.useForm();
 
   // Lấy danh sách budget theo view
@@ -61,9 +61,9 @@ const BudgetsPage: React.FC = () => {
       const token = localStorage.getItem('authToken');
       let endpoint = '/budgets';
 
-      if (budgetView === 'current') {
+      if (budgetView === 'Hiện tại') {
         endpoint = '/budgets/current';
-      } else if (budgetView === 'month') {
+      } else if (budgetView === 'Theo tháng') {
         endpoint = '/budgets/current-month';
       } // 'all' => '/budgets'
 
@@ -75,14 +75,14 @@ const BudgetsPage: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch budgets');
+        throw new Error('Lấy thông tin thất bại');
       }
 
       const data = await response.json();
       setBudgets(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch budgets:', error);
-      message.error('Failed to load budgets');
+      message.error('Lấy thông tin thất bại');
       setBudgets([]);
     } finally {
       setLoading(false);
@@ -113,13 +113,13 @@ const BudgetsPage: React.FC = () => {
     try {
       const token = localStorage.getItem('authToken');
       if (!token) {
-        message.error('Authentication error: No token found');
+        message.error('Lỗi xác thực: Không tìm thấy token');
         return;
       }
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       if (!apiUrl) {
-        message.error('Configuration error: API URL is not defined');
+        message.error('Lỗi cấu hình: Không định nghĩa được API URL');
         return;
       }
       const payload = {
@@ -145,14 +145,14 @@ const BudgetsPage: React.FC = () => {
         throw new Error(`Failed: ${response.status} ${errorData}`);
       }
 
-      message.success('Budget added successfully');
+      message.success('Thêm Ngân sách thành công');
       setModalVisible(false);
       form.resetFields();
       fetchBudgets();
     } catch (error) {
       console.error('Failed to save budget:', error);
       message.error(
-        'Failed to save budget: ' + (error instanceof Error ? error.message : 'Unknown error')
+        'Thêm Ngân sách thất bại: ' + (error instanceof Error ? error.message : 'Lỗi không rõ')
       );
     }
   };
@@ -164,13 +164,13 @@ const BudgetsPage: React.FC = () => {
     try {
       const token = localStorage.getItem('authToken');
       if (!token) {
-        message.error('Authentication error: No token found');
+        message.error('Lỗi xác thực: Không tìm thấy token');
         return;
       }
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       if (!apiUrl) {
-        message.error('Configuration error: API URL is not defined');
+        message.error('Lỗi cấu hình: Không định nghĩa được API URL');
         return;
       }
 
@@ -198,7 +198,7 @@ const BudgetsPage: React.FC = () => {
         throw new Error(`Failed: ${response.status} ${errorData}`);
       }
 
-      message.success('Budget updated successfully');
+      message.success('Chỉnh sửa Ngân sách thành công');
       setModalVisible(false);
       form.resetFields();
       setCurrentBudgetId(null);
@@ -206,7 +206,7 @@ const BudgetsPage: React.FC = () => {
     } catch (error) {
       console.error('Failed to update budget:', error);
       message.error(
-        'Failed to update budget: ' + (error instanceof Error ? error.message : 'Unknown error')
+        'Chỉnh sửa Ngân sách thất bại: ' + (error instanceof Error ? error.message : 'Lỗi không rõ')
       );
     }
   };
@@ -223,14 +223,15 @@ const BudgetsPage: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete budget');
+        throw new Error('Xoá Ngân sách thất bại');
       }
 
-      message.success('Budget deleted successfully');
+      message.success('Xoá Ngân sách thành công');
+      setModalVisible(false);
       fetchBudgets();
     } catch (error) {
       console.error('Failed to delete budget:', error);
-      message.error('Failed to delete budget');
+      message.error('Xoá Ngân sách thất bại');
     }
   };
 
@@ -258,11 +259,11 @@ const BudgetsPage: React.FC = () => {
   // Xác nhận xoá
   const handleDeleteButton = (id: string) => {
     Modal.confirm({
-      title: 'Delete Budget',
-      content: 'Are you sure you want to delete this budget?',
-      okText: 'Delete',
+      title: 'Xoá Ngân sách',
+      content: 'Bạn chắc chắn muốn xoá Ngân sách này không?',
+      okText: 'Xoá',
       okType: 'danger',
-      cancelText: 'Cancel',
+      cancelText: 'Huỷ',
       onOk: () => handleDeleteBudget(id),
     });
   };
@@ -270,7 +271,7 @@ const BudgetsPage: React.FC = () => {
   return (
     <MainLayout>
       <div className={styles.pageHeader}>
-        <h1>Budgets</h1>
+        <h1>Ngân Sách</h1>
         <Button
           type="primary"
           shape="circle"
@@ -283,11 +284,11 @@ const BudgetsPage: React.FC = () => {
 
       <Tabs
         activeKey={budgetView}
-        onChange={(key) => setBudgetView(key as 'all' | 'current' | 'month')}
+        onChange={(key) => setBudgetView(key as 'Tất cả' | 'Hiện tại' | 'Theo tháng')}
         items={[
-          { key: 'current', label: 'Active Budgets' },
-          { key: 'month', label: 'This Month' },
-          { key: 'all', label: 'All Budgets' },
+          { key: 'Hiện tại', label: 'Hiện tại' },
+          { key: 'Theo tháng', label: 'Tháng này' },
+          { key: 'Tất cả', label: 'Tất cả' },
         ]}
       />
 
@@ -304,7 +305,7 @@ const BudgetsPage: React.FC = () => {
       </div>
 
       <Modal
-        title={currentBudgetId ? 'Edit Budget' : 'Add Budget'}
+        title={currentBudgetId ? 'Chỉnh sửa Ngân sách' : 'Thêm Ngân sách'}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
@@ -317,10 +318,10 @@ const BudgetsPage: React.FC = () => {
         >
           <Form.Item
             name="categoryId"
-            label="Category"
-            rules={[{ required: true, message: 'Please select a category' }]}
+            label="Danh mục"
+            rules={[{ required: true, message: 'Vui lòng chọn một danh mục' }]}
           >
-            <Select placeholder="Select a category">
+            <Select placeholder="Chọn một danh mục">
               {predefinedCategories.map((category) => (
                 <Select.Option key={category.id} value={category.id}>
                   {category.name}
@@ -331,12 +332,12 @@ const BudgetsPage: React.FC = () => {
 
           <Form.Item
             name="limit_amount"
-            label="Budget Amount (VNĐ)"
+            label="Lượng Ngân sách (VNĐ)"
             rules={[
-              { required: true, message: 'Please enter a budget amount' },
+              { required: true, message: 'Vui lòng nhập số tiền hợp lệ' },
               {
                 pattern: /^\d+$/,
-                message: 'Budget must be a valid integer (no commas, no dots)',
+                message: 'Số tiền phải là một số nguyên (không dấu chấm, dấu phẩy)',
               },
             ]}
           >
@@ -345,16 +346,16 @@ const BudgetsPage: React.FC = () => {
 
           <Form.Item
             name="start_date"
-            label="Start Date"
-            rules={[{ required: true, message: 'Please select a start date' }]}
+            label="Ngày bắt đầu"
+            rules={[{ required: true, message: 'Vui lòng chọn một ngày bắt đầu' }]}
           >
             <Input type="date" />
           </Form.Item>
 
           <Form.Item
             name="end_date"
-            label="End Date"
-            rules={[{ required: true, message: 'Please select an end date' }]}
+            label="Ngày kết thúc"
+            rules={[{ required: true, message: 'Vui lòng chọn một ngày kết thúc' }]}
           >
             <Input type="date" />
           </Form.Item>
@@ -363,11 +364,11 @@ const BudgetsPage: React.FC = () => {
             <div className={styles.modalFooter}>
               {currentBudgetId && (
                 <Button danger onClick={() => handleDeleteButton(currentBudgetId)}>
-                  Delete
+                  Xoá Ngân sách
                 </Button>
               )}
               <Button type="primary" htmlType="submit">
-                {currentBudgetId ? 'Save Changes' : 'Add Budget'}
+                {currentBudgetId ? 'Chỉnh sửa' : 'Tạo'}
               </Button>
             </div>
           </Form.Item>

@@ -1,0 +1,44 @@
+.filtersCard {
+    border-radius: 8px;
+    margin-bottom: 16px;
+  }
+  
+  .filterItem {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 8px;
+  }
+  
+  .filterItem label {
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  
+  .tableContainer {
+    background-color: white;
+    border-radius: 8px;
+    margin-top: 16px;
+    overflow: hidden;
+  }
+  
+  .table tr:hover {
+    cursor: pointer;
+  }
+  
+  .form {
+    padding: 8px;
+  }
+  
+  .formButtons {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+  }
+  
+  .submitButton {
+    min-width: 100px;
+  }
+  
+  .descriptions {
+    margin-top: 16px;
+  }

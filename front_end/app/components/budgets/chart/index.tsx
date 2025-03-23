@@ -18,7 +18,7 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ categories }) => {
         chart: {
             type: 'donut',
         },
-        labels: categories.length ? categories.map(cat => cat.name) : ["No Data"],
+        labels: categories.length ? categories.map(cat => cat.name) : ["Không có dữ liệu"],
         plotOptions: {
             pie: {
                 donut: {
@@ -30,12 +30,16 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ categories }) => {
             enabled: true,
             formatter: function(val: number) {
                 return val.toFixed(1) + "%"
-            }
+            },
+            style: {
+                fontFamily: 'Prompt, sans-serif',
+                fontWeight: 400
+            },
         },
         legend: {
             position: 'bottom',
             fontSize: '14px',
-            fontFamily: 'Lufga, sans-serif',
+            fontFamily: 'Prompt, sans-serif',
             fontWeight: 400,
         },
         tooltip: {
@@ -50,7 +54,7 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ categories }) => {
     const series = categories.map(cat => cat.spent_amount);
 
     return (
-        <Card className={styles.chartCard} title="Spending by Category">
+        <Card className={styles.chartCard} title="Chi tiêu theo Danh mục">
             <ReactApexChart 
                 options={options}
                 series={series}

@@ -4,8 +4,8 @@ import { LoginForm } from '@/components/auth/LoginForm';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Sign In | WealthMate',
-  description: 'Sign in to your WealthMate account',
+  title: 'Đăng Nhập | WealthMate',
+  description: 'Đăng nhập vào tài khoản WealthMate của bạn',
 };
 
 interface LoginCredentials {
@@ -32,7 +32,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <AuthLayout title="Sign In to WealthMate">
+    <AuthLayout title="Đăng nhập WealthMate">
       <LoginForm />
     </AuthLayout>
   );
