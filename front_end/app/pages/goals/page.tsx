@@ -33,6 +33,8 @@ const GoalsPage: React.FC = () => {
   const [selectedDeadline, setSelectedDeadline] = useState<string>('all');
   const [form] = Form.useForm();
   const [addFundsModalVisible, setAddFundsModalVisible] = useState(false);
+  const [withdrawModalVisible, setWithdrawModalVisible] = useState(false);
+  const [withdrawForm] = Form.useForm();
   const [addFundsForm] = Form.useForm();
 
   const fetchGoals = async () => {
@@ -193,6 +195,34 @@ const GoalsPage: React.FC = () => {
     }
   };
 
+  const handleWithdraw = async (id: string, amount: number) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const amountInUnits = Number(amount) / 1000; // Ensure it's a valid number
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/goals/${id}/withdraw?amount=${amountInUnits}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Rút Tiết kiệm thất bại');
+      }
+
+      message.success('Rút Tiết kiệm thành công');
+      setWithdrawModalVisible(false);
+      withdrawForm.resetFields();
+      fetchGoals();
+    } catch (error) {
+      console.error('Failed to withdraw funds:', error);
+      message.error('Rút Tiết kiệm thất bại');
+    }
+  };
+
   const handleAddButton = () => {
     setCurrentGoal(null);
     setModalVisible(true);
@@ -231,6 +261,13 @@ const GoalsPage: React.FC = () => {
     }, 0);
   };
 
+  const handleWithdrawButton = () => {
+    setWithdrawModalVisible(true);
+    setTimeout(() => {
+      withdrawForm.resetFields();
+    }, 0);
+  };
+
   return (
     <MainLayout>
       <div className={styles.pageHeader}>
@@ -241,6 +278,9 @@ const GoalsPage: React.FC = () => {
           </Button>
           <Button type="primary" onClick={handleAddFundsButton}>
             Thêm Tiết kiệm
+          </Button>
+          <Button type="primary" onClick={handleWithdrawButton}>
+            Rút Tiết kiệm
           </Button>
         </div>
       </div>
@@ -428,6 +468,57 @@ const GoalsPage: React.FC = () => {
             </Button>
             <Button type="primary" htmlType="submit">
               Thêm Tiết kiệm
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Rút Tiết kiệm"
+        open={withdrawModalVisible}
+        onCancel={() => setWithdrawModalVisible(false)}
+        footer={null}
+      >
+        <Form
+          form={withdrawForm}
+          layout="vertical"
+          onFinish={(values) => {
+            const amount = Number(values.amount);
+            if (isNaN(amount) || amount <= 0) {
+              message.error('Vui lòng nhập số hợp lệ');
+              return;
+            }
+            handleWithdraw(values.id, amount);
+          }}
+        >
+          <Form.Item
+            name="id"
+            label="Chọn Mục tiêu"
+            rules={[{ required: true, message: 'Vui lòng chọn Mục tiêu' }]}
+          >
+            <Select>
+              {goals.map(goal => (
+                <Select.Option key={goal.id} value={goal.id}>
+                  {goal.name} - {(goal.saved_amount * 1000).toLocaleString()} / {(goal.target_amount * 1000).toLocaleString()} VNĐ
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="amount"
+            label="Lượng (VNĐ)"
+            rules={[{ required: true, message: 'Vui lòng nhập lượng Tiết kiệm' }]}
+          >
+            <Input type="number" min="0" />
+          </Form.Item>
+
+          <Form.Item className={styles.modalFooter}>
+            <Button type="default" onClick={() => setWithdrawModalVisible(false)}>
+              Huỷ
+            </Button>
+            <Button type="primary" htmlType="submit">
+              Rút Tiết kiệm
             </Button>
           </Form.Item>
         </Form>
