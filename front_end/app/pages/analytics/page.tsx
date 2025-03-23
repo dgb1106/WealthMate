@@ -6,6 +6,8 @@ import MostSpentCategoriesChart from "@/components/analyst/MostSpentCategoriesCh
 import BudgetOverviewChart from "@/components/analyst/BudgetOverviewChart";
 import IncomeExpenseComparisonChart from "@/components/analyst/ComparisonBarChart";
 import BudgetSummaryPieChart from "@/components/analyst/BudgetSummaryPieChart";
+import CashFlowTrendChart from "@/components/analyst/MoneyFlowTrend";
+import TrendAnalysisChart from "@/components/analyst/TrendAnalysisChart";
 import AIAssistantButton from "@/components/analyst/AIAssistanButton";
 import styles from "./styles.module.css";
 
@@ -30,6 +32,18 @@ const AnalystPage: React.FC = () => {
         <Row gutter={[24, 24]} style={{ marginTop: "24px" }}>
           <Col xs={24}>
             <BudgetOverviewChart />
+          </Col>
+        </Row>
+
+        <Row gutter={[24, 24]} style={{ marginTop: "24px" }}>
+          <Col xs={24}>
+            <CashFlowTrendChart />
+          </Col>
+        </Row>
+
+        <Row gutter={[24, 24]} style={{ marginTop: "24px" }}>
+          <Col xs={24}>
+            <TrendAnalysisChart />
           </Col>
         </Row>
 

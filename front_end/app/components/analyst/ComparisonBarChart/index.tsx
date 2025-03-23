@@ -65,8 +65,8 @@ const IncomeExpenseComparisonChart: React.FC = () => {
             <YAxis tickFormatter={formatter} />
             <Tooltip formatter={formatter} />
             <Legend />
-            <Bar dataKey="income" name="Thu nhập" fill="#82ca9d" />
-            <Bar dataKey="expense" name="Chi phí" fill="#ff4d4f" />
+            <Bar dataKey="income" name="Thu nhập" fill="#41b8d5" />
+            <Bar dataKey="expense" name="Chi phí" fill="#31356e" />
           </BarChart>
         </ResponsiveContainer>
       )}
