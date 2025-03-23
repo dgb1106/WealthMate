@@ -168,8 +168,9 @@ const GoalsPage: React.FC = () => {
   const handleAddFunds = async (id: string, amount: number) => {
     try {
       const token = localStorage.getItem('authToken');
-      const amountInUnits = Number(amount); // Ensure it's a valid number
+      const amountInUnits = Number(amount);
       const payload = {
+        id: id,
         amount: amountInUnits / 1000,
       };
 
