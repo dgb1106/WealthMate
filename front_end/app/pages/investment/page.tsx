@@ -10,8 +10,7 @@ import useInvestments from '@/hooks/useInvestments';
 import { Button, Form, Modal, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import styles from './styles.module.css';
-
-import Investment from '@/components/investment/InvestmentTable';
+import type { Investment as InvestmentType } from '@/components/investment/InvestmentTable';
 
 const InvestmentPage: React.FC = () => {
   const {
@@ -26,7 +25,7 @@ const InvestmentPage: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [selectedInvestment, setSelectedInvestment] = useState<Investment | null>(null);
+  const [selectedInvestment, setSelectedInvestment] = useState<InvestmentType | null>(null);
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
@@ -95,7 +94,7 @@ const InvestmentPage: React.FC = () => {
       />
 
       <InvestmentTable 
-        investments={investments} 
+        investments={investments as any} 
         loading={loading} 
         onRowClick={(investment) => {
           setSelectedInvestment(investment);

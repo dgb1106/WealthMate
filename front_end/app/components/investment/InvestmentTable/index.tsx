@@ -4,13 +4,13 @@ import dayjs from 'dayjs';
 import { RedoOutlined } from '@ant-design/icons';
 import styles from './styles.module.css';
 
-interface Investment {
+export interface Investment {
   id: string;
   description: string;
   amount: number;
   created_at: string;
   category: {
-    id: string;
+    id?: string;
     name: string;
   };
 }

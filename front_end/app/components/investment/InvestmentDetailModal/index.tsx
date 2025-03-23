@@ -10,7 +10,7 @@ interface Investment {
   amount: number;
   created_at: string;
   category: {
-    id: string;
+    id?: string;
     name: string;
   };
 }
