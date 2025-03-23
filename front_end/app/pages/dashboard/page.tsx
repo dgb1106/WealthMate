@@ -15,10 +15,10 @@ export default function DashboardPage() {
     <MainLayout>
       <div className={styles.parent}>
         <div className={styles.div1}><UserGreetingCard /></div>
-        <div className={styles.div2}><TotalBalanceCard /></div>
-        <div className={styles.div3}><IncomeExpenseCard /></div>
-        <div className={styles.div4}><PaymentScheduleCard /></div>
-        <div className={styles.div5}><MostSpentCategoriesCard /></div>
+        <div className={styles.div3}><TotalBalanceCard /></div>
+        <div className={styles.div9}><IncomeExpenseCard /></div>
+        <div className={styles.div7}><PaymentScheduleCard /></div>
+        <div className={styles.div8}><MostSpentCategoriesCard /></div>
       </div>
     </MainLayout>
   );
