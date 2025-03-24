@@ -33,10 +33,10 @@ export class FamilyInvitationController {
     @Body() createInvitationDto: CreateFamilyInvitationDto,
     @Req() req,
   ) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const invitation = await this.familyInvitationService.create(
-      groupId,
       userId,
+      groupId,
       createInvitationDto,
     );
     return { success: true, data: invitation.toResponseFormat() };
@@ -52,7 +52,7 @@ export class FamilyInvitationController {
   @ApiResponse({ status: 400, description: 'Bad request or insufficient permissions' })
   @ApiResponse({ status: 404, description: 'Group not found' })
   async findAll(@Param('groupId') groupId: string, @Req() req) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const invitations = await this.familyInvitationService.findAll(groupId, userId);
     return { 
       success: true, 
@@ -67,7 +67,7 @@ export class FamilyInvitationController {
   })
   @ApiResponse({ status: 200, description: 'List of invitations for the current user' })
   async findMyInvitations(@Req() req) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const invitations = await this.familyInvitationService.findMyInvitations(userId);
     return { 
       success: true, 
@@ -85,7 +85,7 @@ export class FamilyInvitationController {
   @ApiResponse({ status: 400, description: 'Bad request or invitation already processed' })
   @ApiResponse({ status: 404, description: 'Invitation not found' })
   async acceptInvitation(@Param('id') id: string, @Req() req) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     await this.familyInvitationService.acceptInvitation(id, userId);
     return { success: true, message: 'Invitation accepted successfully' };
   }
@@ -100,7 +100,7 @@ export class FamilyInvitationController {
   @ApiResponse({ status: 400, description: 'Bad request or invitation already processed' })
   @ApiResponse({ status: 404, description: 'Invitation not found' })
   async rejectInvitation(@Param('id') id: string, @Req() req) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     await this.familyInvitationService.rejectInvitation(id, userId);
     return { success: true, message: 'Invitation rejected successfully' };
   }
@@ -115,7 +115,7 @@ export class FamilyInvitationController {
   @ApiResponse({ status: 400, description: 'Bad request, insufficient permissions, or invitation already processed' })
   @ApiResponse({ status: 404, description: 'Invitation not found' })
   async cancelInvitation(@Param('id') id: string, @Req() req) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     await this.familyInvitationService.cancelInvitation(id, userId);
     return { success: true, message: 'Invitation cancelled successfully' };
   }
