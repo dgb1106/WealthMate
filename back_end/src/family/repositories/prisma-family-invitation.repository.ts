@@ -67,7 +67,7 @@ export class PrismaFamilyInvitationRepository implements FamilyInvitationReposit
         inviteeEmail: createInvitationDto.inviteeEmail,
         status: InvitationStatus.PENDING,
         created_at: new Date(),
-        expires_at
+        expires_at: expires_at
       },
       include: {
         group: true,
