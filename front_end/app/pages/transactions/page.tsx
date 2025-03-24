@@ -3,25 +3,19 @@
 import React, { useState, useEffect } from 'react';
 import MainLayout from '@/layouts/MainLayout/index';
 import TransactionTable from '@/components/transactions/TransactionTable';
+import RecurringTransactionTable from '@/components/transactions/RecurringTransactionTable';
 import TransactionForm from '@/components/transactions/TransactionForm';
 import TransactionDetailModal from '@/components/transactions/TransactionDetailModal';
+import RecurringTransactionDetailModal from '@/components/transactions/RecurringTransactionDetailModal';
 import TransactionFilters from '@/components/transactions/TransactionFilters';
-import useTransactions from '@/hooks/useTransactions';
-import { Button, Form, Modal, message, Dropdown, Menu } from 'antd';
+import RecurringTransactionFilters from '@/components/transactions/RecurringTransactionFilters';
+import useTransactions, { Transaction, RecurringTransaction, Frequency } from '@/hooks/useTransactions';
+import { Button, Form, Modal, message, Dropdown, Menu, Divider, Typography } from 'antd';
 import { PlusOutlined, DownOutlined } from '@ant-design/icons';
 import styles from './styles.module.css';
 import RecurringTransactionForm from '@/components/transactions/RecurringTransactionForm';
 
-interface Transaction {
-  id: string;
-  description: string;
-  amount: number;
-  created_at: string;
-  category: {
-    id: string;
-    name: string;
-  };
-}
+const { Title } = Typography;
 
 interface Category {
   id: string;
@@ -57,14 +51,20 @@ const predefinedCategories: Category[] = [
 const TransactionsPage: React.FC = () => {
   const {
     transactions,
+    recurringTransactions,
     loading,
+    recurringLoading,
     fetchTransactions,
+    fetchRecurringTransactions,
     addTransaction,
     updateTransaction,
     deleteTransaction,
     addRecurringTransaction,
+    updateRecurringTransaction,
+    deleteRecurringTransaction,
   } = useTransactions();
 
+  // Regular transaction states
   const [modalVisible, setModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -75,8 +75,25 @@ const TransactionsPage: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  
+  // Recurring transaction states
   const [recurringModalVisible, setRecurringModalVisible] = useState(false);
   const [recurringForm] = Form.useForm();
+  const [recurringEditForm] = Form.useForm();
+  const [recurringDetailModalVisible, setRecurringDetailModalVisible] = useState(false);
+  const [recurringEditModalVisible, setRecurringEditModalVisible] = useState(false);
+  const [selectedRecurringTransaction, setSelectedRecurringTransaction] = useState<RecurringTransaction | null>(null);
+  const [selectedRecurringCategory, setSelectedRecurringCategory] = useState<string>("all");
+  const [selectedFrequency, setSelectedFrequency] = useState<string>("all");
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
+  
+  const [recurringCurrentPage, setRecurringCurrentPage] = useState(1);
+  const [recurringPageSize, setRecurringPageSize] = useState(10);
+  const [recurringTotal, setRecurringTotal] = useState(0);
 
   const monthOptions = Array.from({ length: 12 }, (_, i) => ({
     label: `Tháng ${i+1}`,
@@ -100,8 +117,12 @@ const TransactionsPage: React.FC = () => {
   }));
 
   useEffect(() => {
-    fetchTransactions(selectedMonth, selectedYear, selectedType, selectedCategory);
-  }, [selectedMonth, selectedYear, selectedType, selectedCategory]);
+    fetchTransactions(selectedMonth, selectedYear, selectedType, selectedCategory, currentPage, pageSize);
+  }, [selectedMonth, selectedYear, selectedType, selectedCategory, currentPage, pageSize]);
+
+  useEffect(() => {
+    fetchRecurringTransactions(selectedRecurringCategory, selectedFrequency as Frequency | 'all', recurringCurrentPage, recurringPageSize);
+  }, [selectedRecurringCategory, selectedFrequency, recurringCurrentPage, recurringPageSize]);
 
   const handleAddTransaction = async (values: { categoryId: string; amount: string; description: string; }) => {
     await addTransaction(values);
@@ -129,9 +150,33 @@ const TransactionsPage: React.FC = () => {
     recurringForm.resetFields();
   };
 
+  const handleUpdateRecurringTransaction = async (values: any) => {
+    if (selectedRecurringTransaction) {
+      await updateRecurringTransaction(selectedRecurringTransaction.id, values);
+      setRecurringEditModalVisible(false);
+    }
+  };
+
+  const handleDeleteRecurringTransaction = async () => {
+    if (selectedRecurringTransaction) {
+      await deleteRecurringTransaction(selectedRecurringTransaction.id);
+      setRecurringDetailModalVisible(false);
+    }
+  };
+
   const onFinishFailed = (errorInfo: any) => {
     console.log('Failed:', errorInfo);
     message.error('Có lỗi xảy ra khi gửi biểu mẫu.');
+  };
+
+  const handlePaginationChange = (page: number, size: number) => {
+    setCurrentPage(page);
+    setPageSize(size);
+  };
+
+  const handleRecurringPaginationChange = (page: number, size: number) => {
+    setRecurringCurrentPage(page);
+    setRecurringPageSize(size);
   };
 
   const addButtonMenu = (
@@ -166,47 +211,109 @@ const TransactionsPage: React.FC = () => {
         </Dropdown>
       </div>
 
-      <TransactionFilters 
-        selectedMonth={selectedMonth}
-        selectedYear={selectedYear}
-        selectedType={selectedType}
-        selectedCategory={selectedCategory}
-        monthOptions={monthOptions}
-        yearOptions={yearOptions}
-        typeOptions={typeOptions}
-        categoryOptions={categoryOptions}
-        onMonthChange={setSelectedMonth}
-        onYearChange={setSelectedYear}
-        onTypeChange={setSelectedType}
-        onCategoryChange={setSelectedCategory}
-      />
+      {/* Regular Transactions Section */}
+      <section className={styles.section}>
+        <Title level={3}>Giao dịch thường</Title>
+        
+        <TransactionFilters 
+          selectedMonth={selectedMonth}
+          selectedYear={selectedYear}
+          selectedType={selectedType}
+          selectedCategory={selectedCategory}
+          monthOptions={monthOptions}
+          yearOptions={yearOptions}
+          typeOptions={typeOptions}
+          categoryOptions={categoryOptions}
+          onMonthChange={setSelectedMonth}
+          onYearChange={setSelectedYear}
+          onTypeChange={setSelectedType}
+          onCategoryChange={setSelectedCategory}
+        />
 
-      <TransactionTable 
-        transactions={transactions} 
-        loading={loading} 
-        onRowClick={(transaction) => {
-          setSelectedTransaction(transaction);
-          setDetailModalVisible(true);
-        }} 
-      />
+        <TransactionTable 
+          transactions={transactions} 
+          loading={loading} 
+          onRowClick={(transaction) => {
+            setSelectedTransaction(transaction);
+            setDetailModalVisible(true);
+          }}
+          pagination={{
+            current: currentPage,
+            pageSize: pageSize,
+            total: total,
+            onChange: handlePaginationChange
+          }}
+        />
 
-      <TransactionDetailModal 
-        visible={detailModalVisible} 
-        transaction={selectedTransaction} 
-        onClose={() => setDetailModalVisible(false)} 
-        onEdit={() => {
-          if (selectedTransaction) {
-            editForm.setFieldsValue({
-              description: selectedTransaction.description,
-              amount: Math.abs(selectedTransaction.amount * 1000).toString(),
-              categoryId: selectedTransaction.category.id
-            });
-            setDetailModalVisible(false);
-            setEditModalVisible(true);
-          }
-        }} 
-        onDelete={handleDeleteTransaction} 
-      />
+        <TransactionDetailModal 
+          visible={detailModalVisible} 
+          transaction={selectedTransaction} 
+          onClose={() => setDetailModalVisible(false)} 
+          onEdit={() => {
+            if (selectedTransaction) {
+              editForm.setFieldsValue({
+                description: selectedTransaction.description,
+                amount: Math.abs(selectedTransaction.amount * 1000).toString(),
+                categoryId: selectedTransaction.category.id
+              });
+              setDetailModalVisible(false);
+              setEditModalVisible(true);
+            }
+          }} 
+          onDelete={handleDeleteTransaction} 
+        />
+      </section>
+
+      <Divider />
+
+      {/* Recurring Transactions Section */}
+      <section className={styles.section}>
+        <Title level={3}>Giao dịch định kỳ</Title>
+        
+        <RecurringTransactionFilters
+          selectedCategory={selectedRecurringCategory}
+          selectedFrequency={selectedFrequency}
+          categoryOptions={categoryOptions}
+          onCategoryChange={setSelectedRecurringCategory}
+          onFrequencyChange={setSelectedFrequency}
+        />
+
+        <RecurringTransactionTable
+          transactions={recurringTransactions}
+          loading={recurringLoading}
+          onRowClick={(transaction) => {
+            setSelectedRecurringTransaction(transaction);
+            setRecurringDetailModalVisible(true);
+          }}
+          pagination={{
+            current: recurringCurrentPage,
+            pageSize: recurringPageSize,
+            total: recurringTotal,
+            onChange: handleRecurringPaginationChange
+          }}
+        />
+
+        <RecurringTransactionDetailModal
+          visible={recurringDetailModalVisible}
+          transaction={selectedRecurringTransaction}
+          onClose={() => setRecurringDetailModalVisible(false)}
+          onEdit={() => {
+            if (selectedRecurringTransaction) {
+              recurringEditForm.setFieldsValue({
+                description: selectedRecurringTransaction.description,
+                amount: Math.abs(selectedRecurringTransaction.amount * 1000).toString(),
+                categoryId: selectedRecurringTransaction.category.id,
+                frequency: selectedRecurringTransaction.frequency,
+                startDate: selectedRecurringTransaction.start_date,
+                endDate: selectedRecurringTransaction.end_date
+              });
+              setRecurringDetailModalVisible(false);
+              setRecurringEditModalVisible(true);
+            }
+          }}
+          onDelete={handleDeleteRecurringTransaction}
+        />
+      </section>
 
       {/* Modal thêm giao dịch */}
       <Modal
@@ -254,6 +361,21 @@ const TransactionsPage: React.FC = () => {
         <TransactionForm 
           form={editForm} 
           onFinish={handleUpdateTransaction} 
+          onFinishFailed={onFinishFailed}
+          isEdit={true} 
+        />
+      </Modal>
+
+      {/* Modal chỉnh sửa giao dịch định kỳ */}
+      <Modal
+        visible={recurringEditModalVisible}
+        title="Chỉnh sửa giao dịch định kỳ"
+        onCancel={() => setRecurringEditModalVisible(false)}
+        footer={null}
+      >
+        <RecurringTransactionForm 
+          form={recurringEditForm} 
+          onFinish={handleUpdateRecurringTransaction} 
           onFinishFailed={onFinishFailed}
           isEdit={true} 
         />

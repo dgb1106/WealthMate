@@ -54,7 +54,7 @@
   }
 
   .filterSelect {
-    min-width: 100px;
+    min-width: 50px;
     border-radius: 20px;
   }
 
@@ -81,21 +81,28 @@
     }
   }
 
-  .section {
-    margin-bottom: 30px;
-  }
-  
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-  
-  .addButton {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  }
-  
   .filters {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .filterCol {
+    display: flex;
+    align-items: center;
+  }
+  
+  .filterSelect {
+    max-width: 200px;
+  }
+
+  .filterButtonsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  
+  .filterSelect {
+    margin-right: 8px;
   }
