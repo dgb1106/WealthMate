@@ -26,10 +26,13 @@ const AIAssistantButton = () => {
             },
           }
         );
-        
-        const income = incomeResponse.data.income || 0;
+        const monthlyData = incomeResponse.data.data;
+        const latestMonth = monthlyData[monthlyData.length - 1];
+        const income = latestMonth.totalIncome || 0;
+
+        console.log("Income value before API call:", income);
         const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/ai-utils/expense-forecast?income=${income*1000}&interestRate=4&inflationRate=2.2&holidays=0`,
+          `${process.env.NEXT_PUBLIC_API_URL}/ai-utils/expense-forecast?income=${income * 1000}&interestRate=4&inflationRate=3.2&holidays=0`,
           {
             headers: {
               "Content-Type": "application/json",
