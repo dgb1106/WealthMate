@@ -40,6 +40,8 @@ const FamilyPage: React.FC = () => {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [form] = Form.useForm();
+  const [groupMemberCounts, setGroupMemberCounts] = useState<Record<string, number>>({});
+  const [membersLoading, setMembersLoading] = useState<Record<string, boolean>>({});
 
   const fetchFamilyGroups = async () => {
     try {
@@ -62,6 +64,54 @@ const FamilyPage: React.FC = () => {
       setFamilyGroups([]);
     }
   };
+
+  const fetchGroupMembers = async () => {
+    if (!familyGroups.length) return;
+    
+    const token = localStorage.getItem('authToken');
+    const newMemberCounts: Record<string, number> = {};
+    const newLoadingState: Record<string, boolean> = {};
+    
+    // Mark all groups as loading
+    familyGroups.forEach(group => {
+      newLoadingState[group.id] = true;
+    });
+    setMembersLoading(newLoadingState);
+    
+    // Fetch members for each group
+    for (const group of familyGroups) {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/family-groups/${group.id}/members`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && Array.isArray(result.data)) {
+            newMemberCounts[group.id] = result.data.length;
+            console.log(`Group ${group.name} has ${result.data.length} members`);
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching members for group ${group.id}:`, error);
+      } finally {
+        // Mark this group as loaded
+        newLoadingState[group.id] = false;
+      }
+    }
+    
+    setGroupMemberCounts(newMemberCounts);
+    setMembersLoading(newLoadingState);
+  };
+  
+  // Add this effect to fetch members when groups are loaded
+  useEffect(() => {
+    if (familyGroups.length > 0) {
+      fetchGroupMembers();
+    }
+  }, [familyGroups]);
 
   const handleCreateGroup = async (values: any) => {
     try {
@@ -129,7 +179,9 @@ const FamilyPage: React.FC = () => {
                     <h3 className={styles.groupName}>{group.name}</h3>
                     <p className={styles.groupDescription}>{group.description}</p>
                     <div className={styles.groupInfo}>
-                      <span>{group.members?.length || 1} thành viên</span>
+                      <span>
+                        {membersLoading[group.id] ? 'Đang tải...' : `${groupMemberCounts[group.id] || 0} thành viên`}
+                      </span>
                       {group.status === 'OWNER' ? (
                         <span className={styles.ownerBadge}>Chủ sở hữu</span>
                       ) : group.status === 'ADMIN' ? (
