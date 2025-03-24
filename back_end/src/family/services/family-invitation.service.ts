@@ -12,8 +12,8 @@ export class FamilyInvitationService {
   ) {}
 
   async create(
-    groupId: string,
     userId: string,
+    groupId: string,
     createInvitationDto: CreateFamilyInvitationDto,
   ): Promise<FamilyInvitation> {
     // The repository method already checks if the user has permission to invite

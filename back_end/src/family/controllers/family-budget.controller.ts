@@ -34,7 +34,7 @@ export class FamilyBudgetController {
     @Body() createBudgetDto: CreateFamilyBudgetDto,
     @Req() req,
   ) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const budget = await this.familyBudgetService.create(groupId, userId, createBudgetDto);
     return { success: true, data: budget.toResponseFormat() };
   }
@@ -49,7 +49,7 @@ export class FamilyBudgetController {
   @ApiResponse({ status: 400, description: 'Bad request or insufficient permissions' })
   @ApiResponse({ status: 404, description: 'Family group not found' })
   async findAll(@Param('groupId') groupId: string, @Req() req) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const budgets = await this.familyBudgetService.findAll(groupId, userId);
     return { 
       success: true, 
@@ -66,7 +66,7 @@ export class FamilyBudgetController {
   @ApiResponse({ status: 200, description: 'List of active family budgets' })
   @ApiResponse({ status: 400, description: 'Bad request or insufficient permissions' })
   async findActive(@Param('groupId') groupId: string, @Req() req) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const budgets = await this.familyBudgetService.findActiveByGroup(groupId, userId);
     return { 
       success: true, 
@@ -88,7 +88,7 @@ export class FamilyBudgetController {
     @Param('categoryId') categoryId: string,
     @Req() req,
   ) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const budgets = await this.familyBudgetService.findByCategory(groupId, categoryId, userId);
     return { 
       success: true, 
@@ -105,7 +105,7 @@ export class FamilyBudgetController {
   @ApiResponse({ status: 200, description: 'Budget summary for the family group' })
   @ApiResponse({ status: 400, description: 'Bad request or insufficient permissions' })
   async getGroupBudgetSummary(@Param('groupId') groupId: string, @Req() req) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const summary = await this.familyBudgetService.getGroupBudgetSummary(groupId, userId);
     return { success: true, data: summary };
   }
@@ -120,7 +120,7 @@ export class FamilyBudgetController {
   @ApiResponse({ status: 200, description: 'The family budget' })
   @ApiResponse({ status: 404, description: 'Budget not found' })
   async findOne(@Param('id') id: string, @Req() req) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const budget = await this.familyBudgetService.findOne(id, userId);
     return { success: true, data: budget.toResponseFormat() };
   }
@@ -141,7 +141,7 @@ export class FamilyBudgetController {
     @Body() updateBudgetDto: UpdateFamilyBudgetDto,
     @Req() req,
   ) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const budget = await this.familyBudgetService.update(id, userId, updateBudgetDto);
     return { success: true, data: budget.toResponseFormat() };
   }
@@ -157,7 +157,7 @@ export class FamilyBudgetController {
   @ApiResponse({ status: 400, description: 'Bad request or insufficient permissions' })
   @ApiResponse({ status: 404, description: 'Budget not found' })
   async remove(@Param('id') id: string, @Req() req) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     await this.familyBudgetService.remove(id, userId);
     return { success: true, message: 'Budget deleted successfully' };
   }
