@@ -1,0 +1,62 @@
+.groupName {
+    color: #1890ff;
+}
+
+.container {
+    display: flex;
+    flex-wrap: nowrap; /* Ensure columns stay in one row */
+    gap: 1.5rem;
+    width: 100%;
+    padding: 1rem;
+}
+
+.leftColumn {
+    flex: 2;
+    display: flex;
+    flex-direction: column; /* Ensure content stacks properly */
+}
+
+.rightColumn {
+    flex: 1;
+    min-width: 300px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.membersCard {
+    margin-top: 20px;
+    width: 100%;    
+  }
+  
+  .memberItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .memberInfo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .memberName {
+    font-weight: 500;
+    color: #000000;
+  }
+  
+  .memberRole {
+    color: #888;
+    margin-left: 10px;
+    font-size: 0.9em;
+  }
+  
+.memberActions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0; /* Prevent the buttons from shrinking */
+    margin-left: 16px;
+}

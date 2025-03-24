@@ -6,6 +6,7 @@ import InvestmentPage from "@/pages/investment/page";
 import AnalyticsPage from "@/pages/analytics/page";
 import LoansPage from "@/pages/loans/page";
 import FamilyPage from "@/pages/family/page";
+import FamilyGroupPage from "@/pages/family/[groupId]/page";
 import AiAssistantPage from "@/pages/ai_assistant/page";
 import ProfilePage from "@/pages/profile/page";
 
@@ -47,6 +48,10 @@ const appRoutes: RouteType[] = [
     {
         path: '/pages/family',
         element: <FamilyPage />,
+    },
+    {
+        path: '/pages/family/:groupId',
+        element: <FamilyGroupPage />,
     },
     {
         path: '/pages/ai-assistant',

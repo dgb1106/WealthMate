@@ -1,0 +1,79 @@
+.pageHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.headerButtons {
+    display: flex;
+    gap: 1rem;
+}
+
+.groupsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+  
+.groupCard {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+  
+.groupCard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.groupName {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1890ff;
+    margin-bottom: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.groupDescription {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 40px;
+}
+  
+.groupInfo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.adminBadge {
+    background-color: pink;
+    color: red;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.ownerBadge {
+    background-color: lightyellow;
+    color: yellow;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+  
+.modalFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-bottom: 0;
+}
+  
