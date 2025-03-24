@@ -1,0 +1,130 @@
+.infoColumn {
+    flex: 1;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+  }
+  
+  .profileCard {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    width: 700px;
+    height: 650px;
+  }
+  
+  .profileHeader {
+    background-color: #f5f5f5;
+    padding: 24px;
+    border-bottom: 1px solid #eaeaea;
+  }
+  
+  .profileName {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    color: #333;
+  }
+  
+  .profileJob {
+    font-size: 16px;
+    color: #666;
+    margin: 0;
+  }
+  
+  .profileContent {
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  
+  .infoGroup {
+    margin-bottom: 20px;
+  }
+  
+  .sectionTitle {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #333;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 8px;
+  }
+  
+  .infoItem {
+    display: flex;
+    margin-bottom: 12px;
+    flex-direction: column;
+  }
+  
+  @media (min-width: 576px) {
+    .infoItem {
+      flex-direction: row;
+    }
+  }
+  
+  .infoLabel {
+    font-weight: 600;
+    color: #666;
+    min-width: 150px;
+    margin-bottom: 4px;
+    margin-right: 10px;
+  }
+  
+  .infoValue {
+    color: #333;
+    flex: 1;
+  }
+  
+  .positive {
+    color: #4caf50;
+    font-weight: 600;
+  }
+  
+  .negative {
+    color: #e53935;
+    font-weight: 600;
+  }
+  
+  .actionButtons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 32px;
+  }
+  
+  .actionButton {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .actionButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  .updateButton {
+    background-color: #4caf50;
+    color: white;
+  }
+  
+  .updateButton:hover {
+    background-color: #388e3c;
+  }
+  
+  .passwordButton {
+    background-color: #2196f3;
+    color: white;
+  }
+  
+  .passwordButton:hover {
+    background-color: #1976d2;
+  }
