@@ -111,7 +111,10 @@ const FamilyGroupPage: React.FC = () => {
             (member: FamilyMember) => member.userId === userId
           );
           console.log('Current user member:', userMember);
+          
+          console.log('Current user id:', userId);
           setCurrentUserRole(userMember?.role || null);
+          console.log('Current user role:', userMember?.role);
         }
       }
     } catch (error) {
@@ -242,7 +245,7 @@ const FamilyGroupPage: React.FC = () => {
                   </div>
                   
                   {(currentUserRole === 'OWNER' || currentUserRole === 'ADMIN') && 
-                   member.role !== 'OWNER' && (
+                    (
                     <div className={styles.memberActions}>
                       {((currentUserRole === 'OWNER') || 
                         (currentUserRole === 'ADMIN')) && (

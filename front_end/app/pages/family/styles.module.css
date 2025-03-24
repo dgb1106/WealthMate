@@ -76,4 +76,83 @@
     gap: 8px;
     margin-bottom: 0;
 }
+
+.invitationsList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 32px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  color: #666;
+}
+
+.invitationCard {
+  margin-bottom: 16px;
+}
+
+.invitationContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.invitationInfo {
+  flex: 1;
+}
+
+.invitationInfo h3 {
+  margin: 0 0 8px 0;
+  color: #333;
+}
+
+.invitationMessage {
+  color: #666;
+  margin: 8px 0;
+  font-style: italic;
+}
+
+.invitationDate {
+  color: #999;
+  font-size: 0.9em;
+  margin: 8px 0;
+}
+
+.invitationActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.invitationStatus {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.invitationStatus.pending {
+  background-color: #e6f7ff;
+  color: #1890ff;
+}
+
+.invitationStatus.accepted {
+  background-color: #f6ffed;
+  color: #52c41a;
+}
+
+.invitationStatus.rejected {
+  background-color: #fff1f0;
+  color: #ff4d4f;
+}
+
+.invitationStatus.expired {
+  background-color: #f5f5f5;
+  color: #999;
+}
   

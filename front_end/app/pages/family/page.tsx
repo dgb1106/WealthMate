@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Tabs, Card, Button, Modal, Form, Input, message } from 'antd';
+import { Tabs, Card, Button, Modal, Form, Input, message, Select } from 'antd';
 import MainLayout from '@/layouts/MainLayout/index';
 import styles from './styles.module.css';
 
@@ -31,6 +31,7 @@ interface Invitation {
   expires_at: Date;
   group?: FamilyGroup;
   inviter?: any;
+  message?: string;
 }
 
 const FamilyPage: React.FC = () => {
@@ -42,6 +43,8 @@ const FamilyPage: React.FC = () => {
   const [form] = Form.useForm();
   const [groupMemberCounts, setGroupMemberCounts] = useState<Record<string, number>>({});
   const [membersLoading, setMembersLoading] = useState<Record<string, boolean>>({});
+  const [inviteModalVisible, setInviteModalVisible] = useState(false);
+  const [inviteForm] = Form.useForm();
 
   const fetchFamilyGroups = async () => {
     try {
@@ -105,6 +108,27 @@ const FamilyPage: React.FC = () => {
     setGroupMemberCounts(newMemberCounts);
     setMembersLoading(newLoadingState);
   };
+
+  const fetchInvitations = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invitations/my`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch invitations');
+      }
+
+      const result = await response.json();
+      setInvitations(result.data || []);
+    } catch (error) {
+      console.error(error);
+      message.error('Lấy dữ liệu thất bại');  
+    }
+  };
   
   // Add this effect to fetch members when groups are loaded
   useEffect(() => {
@@ -143,11 +167,97 @@ const FamilyPage: React.FC = () => {
     fetchFamilyGroups();
   }, []);
 
+  useEffect(() => {
+    fetchInvitations();
+  }, []);
+
+  const handleInvite = async (values: any) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/family-groups/${values.groupId}/invitations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ 
+          inviteeEmail: values.inviteEmail,
+          message: values.message,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to invite member');
+      }
+
+      message.success('Gửi lời mời thành công');
+      setInviteModalVisible(false);
+      inviteForm.resetFields();
+      fetchInvitations(); // Refresh the invitations list
+    } catch (error: any) {
+      console.error('Invite error:', error);
+      message.error(error.message || 'Gửi lời mời thất bại');
+    }
+  };
+
   const handleCreateButton = () => {
     setCreateModalVisible(true);
     setTimeout(() => {
       form.resetFields();
     }, 0);
+  };
+
+  const handleInviteButton = () => {
+    setInviteModalVisible(true);
+    setTimeout(() => {
+      inviteForm.resetFields();
+    }, 0);
+  };
+
+  const handleAcceptInvitation = async (invitationId: string) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invitations/${invitationId}/accept`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to accept invitation');
+      }
+
+      message.success('Đã chấp nhận lời mời');
+      fetchInvitations();
+      fetchFamilyGroups(); // Refresh the groups list
+    } catch (error) {
+      console.error(error);
+      message.error('Chấp nhận lời mời thất bại');
+    }
+  };
+
+  const handleRejectInvitation = async (invitationId: string) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invitations/${invitationId}/reject`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to reject invitation');
+      }
+
+      message.success('Đã từ chối lời mời');
+      fetchInvitations();
+    } catch (error) {
+      console.error(error);
+      message.error('Từ chối lời mời thất bại');
+    }
   };
 
   return (
@@ -156,7 +266,10 @@ const FamilyPage: React.FC = () => {
         <h1>Nhóm</h1>
         <div className={styles.headerButtons}>
           <Button type="primary" onClick={handleCreateButton}>
-              Tạo Nhóm
+            Tạo Nhóm
+          </Button>
+          <Button type="primary" onClick={handleInviteButton}>
+            Mời thành viên
           </Button>
         </div>
       </div>
@@ -196,7 +309,56 @@ const FamilyPage: React.FC = () => {
           {
             key: '2',
             label: 'Lời mời của bạn',
-            children: 'Invitation content here',
+            children: (
+              <div className={styles.invitationsList}>
+                {invitations.length === 0 ? (
+                  <div className={styles.emptyState}>
+                    <p>Bạn chưa có lời mời nào</p>
+                  </div>
+                ) : (
+                  invitations.map(invitation => (
+                    <Card key={invitation.id} className={styles.invitationCard}>
+                      <div className={styles.invitationContent}>
+                        <div className={styles.invitationInfo}>
+                          <h3>Lời mời tham gia nhóm: {invitation.group?.name}</h3>
+                          <p>Người mời: {invitation.inviter?.username || 'Không xác định'}</p>
+                          {invitation.message && (
+                            <p className={styles.invitationMessage}>{invitation.message}</p>
+                          )}
+                          <p className={styles.invitationDate}>
+                            Ngày mời: {new Date(invitation.created_at).toLocaleDateString('vi-VN')}
+                          </p>
+                        </div>
+                        <div className={styles.invitationActions}>
+                          {invitation.status === 'PENDING' ? (
+                            <>
+                              <Button 
+                                type="primary" 
+                                onClick={() => handleAcceptInvitation(invitation.id)}
+                              >
+                                Chấp nhận
+                              </Button>
+                              <Button 
+                                danger 
+                                onClick={() => handleRejectInvitation(invitation.id)}
+                              >
+                                Từ chối
+                              </Button>
+                            </>
+                          ) : (
+                            <span className={`${styles.invitationStatus} ${styles[invitation.status.toLowerCase()]}`}>
+                              {invitation.status === 'ACCEPTED' ? 'Đã chấp nhận' :
+                               invitation.status === 'REJECTED' ? 'Đã từ chối' :
+                               invitation.status === 'EXPIRED' ? 'Đã hết hạn' : invitation.status}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
+            ),
           },
         ]}
       />
@@ -231,6 +393,49 @@ const FamilyPage: React.FC = () => {
           <Form.Item className={styles.modalFooter}>
             <Button onClick={() => setCreateModalVisible(false)}>Huỷ</Button>
             <Button type="primary" htmlType="submit">Tạo</Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Mời thành viên mới"
+        open={inviteModalVisible}
+        onCancel={() => setInviteModalVisible(false)}
+        footer={null}
+      >
+        <Form
+          form={inviteForm}
+          layout="vertical"
+          onFinish={handleInvite}
+        >
+          <Form.Item
+            name="inviteEmail"
+            label="Email"
+            rules={[
+              { required: true, message: 'Vui lòng nhập email' },
+              { type: 'email', message: 'Email không hợp lệ' }
+            ]}
+          >
+            <Input placeholder="Nhập email người dùng" />
+          </Form.Item>
+
+          <Form.Item
+            name="groupId"
+            label="Nhóm"
+            rules={[{ required: true, message: 'Vui lòng chọn nhóm' }]}
+          >
+            <Select options={familyGroups.map(group => ({ label: group.name, value: group.id }))} />
+          </Form.Item>
+
+          <Form.Item
+            name="message"
+            label="Lời nhắn (tùy chọn)"
+          >
+            <Input.TextArea placeholder="Nhập lời nhắn cho người được mời" />
+          </Form.Item>
+          <Form.Item className={styles.modalFooter}>
+            <Button onClick={() => setInviteModalVisible(false)}>Hủy</Button>
+            <Button type="primary" htmlType="submit">Gửi lời mời</Button>
           </Form.Item>
         </Form>
       </Modal>
