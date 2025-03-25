@@ -60,7 +60,7 @@ export class CreateFamilyGoalDto {
   })
   @IsDate()
   @Type(() => Date)
-  target_date: Date;
+  due_date: Date;
 
   @ApiProperty({
     description: 'Priority level of the goal',
@@ -72,5 +72,4 @@ export class CreateFamilyGoalDto {
   @IsEnum(GoalPriority)
   @IsOptional()
   priority?: GoalPriority;
-  due_date: string | number | Date;
 }
