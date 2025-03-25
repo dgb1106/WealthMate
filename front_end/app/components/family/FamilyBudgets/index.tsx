@@ -72,7 +72,24 @@ const FamilyBudgets: React.FC<FamilyBudgetProps> = ({ groupId }) => {
 
         const result = await response.json();
         console.log('Fetched budgets:', result); // Debug log
-        setBudgets(result.data || []);
+
+        // Map the response data to include category information
+        const mappedBudgets = result.data.map((budget: any) => {
+            const category = predefinedCategories.find(cat => cat.id === budget.categoryId);
+            return {
+                ...budget,
+                category: category ? {
+                    id: category.id,
+                    name: category.name
+                } : {
+                    id: budget.categoryId,
+                    name: 'Unknown Category'
+                }
+            };
+        });
+
+        console.log('Mapped budgets:', mappedBudgets); // Debug log
+        setBudgets(mappedBudgets);
     } catch (error) {
         console.error('Error fetching budgets:', error);
         message.error('Lấy dữ liệu thất bại');

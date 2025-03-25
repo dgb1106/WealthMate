@@ -287,15 +287,17 @@ const FamilyGoals: React.FC<FamilyGoalProps> = ({ groupId }) => {
                         <Input type="date" />
                     </Form.Item>
 
-                    <Form.Item className={styles.modalFooter}>
-                        {currentGoal && (
-                            <Button danger onClick={() => handleDeleteButton(currentGoal.id)}>
-                                Xoá Mục tiêu
+                    <Form.Item>
+                        <div className={styles.modalFooter}>
+                            {currentGoal && (
+                                <Button danger onClick={() => handleDeleteButton(currentGoal.id)}>
+                                    Xoá Mục tiêu
+                                </Button>
+                            )}
+                            <Button type="primary" htmlType="submit">
+                                {currentGoal ? 'Chỉnh sửa' : 'Tạo'}
                             </Button>
-                        )}
-                        <Button type="primary" htmlType="submit">
-                            {currentGoal ? 'Chỉnh sửa' : 'Tạo'}
-                        </Button>
+                        </div>
                     </Form.Item>
                 </Form>
             </Modal>

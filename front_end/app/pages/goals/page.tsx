@@ -409,15 +409,17 @@ const GoalsPage: React.FC = () => {
             <Input type="date" />
           </Form.Item>
 
-          <Form.Item className={styles.modalFooter}>
-            {currentGoal && (
-              <Button danger onClick={() => handleDeleteButton(currentGoal.id)}>
-                Xoá Mục tiêu
+          <Form.Item>
+            <div className={styles.modalFooter}>
+              {currentGoal && (
+                <Button danger onClick={() => handleDeleteButton(currentGoal.id)}>
+                  Xoá Mục tiêu
                 </Button>
-            )}
-            <Button type="primary" htmlType="submit">
-              {currentGoal ? 'Chỉnh sửa' : 'Tạo'}
-            </Button>
+              )}
+              <Button type="primary" htmlType="submit">
+                {currentGoal ? 'Chỉnh sửa' : 'Tạo'}
+              </Button>
+            </div>
           </Form.Item>
         </Form>
       </Modal>
@@ -462,13 +464,15 @@ const GoalsPage: React.FC = () => {
             <Input type="number" min="0" />
           </Form.Item>
 
-          <Form.Item className={styles.modalFooter}>
-            <Button type="default" onClick={() => setAddFundsModalVisible(false)}>
-              Huỷ
-            </Button>
-            <Button type="primary" htmlType="submit">
-              Thêm Tiết kiệm
-            </Button>
+          <Form.Item>
+            <div className={styles.modalFooter}>
+              <Button type="default" onClick={() => setAddFundsModalVisible(false)}>
+                Huỷ
+              </Button>
+              <Button type="primary" htmlType="submit">
+                Thêm Tiết kiệm
+              </Button>
+            </div>
           </Form.Item>
         </Form>
       </Modal>
@@ -513,13 +517,15 @@ const GoalsPage: React.FC = () => {
             <Input type="number" min="0" />
           </Form.Item>
 
-          <Form.Item className={styles.modalFooter}>
-            <Button type="default" onClick={() => setWithdrawModalVisible(false)}>
-              Huỷ
-            </Button>
-            <Button type="primary" htmlType="submit">
-              Rút Tiết kiệm
-            </Button>
+          <Form.Item>
+            <div className={styles.modalFooter}>
+              <Button type="default" onClick={() => setWithdrawModalVisible(false)}>
+                Huỷ
+              </Button>
+              <Button type="primary" htmlType="submit">
+                Rút Tiết kiệm
+              </Button>
+            </div>
           </Form.Item>
         </Form>
       </Modal>

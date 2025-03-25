@@ -4,6 +4,11 @@
     align-items: center;
     margin-bottom: 1rem;
   }
+
+  .headerButtons {
+    display: flex;
+    gap: 1rem;
+}
   
   .budgetsContainer {
     display: grid;
@@ -11,7 +16,7 @@
     gap: 1rem;
     width: 100%;
     align-items: start;
-    padding: 1rem;
+    margin-top: 1.5rem;
   }
     
   .contentWrapper {

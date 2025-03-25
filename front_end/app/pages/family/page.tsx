@@ -497,9 +497,11 @@ const FamilyPage: React.FC = () => {
             <Input.TextArea />
           </Form.Item>
 
-          <Form.Item className={styles.modalFooter}>
-            <Button onClick={() => setCreateModalVisible(false)}>Huỷ</Button>
-            <Button type="primary" htmlType="submit">Tạo</Button>
+          <Form.Item>
+            <div className={styles.modalFooter}>
+              <Button onClick={() => setCreateModalVisible(false)}>Huỷ</Button>
+              <Button type="primary" htmlType="submit">Tạo</Button>
+            </div>
           </Form.Item>
         </Form>
       </Modal>
