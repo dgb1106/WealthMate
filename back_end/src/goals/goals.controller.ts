@@ -75,13 +75,17 @@ export class GoalsController {
     );
   }
 
-  @Post('withdraw')
+  @Patch(':id/withdraw')
   @ApiOperation({ summary: 'Rút tiền từ mục tiêu' })
-  @ApiQuery({ name: 'goalId', type: String, description: 'ID của mục tiêu' })
+  @ApiParam({ name: 'id', type: String, description: 'ID của mục tiêu' })
   @ApiQuery({ name: 'amount', type: Number, description: 'Số tiền cần rút' })
   @ApiResponse({ status: 200, description: 'Rút tiền thành công.' })
   @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ.' })
-  async withdrawFunds(@Request() req: RequestWithUser, @Param('id') id: string, @Query('amount') amount: number) {
+  async withdrawFunds(
+    @Request() req: RequestWithUser, 
+    @Param('id') id: string,
+    @Query('amount') amount: number
+  ) {
     return this.goalsService.withdrawFundsFromGoal(id, req.user.userId, amount);
   }
 

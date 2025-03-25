@@ -15,7 +15,7 @@ export class FamilyTransactionContributionController {
   @Post()
   @ApiOperation({ summary: 'Tạo đóng góp giao dịch mới cho nhóm gia đình' })
   create(@Request() req, @Body() createContributionDto: CreateFamilyTransactionContributionDto) {
-    return this.familyTransactionContributionService.create(req.user.id, createContributionDto);
+    return this.familyTransactionContributionService.create(req.user.userId, createContributionDto);
   }
 
   @Get()
@@ -35,7 +35,7 @@ export class FamilyTransactionContributionController {
   @Get('my')
   @ApiOperation({ summary: 'Lấy tất cả đóng góp của người dùng hiện tại trong nhóm' })
   async findByUser(@Param('groupId') groupId: string, @Request() req) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const contributions = await this.familyTransactionContributionService.findByUser(userId, groupId);
     return { 
       success: true, 
@@ -46,7 +46,7 @@ export class FamilyTransactionContributionController {
   @Get('stats')
   @ApiOperation({ summary: 'Lấy thống kê đóng góp của nhóm gia đình' })
   async getGroupContributionStats(@Param('groupId') groupId: string, @Request() req) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const stats = await this.familyTransactionContributionService.getGroupContributionStats(groupId, userId);
     return { success: true, data: stats };
   }
@@ -54,7 +54,7 @@ export class FamilyTransactionContributionController {
   @Get('transactions/:transactionId')
   @ApiOperation({ summary: 'Lấy tất cả đóng góp cho một giao dịch cụ thể' })
   async findByTransaction(@Param('transactionId') transactionId: string, @Request() req) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const contributions = await this.familyTransactionContributionService.findByTransaction(transactionId, userId);
     return { 
       success: true, 
@@ -65,7 +65,7 @@ export class FamilyTransactionContributionController {
   @Delete(':id')
   @ApiOperation({ summary: 'Xóa một đóng góp' })
   async remove(@Param('id') id: string, @Request() req) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     await this.familyTransactionContributionService.remove(id, userId);
     return { success: true, message: 'Contribution deleted successfully' };
   }

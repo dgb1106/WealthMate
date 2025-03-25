@@ -278,13 +278,10 @@ export class PrismaGoalRepository implements GoalRepository {
   }
 
   async findOverdueGoals(userId: string): Promise<Goal[]> {
-    const today = new Date();
-    
     const goals = await this.prisma.goals.findMany({
       where: {
         userId,
-        status: { not: GoalStatus.OVER_DUE },
-        due_date: { lt: today }
+        status: 'OVER_DUE',
       },
       orderBy: { due_date: 'asc' }
     });

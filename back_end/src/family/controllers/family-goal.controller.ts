@@ -25,7 +25,7 @@ export class FamilyGoalController {
     @Body() createGoalDto: CreateFamilyGoalDto,
     @Request() req,
   ) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const goal = await this.familyGoalService.create(groupId, userId, createGoalDto);
     return { success: true, data: goal.toResponseFormat() };
   }
@@ -37,7 +37,7 @@ export class FamilyGoalController {
   @ApiResponse({ status: 400, description: 'Bad request or insufficient permissions.' })
   @ApiResponse({ status: 404, description: 'Family group not found.' })
   async findAll(@Param('groupId') groupId: string, @Request() req, @Query() paginationDto: PaginationDto) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const result = await this.familyGoalService.findAll(groupId, userId, paginationDto);
     return { 
       ...result, 
@@ -51,7 +51,7 @@ export class FamilyGoalController {
   @ApiResponse({ status: 200, description: 'List of active family goals.' })
   @ApiResponse({ status: 400, description: 'Bad request or insufficient permissions.' })
   async findActive(@Param('groupId') groupId: string, @Request() req) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const goals = await this.familyGoalService.findActiveByGroup(groupId, userId);
     return { 
       success: true, 
@@ -65,7 +65,7 @@ export class FamilyGoalController {
   @ApiResponse({ status: 200, description: 'Summary of family goals.' })
   @ApiResponse({ status: 400, description: 'Bad request or insufficient permissions.' })
   async getGroupGoalsSummary(@Param('groupId') groupId: string, @Request() req) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const summary = await this.familyGoalService.getGroupGoalsSummary(groupId, userId);
     return { success: true, data: summary };
   }
@@ -77,7 +77,7 @@ export class FamilyGoalController {
   @ApiResponse({ status: 200, description: 'The family goal.' })
   @ApiResponse({ status: 404, description: 'Goal not found.' })
   async findOne(@Param('groupId') groupId: string, @Param('id') id: string, @Request() req) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const goal = await this.familyGoalService.findOne(id, userId);
     return { success: true, data: goal.toResponseFormat() };
   }
@@ -89,7 +89,7 @@ export class FamilyGoalController {
   @ApiResponse({ status: 200, description: 'Summary of the family goal.' })
   @ApiResponse({ status: 404, description: 'Goal not found.' })
   async getGoalSummary(@Param('groupId') groupId: string, @Param('id') id: string, @Request() req) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const summary = await this.familyGoalService.getGoalSummary(id, userId);
     return { success: true, data: summary };
   }
@@ -108,7 +108,7 @@ export class FamilyGoalController {
     @Body() updateGoalDto: UpdateFamilyGoalDto,
     @Request() req,
   ) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const goal = await this.familyGoalService.update(id, userId, updateGoalDto);
     return { success: true, data: goal.toResponseFormat() };
   }
@@ -121,7 +121,7 @@ export class FamilyGoalController {
   @ApiResponse({ status: 400, description: 'Bad request or insufficient permissions.' })
   @ApiResponse({ status: 404, description: 'Goal not found.' })
   async remove(@Param('groupId') groupId: string, @Param('id') id: string, @Request() req) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     await this.familyGoalService.remove(id, userId);
     return { success: true, message: 'Goal deleted successfully' };
   }
