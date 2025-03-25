@@ -58,6 +58,9 @@ export const LoginForm: React.FC = () => {
             
             if (profileResponse.ok && profileData.id) {
               localStorage.setItem('userId', profileData.id);
+              if (profileData.email) {
+                localStorage.setItem('userEmail', profileData.email);
+              }
             } else {
               console.error('Failed to fetch user profile:', profileData);
             }
