@@ -10,13 +10,14 @@ interface FamilyGroup {
   id: string;
   name: string;
   description: string;
-  status: 'OWNER' | 'ADMIN' | 'MEMBER';
-  members: FamilyMember[]; //not showing the correct number of members
+  //status: 'OWNER' | 'ADMIN' | 'MEMBER';
+  members: FamilyMember[];
 }
 
 interface FamilyMember {
   id: string;
   userId: string;
+  userEmail: string;
   role: 'OWNER' | 'ADMIN' | 'MEMBER';
   joinedAt: Date;
 }
@@ -45,6 +46,9 @@ const FamilyPage: React.FC = () => {
   const [membersLoading, setMembersLoading] = useState<Record<string, boolean>>({});
   const [inviteModalVisible, setInviteModalVisible] = useState(false);
   const [inviteForm] = Form.useForm();
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editForm] = Form.useForm();
+  const [selectedGroup, setSelectedGroup] = useState<FamilyGroup | null>(null);
 
   const fetchFamilyGroups = async () => {
     try {
@@ -112,6 +116,9 @@ const FamilyPage: React.FC = () => {
   const fetchInvitations = async () => {
     try {
       const token = localStorage.getItem('authToken');
+      const userId = localStorage.getItem('userId');
+      const userEmail = localStorage.getItem('userEmail');
+      
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invitations/my`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -119,14 +126,35 @@ const FamilyPage: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch invitations');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch invitations');
       }
 
       const result = await response.json();
+      console.log('Invitations API response:', result);
+      console.log('Current user ID:', userId);
+      console.log('Current user email:', userEmail);
+
+      if (!result.success) {
+        throw new Error('Invalid response format from server');
+      }
+
+      // Log each invitation for debugging
+      if (result.data && result.data.length > 0) {
+        console.log('Found invitations:', result.data.map((inv: any) => ({
+          id: inv.id,
+          inviteeEmail: inv.inviteeEmail,
+          status: inv.status
+        })));
+      } else {
+        console.log('No invitations found in response');
+      }
+
       setInvitations(result.data || []);
-    } catch (error) {
-      console.error(error);
-      message.error('Lấy dữ liệu thất bại');  
+    } catch (error: any) {
+      console.error('Error fetching invitations:', error);
+      message.error(error.message || 'Lấy dữ liệu thất bại');
+      setInvitations([]);
     }
   };
   
@@ -160,6 +188,69 @@ const FamilyPage: React.FC = () => {
     } catch (error) {
       console.error(error);
       message.error('Tạo nhóm gia đình thất bại');
+    }
+  };
+
+  const handleEditGroup = async (values: any) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/family-groups/${selectedGroup?.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: values.name,
+          description: values.description
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update family group');
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to update family group');
+      }
+
+      message.success('Cập nhật nhóm thành công');
+      setEditModalVisible(false);
+      editForm.resetFields();
+      setSelectedGroup(null);
+      fetchFamilyGroups();
+    } catch (error: any) {
+      console.error('Edit error:', error);
+      message.error(error.message || 'Cập nhật nhóm thất bại');
+    }
+  };
+
+  const handleDeleteGroup = async () => {
+    if (!selectedGroup) return;
+
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/family-groups/${selectedGroup.id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete family group');
+      }
+
+      message.success('Xóa nhóm thành công');
+      setEditModalVisible(false);
+      editForm.resetFields();
+      setSelectedGroup(null);
+      fetchFamilyGroups();
+    } catch (error) {
+      console.error(error);
+      message.error('Xóa nhóm thất bại');
     }
   };
 
@@ -199,20 +290,6 @@ const FamilyPage: React.FC = () => {
       console.error('Invite error:', error);
       message.error(error.message || 'Gửi lời mời thất bại');
     }
-  };
-
-  const handleCreateButton = () => {
-    setCreateModalVisible(true);
-    setTimeout(() => {
-      form.resetFields();
-    }, 0);
-  };
-
-  const handleInviteButton = () => {
-    setInviteModalVisible(true);
-    setTimeout(() => {
-      inviteForm.resetFields();
-    }, 0);
   };
 
   const handleAcceptInvitation = async (invitationId: string) => {
@@ -260,6 +337,38 @@ const FamilyPage: React.FC = () => {
     }
   };
 
+  const handleCreateButton = () => {
+    setCreateModalVisible(true);
+    setTimeout(() => {
+      form.resetFields();
+    }, 0);
+  };
+
+  const handleInviteButton = () => {
+    setInviteModalVisible(true);
+    setTimeout(() => {
+      inviteForm.resetFields();
+    }, 0);
+  };
+
+  const handleEditButton = () => {
+    setEditModalVisible(true);
+    setTimeout(() => {
+      editForm.resetFields();
+    }, 0);
+  };
+
+  const handleGroupSelect = (groupId: string) => {
+    const group = familyGroups.find(g => g.id === groupId);
+    if (group) {
+      setSelectedGroup(group);
+      editForm.setFieldsValue({
+        name: group.name,
+        description: group.description
+      });
+    }
+  };
+
   return (
     <MainLayout>
       <div className={styles.pageHeader}>
@@ -270,6 +379,9 @@ const FamilyPage: React.FC = () => {
           </Button>
           <Button type="primary" onClick={handleInviteButton}>
             Mời thành viên
+          </Button>
+          <Button type="primary" onClick={handleEditButton}>
+            Chỉnh sửa Nhóm
           </Button>
         </div>
       </div>
@@ -295,11 +407,6 @@ const FamilyPage: React.FC = () => {
                       <span>
                         {membersLoading[group.id] ? 'Đang tải...' : `${groupMemberCounts[group.id] || 0} thành viên`}
                       </span>
-                      {group.status === 'OWNER' ? (
-                        <span className={styles.ownerBadge}>Chủ sở hữu</span>
-                      ) : group.status === 'ADMIN' ? (
-                        <span className={styles.adminBadge}>Quản trị viên</span>
-                      ) : null}
                     </div>
                   </Card>
                 ))}
@@ -436,6 +543,64 @@ const FamilyPage: React.FC = () => {
           <Form.Item className={styles.modalFooter}>
             <Button onClick={() => setInviteModalVisible(false)}>Hủy</Button>
             <Button type="primary" htmlType="submit">Gửi lời mời</Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Chỉnh sửa nhóm"
+        open={editModalVisible}
+        onCancel={() => {
+          setEditModalVisible(false);
+          setSelectedGroup(null);
+        }}
+        footer={null}
+      >
+        <Form
+          form={editForm}
+          layout="vertical"
+          onFinish={handleEditGroup}
+        >
+          <Form.Item
+            name="groupId"
+            label="Chọn nhóm"
+            rules={[{ required: true, message: 'Vui lòng chọn nhóm' }]}
+          >
+            <Select 
+              placeholder="Chọn nhóm cần chỉnh sửa"
+              onChange={handleGroupSelect}
+              options={familyGroups.map(group => ({ 
+                label: group.name, 
+                value: group.id 
+              }))}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="name"
+            label="Tên nhóm"
+            rules={[{ required: true, message: 'Vui lòng nhập tên nhóm' }]}
+          >
+            <Input disabled={!selectedGroup} />
+          </Form.Item>
+
+          <Form.Item
+            name="description"
+            label="Mô tả"
+            rules={[{ required: true, message: 'Vui lòng nhập mô tả' }]}
+          >
+            <Input.TextArea disabled={!selectedGroup} />
+          </Form.Item>
+
+          <Form.Item className={styles.modalFooter}>
+            {selectedGroup && (
+              <Button danger onClick={handleDeleteGroup}>
+                Xóa nhóm
+              </Button>
+            )}
+            <Button type="primary" htmlType="submit" disabled={!selectedGroup}>
+              Lưu chỉnh sửa
+            </Button>
           </Form.Item>
         </Form>
       </Modal>

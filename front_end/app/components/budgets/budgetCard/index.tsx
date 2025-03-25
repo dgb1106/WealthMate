@@ -11,7 +11,7 @@ interface BudgetCardProps {
         id: string;
         limit_amount: number;
         spent_amount: number;
-        category: {
+        category?: {
             id: string;
             name: string;
         };
@@ -86,7 +86,7 @@ const BudgetCard: React.FC<BudgetCardProps> = ({ budget, onEdit }) => {
         <Card className={styles.card}>
             <div className={styles.header}>
                 <div>
-                    <p>{category.name}</p>
+                    <p>{category?.name}</p>
                 </div>
                 <Button
                     type="text"

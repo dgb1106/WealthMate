@@ -1,0 +1,53 @@
+.pageHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .budgetsContainer {
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    gap: 1rem;
+    width: 100%;
+    align-items: start;
+    padding: 1rem;
+  }
+    
+  .contentWrapper {
+    display: flex;
+    gap: 1.5rem;
+    width: 100%;
+    padding: 1rem;
+  }
+  
+  .budgetsCardsSection {
+    grid-column: 1;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    gap: 1.5rem;
+    width: 100%;
+    align-content: flex-start; 
+  }
+  
+  .budgetCardsSection > * {
+      width: calc(33.333% - 0.667rem);
+      margin: 0;
+  }
+    
+  .addButton {
+    background-color: #004aad;
+  }
+    
+  .modalFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .loading, .noData {
+    text-align: center;
+    padding: 3rem;
+    color: #666;
+  }
