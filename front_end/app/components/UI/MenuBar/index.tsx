@@ -1,12 +1,14 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './styles.module.css';
 
 const MenuBar: React.FC = () => {
   return (
     <nav className={styles.navContainer}>
-      <div>
-        <h3 id={styles.logo}> WealthMate</h3>
+      <div className={styles.logoContainer}>
+        <Image className={styles.logoImage} src="/logo.png" alt="WealthMate Logo" width={45} height={45} />
+        <Image className={styles.logoName} src="/logo-name.png" alt="WealthMate" width={120} height={60} />
       </div>
       <ul className={styles.menuList}>
         <li>
