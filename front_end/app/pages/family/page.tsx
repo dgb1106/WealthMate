@@ -542,9 +542,11 @@ const FamilyPage: React.FC = () => {
           >
             <Input.TextArea placeholder="Nhập lời nhắn cho người được mời" />
           </Form.Item>
-          <Form.Item className={styles.modalFooter}>
-            <Button onClick={() => setInviteModalVisible(false)}>Hủy</Button>
-            <Button type="primary" htmlType="submit">Gửi lời mời</Button>
+          <Form.Item>
+            <div className={styles.modalFooter}>
+              <Button onClick={() => setInviteModalVisible(false)}>Hủy</Button>
+              <Button type="primary" htmlType="submit">Gửi lời mời</Button>
+            </div>
           </Form.Item>
         </Form>
       </Modal>
@@ -594,15 +596,17 @@ const FamilyPage: React.FC = () => {
             <Input.TextArea disabled={!selectedGroup} />
           </Form.Item>
 
-          <Form.Item className={styles.modalFooter}>
-            {selectedGroup && (
-              <Button danger onClick={handleDeleteGroup}>
-                Xóa nhóm
+          <Form.Item>
+            <div className={`${styles.modalFooter} modal-footer`}>
+              {selectedGroup && (
+                <Button danger onClick={handleDeleteGroup}>
+                  Xóa nhóm
+                </Button>
+              )}
+              <Button type="primary" htmlType="submit" disabled={!selectedGroup}>
+                Lưu chỉnh sửa
               </Button>
-            )}
-            <Button type="primary" htmlType="submit" disabled={!selectedGroup}>
-              Lưu chỉnh sửa
-            </Button>
+            </div>
           </Form.Item>
         </Form>
       </Modal>

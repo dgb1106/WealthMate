@@ -1,5 +1,13 @@
 .card {
     width: 100%;
-    height: 500px;
+    height: 100%;
+  }
+
+  .title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #333;
+    flex-shrink: 0; /* Không cho phép tiêu đề co lại */
   }
   
