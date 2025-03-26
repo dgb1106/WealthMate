@@ -7,15 +7,23 @@ import { FamilyGroupModule } from './family-group.module';
 import { PrismaFamilyMemberRepository } from '../repositories/prisma-family-member.repository';
 import { UserDomainService } from '../../users/services/user-domain.service';
 import { FamilyTransactionContributionModule } from './family-transaction-contribution.module';
+import { FamilyBudgetSchedulerService } from '../services/family-budget-scheduler.service';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
-  imports: [PrismaModule, FamilyGroupModule, FamilyTransactionContributionModule],
+  imports: [
+    PrismaModule, 
+    FamilyGroupModule, 
+    FamilyTransactionContributionModule,
+    ScheduleModule.forRoot() // Register the schedule module
+  ],
   controllers: [FamilyBudgetController],
   providers: [
     FamilyBudgetService,
     PrismaFamilyBudgetRepository,
     PrismaFamilyMemberRepository,
-    UserDomainService
+    UserDomainService,
+    FamilyBudgetSchedulerService // Add the scheduler service
   ],
   exports: [FamilyBudgetService, PrismaFamilyBudgetRepository]
 })
