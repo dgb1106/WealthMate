@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, ConflictException } from '@nestjs/common';
 import { CreateBudgetDto } from './dto/create-budget.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
 import { BudgetRepository } from './repositories/budget-repository.interface';
@@ -15,6 +15,9 @@ export class BudgetsService {
   async create(userId: string, createBudgetDto: CreateBudgetDto) {
     // Validate the input using the domain service
     this.budgetDomainService.validateCreateBudgetDto(createBudgetDto);
+    
+    // Check if a budget already exists for this category
+    await this.ensureNoBudgetExistsForCategory(userId, createBudgetDto.categoryId);
     
     // Create the budget using the repository
     const budget = await this.budgetRepository.create(userId, createBudgetDto);
@@ -163,5 +166,17 @@ export class BudgetsService {
         }))
       }
     };
+  }
+
+  /**
+   * Ensures that no budget exists for the given category.
+   * Throws a ConflictException if a budget already exists.
+   */
+  private async ensureNoBudgetExistsForCategory(userId: string, categoryId: string): Promise<void> {
+    const existingBudgets = await this.budgetRepository.findByCategory(userId, categoryId);
+    
+    if (existingBudgets && existingBudgets.length > 0) {
+      throw new ConflictException('A budget already exists for this category');
+    }
   }
 }
