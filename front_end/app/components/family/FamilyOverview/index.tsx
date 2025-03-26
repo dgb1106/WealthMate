@@ -140,7 +140,7 @@ const FamilyOverview: React.FC = () => {
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch (`${process.env.NEXT_PUBLIC_API_URL}/family-groups/${groupId}/members/${memberId}/role`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -198,6 +198,11 @@ const FamilyOverview: React.FC = () => {
   };
 
   const handleRemoveButton = (member: FamilyMember) => {
+    if (member.role === 'OWNER') {
+      message.error('Không thể xoá chủ nhóm');
+      return;
+    }
+    
     Modal.confirm({
       title: 'Xác nhận xóa thành viên',
       content: `Bạn có chắc chắn muốn xóa ${member.user?.name} khỏi nhóm gia đình này?`,
@@ -250,7 +255,8 @@ const FamilyOverview: React.FC = () => {
                           size="small" 
                           type="primary"
                           onClick={() => handleRoleChangeButton(member)}
-                        >
+                          disabled = {member.role === 'OWNER'}  
+                        > 
                           Thay đổi vai trò
                         </Button>
                       )}
@@ -259,6 +265,7 @@ const FamilyOverview: React.FC = () => {
                         size="small" 
                         danger 
                         onClick={() => handleRemoveButton(member)}
+                        disabled = {member.role === 'OWNER'}
                       >
                         Xóa
                       </Button>

@@ -1,0 +1,36 @@
+.marketDataContainer {
+  margin: 20px 0 40px;
+}
+
+.tablesContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.smallTablesRow {
+  display: flex;
+  gap: 20px;
+}
+
+.dataCard {
+  width: 100%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+}
+
+.dataTable {
+  margin-top: 10px;
+}
+
+.changeTag {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .smallTablesRow {
+    flex-direction: column;
+  }
+}
