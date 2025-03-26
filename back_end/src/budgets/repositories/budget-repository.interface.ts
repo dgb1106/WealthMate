@@ -14,4 +14,11 @@ export interface BudgetRepository {
   incrementSpentAmount(id: string, userId: string, amount: number): Promise<Budget>;
   getCurrentMonthBudgets(userId: string): Promise<Budget[]>;
   findMatchingBudgets(userId: string, categoryId: string, date: Date): Promise<Budget[]>;
+
+  /**
+   * Gets current active budgets, optionally filtered by user
+   * @param userId User ID or 'all' to get budgets for all users
+   * @returns List of active budgets
+   */
+  getCurrentBudgets(userId: string | 'all'): Promise<Budget[]>;
 }

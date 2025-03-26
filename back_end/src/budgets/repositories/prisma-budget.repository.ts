@@ -206,15 +206,25 @@ export class PrismaBudgetRepository implements BudgetRepository {
     return Budget.fromPrismaArray(prismaBudgets);
   }
 
-  async getCurrentBudgets(userId: string): Promise<Budget[]> {
+  async getCurrentBudgets(userId: string | 'all'): Promise<Budget[]> {
     const today = new Date();
     
+    // Prepare the where clause based on whether we need all budgets or just one user's
+    const whereClause = userId === 'all' 
+      ? {
+          // Just filter by date for all users
+          start_date: { lte: today },
+          end_date: { gte: today }
+        }
+      : {
+          // Filter by user ID and date
+          userId,
+          start_date: { lte: today },
+          end_date: { gte: today }
+        };
+    
     const prismaBudgets = await this.prisma.budgets.findMany({
-      where: {
-        userId,
-        start_date: { lte: today },
-        end_date: { gte: today }
-      },
+      where: whereClause,
       include: {
         category: true
       }

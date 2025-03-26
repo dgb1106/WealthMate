@@ -1,22 +1,27 @@
 import { Module } from '@nestjs/common';
-import { BudgetsController } from './budgets.controller';
 import { BudgetsService } from './budgets.service';
-import { PrismaModule } from '../prisma/prisma.module';
+import { BudgetsController } from './budgets.controller';
 import { BudgetDomainService } from './services/budget-domain.service';
+import { BudgetSchedulerService } from './services/budget-scheduler.service';
 import { PrismaBudgetRepository } from './repositories/prisma-budget.repository';
-import { CommonModule } from '../common/common.module';
+import { PrismaModule } from '../prisma/prisma.module';
+import { DateUtilsService } from '../common/services/date-utils.service';
 
 @Module({
-  imports: [PrismaModule, CommonModule],
+  imports: [
+    PrismaModule,
+  ],
   controllers: [BudgetsController],
   providers: [
     BudgetsService,
-    BudgetDomainService, 
+    BudgetDomainService,
+    BudgetSchedulerService,
     {
       provide: 'BudgetRepository',
       useClass: PrismaBudgetRepository,
-    }
+    },
+    DateUtilsService,
   ],
-  exports: [BudgetsService],
+  exports: [BudgetsService]
 })
 export class BudgetsModule {}
