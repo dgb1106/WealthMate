@@ -46,29 +46,23 @@ export class FamilyInvitationService {
     return invitation;
   }
 
-  async findMyInvitations(userId: string): Promise<FamilyInvitation[]> {
-    // Get the user email
-    const user = await this.getUserEmail(userId);
-    
-    return this.familyInvitationRepository.findByEmail(user.email);
+  async findMyInvitations(email: string): Promise<FamilyInvitation[]> {
+    return this.familyInvitationRepository.findByEmail(email);
   }
 
   async acceptInvitation(id: string, userId: string): Promise<void> {
     return this.familyInvitationRepository.acceptInvitation(id, userId);
   }
 
-  async rejectInvitation(id: string, userId: string): Promise<void> {
+  async rejectInvitation(id: string, email: string): Promise<void> {
     const invitation = await this.familyInvitationRepository.findOne(id);
     
     if (!invitation) {
       throw new NotFoundException(`Invitation with ID ${id} not found`);
     }
-
-    // Get the user email
-    const user = await this.getUserEmail(userId);
     
     // Verify the invitation is for this user
-    if (invitation.inviteeEmail.toLowerCase() !== user.email.toLowerCase()) {
+    if (invitation.inviteeEmail.toLowerCase() !== email.toLowerCase()) {
       throw new BadRequestException('This invitation is not for you');
     }
 
@@ -81,17 +75,5 @@ export class FamilyInvitationService {
 
   async cleanupExpiredInvitations(): Promise<number> {
     return this.familyInvitationRepository.cleanupExpiredInvitations();
-  }
-
-  private async getUserEmail(userId: string): Promise<{ email: string }> {
-    // This should be replaced with your actual user repository method
-    // For now, we're using a mock implementation
-    const user = { id: userId, email: 'user@example.com' };
-    
-    if (!user) {
-      throw new NotFoundException(`User with ID ${userId} not found`);
-    }
-    
-    return { email: user.email };
   }
 }
