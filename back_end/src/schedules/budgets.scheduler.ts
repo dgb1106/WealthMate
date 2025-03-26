@@ -20,8 +20,8 @@ export class BudgetsScheduler {
     try {
       const today = new Date();
       
-      // Find and delete all budgets where end_date has passed
-      const result = await this.prisma.budgets.deleteMany({
+      // Find and delete all personal budgets where end_date has passed
+      const personalResult = await this.prisma.budgets.deleteMany({
         where: {
           end_date: {
             lt: today
@@ -29,10 +29,29 @@ export class BudgetsScheduler {
         }
       });
       
-      this.logger.log(`Successfully cleaned up ${result.count} expired budgets`);
+      const expiredFamilyBudgets = await this.prisma.familyBudgets.findMany({
+        where: {
+          end_date: {
+            lt: today
+          }
+        },
+        include: {
+          group: {
+            select: {
+              name: true
+            }
+          }
+        }
+      });
+      
+      this.logger.log(`Deleted ${personalResult.count} personal budgets`);
+      this.logger.log(`Found ${expiredFamilyBudgets.length} expired family budgets`);
+      this.logger.log(expiredFamilyBudgets);
     } catch (error) {
       this.logger.error(`Failed to clean up expired budgets: ${error.message}`);
       this.logger.error(error.stack);
     }
   }
+
+
 }

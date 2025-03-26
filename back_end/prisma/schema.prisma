@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["extendedWhereUnique"]
 }
 
@@ -59,45 +59,46 @@ enum InvitationStatus {
 }
 
 model Users {
-  id              String         @id @default(uuid())
-  name            String         @db.VarChar(255)
-  email           String         @unique @db.VarChar(255)
-  phone           String         @unique @db.VarChar(255)
-  city            String         @db.VarChar(255)
-  district        String         @db.VarChar(255)
-  job             String         @db.VarChar(255)
+  id              String        @id @default(uuid())
+  name            String        @db.VarChar(255)
+  email           String        @unique @db.VarChar(255)
+  phone           String        @unique @db.VarChar(255)
+  city            String        @db.VarChar(255)
+  district        String        @db.VarChar(255)
+  job             String        @db.VarChar(255)
   preferred_mood  PreferredMood
   preferred_goal  PreferredGoal
-  hash_password   String         @db.VarChar(255)
-  current_balance Decimal        @db.Decimal(14, 2)
-  create_at       DateTime       @db.Date
-  updated_at      DateTime       @db.Date
+  hash_password   String        @db.VarChar(255)
+  current_balance Decimal       @db.Decimal(14, 2)
+  create_at       DateTime      @db.Date
+  updated_at      DateTime      @db.Date
 
-  transactions           Transactions[]
-  recurringTransactions  RecurringTransactions[]
-  budgets                Budgets[]
-  goals                  Goals[]
-  loans                  Loans[]
-  jwtTokens              JWT[]
-  familyMemberships      FamilyMembers[]
-  familyBudgetsCreated   FamilyBudgets[]
-  familyGoalsCreated     FamilyGoals[]
-  familyInvitationsSent  FamilyInvitations[]
+  transactions          Transactions[]
+  recurringTransactions RecurringTransactions[]
+  budgets               Budgets[]
+  goals                 Goals[]
+  loans                 Loans[]
+  jwtTokens             JWT[]
+  familyMemberships     FamilyMembers[]
+  familyBudgetsCreated  FamilyBudgets[]
+  familyGoalsCreated    FamilyGoals[]
+  familyInvitationsSent FamilyInvitations[]
+  familyContributions   FamilyTransactionContributions[]
 
   @@map("Users")
 }
 
 model Transactions {
-  id          BigInt         @id @default(autoincrement())
+  id          BigInt   @id @default(autoincrement())
   userId      String
   categoryId  BigInt
-  amount      Decimal        @db.Decimal(11, 2)
-  created_at  DateTime       @db.Date
-  description String         @db.VarChar(255)
+  amount      Decimal  @db.Decimal(11, 2)
+  created_at  DateTime @db.Date
+  description String   @db.VarChar(255)
 
-  user        Users          @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  category    Categories     @relation(fields: [categoryId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  familyContributions    FamilyTransactionContributions[]
+  user                Users                            @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  category            Categories                       @relation(fields: [categoryId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  familyContributions FamilyTransactionContributions[]
 
   @@index([userId])
   @@index([categoryId])
@@ -106,17 +107,17 @@ model Transactions {
 }
 
 model RecurringTransactions {
-  id             BigInt         @id @default(autoincrement())
+  id             BigInt    @id @default(autoincrement())
   userId         String
   categoryId     BigInt
-  amount         Decimal        @db.Decimal(11, 2)
+  amount         Decimal   @db.Decimal(11, 2)
   frequency      Frequency
-  created_at     DateTime       @db.Date
-  next_occurence DateTime       @db.Date
-  description    String         @db.VarChar(255)
+  created_at     DateTime  @db.Date
+  next_occurence DateTime  @db.Date
+  description    String    @db.VarChar(255)
 
-  user           Users          @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  category       Categories     @relation(fields: [categoryId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  user     Users      @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  category Categories @relation(fields: [categoryId], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
   @@index([userId])
   @@index([categoryId])
@@ -125,29 +126,29 @@ model RecurringTransactions {
 }
 
 model Categories {
-  id     BigInt         @id @default(autoincrement())
-  name   String         @db.VarChar(255)
-  type   TransactionType
+  id   BigInt          @id @default(autoincrement())
+  name String          @db.VarChar(255)
+  type TransactionType
 
-  transactions         Transactions[]
+  transactions          Transactions[]
   recurringTransactions RecurringTransactions[]
-  budgets              Budgets[]
-  familyBudgets        FamilyBudgets[]
+  budgets               Budgets[]
+  familyBudgets         FamilyBudgets[]
 
   @@map("Categories")
 }
 
 model Budgets {
-  id          BigInt         @id @default(autoincrement())
-  userId      String
-  categoryId  BigInt
-  limit_amount Decimal       @db.Decimal(11, 2)
-  start_date  DateTime       @db.Date
-  end_date    DateTime       @db.Date
-  spent_amount Decimal       @db.Decimal(11, 2)
+  id           BigInt   @id @default(autoincrement())
+  userId       String
+  categoryId   BigInt
+  limit_amount Decimal  @db.Decimal(11, 2)
+  start_date   DateTime @db.Date
+  end_date     DateTime @db.Date
+  spent_amount Decimal  @db.Decimal(11, 2)
 
-  user        Users         @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  category    Categories    @relation(fields: [categoryId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  user     Users      @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  category Categories @relation(fields: [categoryId], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
   @@index([userId])
   @@index([categoryId])
@@ -155,16 +156,16 @@ model Budgets {
 }
 
 model Goals {
-  id           BigInt         @id @default(autoincrement())
-  userId       String
-  name         String         @db.VarChar(255)
-  target_amount Decimal       @db.Decimal(11, 2)
-  saved_amount Decimal        @db.Decimal(11, 2)
-  status       GoalStatus
-  due_date     DateTime       @db.Date
-  created_at   DateTime       @db.Date
+  id            BigInt     @id @default(autoincrement())
+  userId        String
+  name          String     @db.VarChar(255)
+  target_amount Decimal    @db.Decimal(11, 2)
+  saved_amount  Decimal    @db.Decimal(11, 2)
+  status        GoalStatus
+  due_date      DateTime   @db.Date
+  created_at    DateTime   @db.Date
 
-  user         Users         @relation(fields: [userId], references: [id], onUpdate: Cascade)
+  user Users @relation(fields: [userId], references: [id], onUpdate: Cascade)
 
   @@index([userId])
   @@index([status])
@@ -173,64 +174,64 @@ model Goals {
 }
 
 model Loans {
-  id              BigInt         @id @default(autoincrement())
-  userId          String
-  name            String         @db.VarChar(255)
-  due_date        DateTime       @db.Date
-  created_at      DateTime       @db.Date
-  total_amount    Decimal        @db.Decimal(11, 2)
-  remaining_amount Decimal       @db.Decimal(11, 2)
-  status          LoanStatus
-  interest_rate   Decimal        @db.Decimal(11, 2)
-  monthly_payment Decimal        @db.Decimal(11, 2)
-  description     String         @db.VarChar(255)
+  id               BigInt     @id @default(autoincrement())
+  userId           String
+  name             String     @db.VarChar(255)
+  due_date         DateTime   @db.Date
+  created_at       DateTime   @db.Date
+  total_amount     Decimal    @db.Decimal(11, 2)
+  remaining_amount Decimal    @db.Decimal(11, 2)
+  status           LoanStatus
+  interest_rate    Decimal    @db.Decimal(11, 2)
+  monthly_payment  Decimal    @db.Decimal(11, 2)
+  description      String     @db.VarChar(255)
 
-  user           Users          @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  user Users @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
   @@index([userId])
   @@map("Loans")
 }
 
 model JWT {
-  id          BigInt         @id @default(autoincrement())
-  userId      String
-  token       String         @unique @db.VarChar(255)
-  expires_at  DateTime       @db.Date
-  created_at  DateTime       @db.Date
+  id         BigInt   @id @default(autoincrement())
+  userId     String
+  token      String   @unique @db.VarChar(255)
+  expires_at DateTime @db.Date
+  created_at DateTime @db.Date
 
-  user        Users         @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  user Users @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
   @@index([userId])
   @@map("JWT")
 }
 
 model FamilyGroups {
-  id                BigInt         @id @default(autoincrement())
-  name              String         @db.VarChar(255)
-  description       String?        @db.VarChar(1000)
-  created_at        DateTime       @db.Date
-  updated_at        DateTime       @db.Date
-  avatar_url        String?        @db.VarChar(500)
-  
-  members           FamilyMembers[]
-  budgets           FamilyBudgets[]
-  goals             FamilyGoals[]
-  invitations       FamilyInvitations[]
-  contributions     FamilyTransactionContributions[]
+  id          BigInt   @id @default(autoincrement())
+  name        String   @db.VarChar(255)
+  description String?  @db.VarChar(1000)
+  created_at  DateTime @db.Date
+  updated_at  DateTime @db.Date
+  avatar_url  String?  @db.VarChar(500)
+
+  members       FamilyMembers[]
+  budgets       FamilyBudgets[]
+  goals         FamilyGoals[]
+  invitations   FamilyInvitations[]
+  contributions FamilyTransactionContributions[]
 
   @@map("FamilyGroups")
 }
 
 model FamilyMembers {
-  id              BigInt         @id @default(autoincrement())
-  groupId         BigInt
-  userId          String
-  role            FamilyMemberRole
-  joined_at       DateTime       @db.Date
-  
-  group           FamilyGroups   @relation(fields: [groupId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  user            Users          @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  
+  id        BigInt           @id @default(autoincrement())
+  groupId   BigInt
+  userId    String
+  role      FamilyMemberRole
+  joined_at DateTime         @db.Date
+
+  group FamilyGroups @relation(fields: [groupId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  user  Users        @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+
   @@unique([groupId, userId])
   @@index([groupId])
   @@index([userId])
@@ -238,17 +239,17 @@ model FamilyMembers {
 }
 
 model FamilyInvitations {
-  id              BigInt         @id @default(autoincrement())
-  groupId         BigInt
-  inviterId       String
-  inviteeEmail    String         @db.VarChar(255)
-  status          InvitationStatus
-  created_at      DateTime       @db.Date
-  expires_at      DateTime       @db.Date
-  
-  group           FamilyGroups   @relation(fields: [groupId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  inviter         Users          @relation(fields: [inviterId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  
+  id           BigInt           @id @default(autoincrement())
+  groupId      BigInt
+  inviterId    String
+  inviteeEmail String           @db.VarChar(255)
+  status       InvitationStatus
+  created_at   DateTime         @db.Date
+  expires_at   DateTime         @db.Date
+
+  group   FamilyGroups @relation(fields: [groupId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  inviter Users        @relation(fields: [inviterId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+
   @@index([groupId])
   @@index([inviterId])
   @@index([inviteeEmail])
@@ -256,21 +257,21 @@ model FamilyInvitations {
 }
 
 model FamilyBudgets {
-  id              BigInt         @id @default(autoincrement())
-  groupId         BigInt
-  categoryId      BigInt
-  limit_amount    Decimal        @db.Decimal(11, 2)
-  spent_amount    Decimal        @db.Decimal(11, 2)
-  start_date      DateTime       @db.Date
-  end_date        DateTime       @db.Date
-  created_at      DateTime       @db.Date
-  created_by      String
-  
-  group           FamilyGroups   @relation(fields: [groupId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  category        Categories     @relation(fields: [categoryId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  creator         Users          @relation(fields: [created_by], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  contributions   FamilyTransactionContributions[]
-  
+  id           BigInt   @id @default(autoincrement())
+  groupId      BigInt
+  categoryId   BigInt
+  limit_amount Decimal  @db.Decimal(11, 2)
+  spent_amount Decimal  @db.Decimal(11, 2)
+  start_date   DateTime @db.Date
+  end_date     DateTime @db.Date
+  created_at   DateTime @db.Date
+  created_by   String
+
+  group         FamilyGroups                     @relation(fields: [groupId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  category      Categories                       @relation(fields: [categoryId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  creator       Users                            @relation(fields: [created_by], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  contributions FamilyTransactionContributions[]
+
   @@index([groupId])
   @@index([categoryId])
   @@index([created_by])
@@ -278,20 +279,20 @@ model FamilyBudgets {
 }
 
 model FamilyGoals {
-  id              BigInt         @id @default(autoincrement())
-  groupId         BigInt
-  name            String         @db.VarChar(255)
-  target_amount   Decimal        @db.Decimal(11, 2)
-  saved_amount    Decimal        @db.Decimal(11, 2)
-  status          GoalStatus
-  due_date        DateTime       @db.Date
-  created_at      DateTime       @db.Date
-  created_by      String
-  
-  group           FamilyGroups   @relation(fields: [groupId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  creator         Users          @relation(fields: [created_by], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  contributions   FamilyTransactionContributions[]
-  
+  id            BigInt     @id @default(autoincrement())
+  groupId       BigInt
+  name          String     @db.VarChar(255)
+  target_amount Decimal    @db.Decimal(11, 2)
+  saved_amount  Decimal    @db.Decimal(11, 2)
+  status        GoalStatus
+  due_date      DateTime   @db.Date
+  created_at    DateTime   @db.Date
+  created_by    String
+
+  group         FamilyGroups                     @relation(fields: [groupId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  creator       Users                            @relation(fields: [created_by], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  contributions FamilyTransactionContributions[]
+
   @@index([groupId])
   @@index([created_by])
   @@index([status])
@@ -299,24 +300,25 @@ model FamilyGoals {
 }
 
 model FamilyTransactionContributions {
-  id              BigInt         @id @default(autoincrement())
-  transactionId   BigInt
-  groupId         BigInt
-  amount          Decimal        @db.Decimal(11, 2)
-  contributionType String        @db.VarChar(20) // "BUDGET" or "GOAL"
-  targetId        BigInt        // ID of the budget or goal
-  budgetId        BigInt?        // ID of the budget if contributionType = "BUDGET"
-  goalId          BigInt?        // ID of the goal if contributionType = "GOAL"
-  created_at      DateTime       @db.Date
-  
-  transaction     Transactions   @relation(fields: [transactionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  group           FamilyGroups   @relation(fields: [groupId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  familyBudget    FamilyBudgets? @relation(fields: [budgetId], references: [id])
-  familyGoal      FamilyGoals?   @relation(fields: [goalId], references: [id])
-  
+  id               BigInt   @id @default(autoincrement())
+  transactionId    BigInt
+  groupId          BigInt
+  amount           Float
+  contributionType String?
+  targetId         BigInt?
+  budgetId         BigInt?
+  goalId           BigInt?
+  userId           String?
+  created_at       DateTime @default(now())
+
+  // Relations
+  transaction  Transactions   @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  group        FamilyGroups   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  familyBudget FamilyBudgets? @relation(fields: [budgetId], references: [id], onDelete: SetNull)
+  familyGoal   FamilyGoals?   @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  user         Users?         @relation(fields: [userId], references: [id])
+
   @@index([transactionId])
   @@index([groupId])
-  @@index([budgetId])
-  @@index([goalId])
-  @@map("FamilyTransactionContributions")
+  @@index([userId])
 }

@@ -4,12 +4,17 @@ import { PrismaFamilyMemberRepository } from '../repositories/prisma-family-memb
 import { FamilyBudget } from '../entities/family-budget.entity';
 import { CreateFamilyBudgetDto } from '../dto/create-family-budget.dto';
 import { UpdateFamilyBudgetDto } from '../dto/update-family-budget.dto';
+import { UserDomainService } from '../../users/services/user-domain.service';
+import { PrismaService } from '../../prisma/prisma.service';
+import { ContributionType } from '../../common/enums/enum';
 
 @Injectable()
 export class FamilyBudgetService {
   constructor(
     private readonly familyBudgetRepository: PrismaFamilyBudgetRepository,
     private readonly familyMemberRepository: PrismaFamilyMemberRepository,
+    private readonly userDomainService: UserDomainService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async create(
@@ -23,8 +28,37 @@ export class FamilyBudgetService {
     if (!member || !member.canManageBudgetsAndGoals()) {
       throw new BadRequestException('You do not have permission to create budgets for this group');
     }
-    
-    return this.familyBudgetRepository.create(groupId, userId, createBudgetDto);
+
+    // Check if a budget for this category already exists (enforcing one budget per category)
+    const existingBudgets = await this.familyBudgetRepository.findByCategory(
+      groupId, 
+      createBudgetDto.categoryId
+    );
+
+    if (existingBudgets.length > 0) {
+      throw new BadRequestException(
+        'A budget for this category already exists. Only one budget per category is allowed.'
+      );
+    }
+
+    // Calculate the initial spent amount from existing contributions
+    const startDate = new Date(createBudgetDto.start_date);
+    const endDate = new Date(createBudgetDto.end_date);
+    const totalSpent = await this.calculateTotalSpent(
+      groupId,
+      createBudgetDto.categoryId,
+      startDate,
+      endDate
+    );
+
+    // Create a new DTO with the calculated spent amount
+    const enrichedDto = {
+      ...createBudgetDto,
+      spent_amount: totalSpent
+    };
+
+    // Create the budget with the calculated spent amount
+    return this.familyBudgetRepository.create(groupId, userId, enrichedDto);
   }
 
   async findAll(groupId: string, userId: string): Promise<FamilyBudget[]> {
@@ -62,6 +96,20 @@ export class FamilyBudgetService {
     
     if (!budget) {
       throw new NotFoundException(`Budget with ID ${id} not found`);
+    }
+
+    // If the category is being changed, verify no other budget exists for the new category
+    if (updateBudgetDto.categoryId && updateBudgetDto.categoryId !== budget.categoryId) {
+      const existingBudgets = await this.familyBudgetRepository.findByCategory(
+        budget.groupId, 
+        updateBudgetDto.categoryId
+      );
+
+      if (existingBudgets.length > 0) {
+        throw new BadRequestException(
+          'A budget for this category already exists. Only one budget per category is allowed.'
+        );
+      }
     }
 
     // The repository method already checks if the user has permission to update
@@ -106,6 +154,48 @@ export class FamilyBudgetService {
       throw new BadRequestException('You do not have permission to view budget summary for this group');
     }
     
-    return this.familyBudgetRepository.getGroupBudgetSummary(groupId);
+    const summary = await this.familyBudgetRepository.getGroupBudgetSummary(groupId);
+    
+    // Add budget health status
+    const activeBudgets = await this.familyBudgetRepository.findActiveByGroup(groupId);
+    summary.budgetHealth = this.userDomainService.calculateBudgetHealth(activeBudgets);
+    
+    return summary;
+  }
+
+  /**
+   * Calculates the total amount spent from existing contributions for a category and group
+   * within a specific date range
+   */
+  private async calculateTotalSpent(
+    groupId: string,
+    categoryId: string,
+    startDate: Date,
+    endDate: Date
+  ): Promise<number> {
+    // Find all budget contributions that match the group and category within the date range
+    const contributions = await this.prisma.familyTransactionContributions.findMany({
+      where: {
+        groupId: BigInt(groupId),
+        contributionType: ContributionType.BUDGET,
+        transaction: {
+          categoryId: BigInt(categoryId),
+          created_at: {
+            gte: startDate,
+            lte: endDate
+          }
+        }
+      },
+      include: {
+        transaction: true
+      }
+    });
+
+    // Sum up all the contribution amounts
+    const totalSpent = contributions.reduce((sum, contribution) => {
+      return sum + Number(contribution.amount);
+    }, 0);
+
+    return totalSpent;
   }
 }

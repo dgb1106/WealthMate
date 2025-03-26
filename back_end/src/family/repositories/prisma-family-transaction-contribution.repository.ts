@@ -19,133 +19,101 @@ interface UserContribution {
 export class PrismaFamilyTransactionContributionRepository implements FamilyTransactionContributionRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(userId: string, createContributionDto: CreateFamilyTransactionContributionDto): Promise<FamilyTransactionContribution> {
-    // Verify the transaction exists and belongs to the user
-    const transaction = await this.prisma.transactions.findUnique({
-      where: { 
-        id: BigInt(createContributionDto.transactionId),
-      },
-      include: { user: true }
-    });
-
-    if (!transaction) {
-      throw new NotFoundException(`Transaction with ID ${createContributionDto.transactionId} not found`);
-    }
-
-    if (transaction.userId !== userId) {
-      throw new BadRequestException('You can only contribute with your own transactions');
-    }
-
-    // Check contribution type and target
-    if (createContributionDto.contributionType === ContributionType.BUDGET) {
-      // Verify budget exists and belongs to the group
-      const budget = await this.prisma.familyBudgets.findUnique({
-        where: { id: BigInt(createContributionDto.targetId) }
-      });
-
-      if (!budget) {
-        throw new NotFoundException(`Budget with ID ${createContributionDto.targetId} not found`);
-      }
-
-      if (budget.groupId !== BigInt(createContributionDto.groupId)) {
-        throw new BadRequestException('Budget does not belong to this group');
-      }
-
-      // Create contribution
-      const contribution = await this.prisma.familyTransactionContributions.create({
-        data: {
-          transactionId: BigInt(createContributionDto.transactionId),
-          groupId: BigInt(createContributionDto.groupId),
-          amount: createContributionDto.amount,
-          contributionType: ContributionType.BUDGET,
-          targetId: BigInt(createContributionDto.targetId),
-          budgetId: BigInt(createContributionDto.targetId),
-          created_at: new Date()
+  async create(userId: string, createContributionDto: any): Promise<FamilyTransactionContribution> {
+    return this.prisma.$transaction(async (prisma) => {
+      // Verify the transaction exists and belongs to the user
+      const transaction = await prisma.transactions.findFirst({
+        where: {
+          id: BigInt(createContributionDto.transactionId),
+          userId: userId
         },
         include: {
-          transaction: {
-            include: {
-              user: true
-            }
-          },
-          group: true,
-          familyBudget: {
-            include: {
-              category: true
-            }
-          }
+          category: true
         }
       });
 
-      // Update budget spent amount
-      await this.prisma.familyBudgets.update({
-        where: { id: BigInt(createContributionDto.targetId) },
-        data: {
-          spent_amount: {
-            increment: createContributionDto.amount
-          }
-        }
-      });
-
-      return FamilyTransactionContribution.fromPrisma(contribution);
-    } 
-    else if (createContributionDto.contributionType === ContributionType.GOAL) {
-      // Verify goal exists and belongs to the group
-      const goal = await this.prisma.familyGoals.findUnique({
-        where: { id: BigInt(createContributionDto.targetId) }
-      });
-
-      if (!goal) {
-        throw new NotFoundException(`Goal with ID ${createContributionDto.targetId} not found`);
+      if (!transaction) {
+        throw new NotFoundException(`Transaction with ID ${createContributionDto.transactionId} not found`);
       }
 
-      if (goal.groupId !== BigInt(createContributionDto.groupId)) {
-        throw new BadRequestException('Goal does not belong to this group');
+      // Validate the group exists
+      const group = await prisma.familyGroups.findUnique({
+        where: { id: BigInt(createContributionDto.groupId) }
+      });
+
+      if (!group) {
+        throw new NotFoundException(`Group with ID ${createContributionDto.groupId} not found`);
       }
 
-      // Create contribution
-      const contribution = await this.prisma.familyTransactionContributions.create({
-        data: {
-          transactionId: BigInt(createContributionDto.transactionId),
-          groupId: BigInt(createContributionDto.groupId),
-          amount: createContributionDto.amount,
-          contributionType: ContributionType.GOAL,
-          targetId: BigInt(createContributionDto.targetId),
-          goalId: BigInt(createContributionDto.targetId),
-          created_at: new Date()
-        },
-        include: {
-          transaction: {
-            include: {
-              user: true
-            }
-          },
-          group: true,
-          familyGoal: true
-        }
-      });
+      // Handle BUDGET contributions
+      if (createContributionDto.contributionType === ContributionType.BUDGET) {
+        const budget = await prisma.familyBudgets.findUnique({
+          where: { id: BigInt(createContributionDto.targetId) }
+        });
 
-      // Update goal saved amount and potentially status
-      const updatedGoal = await this.prisma.familyGoals.update({
-        where: { id: BigInt(createContributionDto.targetId) },
-        data: {
-          saved_amount: {
-            increment: createContributionDto.amount
-          },
-          // Update status if completed
-          status: Number(goal.saved_amount) + createContributionDto.amount >= Number(goal.target_amount)
-            ? 'COMPLETED'
-            : Number(goal.saved_amount) === 0 && createContributionDto.amount > 0
-              ? 'IN_PROGRESS'
-              : undefined
+        if (!budget) {
+          throw new NotFoundException(`Budget with ID ${createContributionDto.targetId} not found`);
         }
-      });
 
-      return FamilyTransactionContribution.fromPrisma(contribution);
-    }
-    else {
+        const contributionData = await prisma.familyTransactionContributions.create({
+          data: {
+            transactionId: BigInt(createContributionDto.transactionId),
+            groupId: BigInt(createContributionDto.groupId),
+            amount: createContributionDto.amount,
+            contributionType: createContributionDto.contributionType,
+            targetId: BigInt(createContributionDto.targetId),
+            budgetId: BigInt(createContributionDto.targetId),
+            created_at: new Date(),
+            userId: createContributionDto.userId || userId
+          },
+          include: {
+            transaction: {
+              include: {
+                category: true
+              }
+            },
+            group: true,
+          }
+        });
+
+        return FamilyTransactionContribution.fromPrisma(contributionData);
+      }
+      // Handle GOAL contributions
+      else if (createContributionDto.contributionType === ContributionType.GOAL) {
+        const goal = await prisma.familyGoals.findUnique({
+          where: { id: BigInt(createContributionDto.targetId) }
+        });
+
+        if (!goal) {
+          throw new NotFoundException(`Goal with ID ${createContributionDto.targetId} not found`);
+        }
+
+        const contributionData = await prisma.familyTransactionContributions.create({
+          data: {
+            transactionId: BigInt(createContributionDto.transactionId),
+            groupId: BigInt(createContributionDto.groupId),
+            amount: createContributionDto.amount,
+            contributionType: createContributionDto.contributionType,
+            targetId: BigInt(createContributionDto.targetId),
+            goalId: BigInt(createContributionDto.targetId),
+            created_at: new Date(),
+            userId: createContributionDto.userId || userId
+          },
+          include: {
+            transaction: {
+              include: {
+                category: true
+              }
+            },
+            group: true,
+          }
+        });
+
+        return FamilyTransactionContribution.fromPrisma(contributionData);
+      }
+
       throw new BadRequestException('Invalid contribution type');
-    }
+    });
   }
 
   async findAll(groupId: string, options?: { page?: number, limit?: number, includeDetails?: boolean }): Promise<{ data: FamilyTransactionContribution[], total: number }> {

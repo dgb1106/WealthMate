@@ -15,6 +15,7 @@ export class FamilyTransactionContributionController {
   @Post()
   @ApiOperation({ summary: 'Tạo đóng góp giao dịch mới cho nhóm gia đình' })
   create(@Request() req, @Body() createContributionDto: CreateFamilyTransactionContributionDto) {
+    const userId = req.user.userId;
     return this.familyTransactionContributionService.create(req.user.userId, createContributionDto);
   }
 
