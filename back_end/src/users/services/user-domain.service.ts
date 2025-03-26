@@ -90,6 +90,8 @@ export class UserDomainService {
    * @returns Budget health status
    */
   calculateBudgetHealth(budgets: any[]): string {
+    if (!budgets || budgets.length === 0) return 'NO_BUDGET';
+    
     const totalSpent = budgets.reduce((sum, b) => sum + Number(b.spent_amount), 0);
     const totalLimit = budgets.reduce((sum, b) => sum + Number(b.limit_amount), 0);
     

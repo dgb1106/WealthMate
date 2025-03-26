@@ -6,15 +6,18 @@ import { PrismaFamilyTransactionContributionRepository } from '../repositories/p
 import { FamilyGroupModule } from './family-group.module';
 import { PrismaFamilyMemberRepository } from '../repositories/prisma-family-member.repository';
 import { FamilyMemberModule } from './family-member.module';
-import { FamilyTransactionContribution } from '../entities/family-transaction-contribution.entity';
+import { FamilyBudget } from '../entities/family-budget.entity';
+import { PrismaFamilyBudgetRepository } from '../repositories/prisma-family-budget.repository';
 
 @Module({
-  imports: [PrismaModule, FamilyGroupModule, FamilyMemberModule],
+  imports: [PrismaModule, FamilyGroupModule, FamilyMemberModule, FamilyBudget],
   controllers: [FamilyTransactionContributionController],
   providers: [
     FamilyTransactionContributionService,
     PrismaFamilyTransactionContributionRepository,
     PrismaFamilyMemberRepository,
+    PrismaFamilyBudgetRepository
+
   ],
   exports: [FamilyTransactionContributionService]
 })

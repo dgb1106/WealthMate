@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber, IsEnum, IsNotEmpty, Min } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsNumber, IsString, Min } from 'class-validator';
 import { ContributionType } from '../../common/enums/enum';
 
 export class CreateFamilyTransactionContributionDto {
@@ -12,6 +12,15 @@ export class CreateFamilyTransactionContributionDto {
   @IsNotEmpty()
   transactionId: string;
 
+  @ApiProperty({
+    description: 'The ID of category to contribute to',
+    example: '1',
+    required: true,
+  })
+  @IsString()
+  @IsNotEmpty()
+  categoryId: string;
+  
   @ApiProperty({
     description: 'The ID of the family group',
     example: 'xyz789',
@@ -40,12 +49,6 @@ export class CreateFamilyTransactionContributionDto {
   @IsEnum(ContributionType)
   contributionType: ContributionType;
 
-  @ApiProperty({
-    description: 'The ID of the target budget or goal',
-    example: 'def456',
-    required: true,
-  })
-  @IsString()
-  @IsNotEmpty()
-  targetId: string;
+  // Used internally, not exposed to API
+  targetId?: string;
 }

@@ -4,12 +4,14 @@ import { PrismaFamilyMemberRepository } from '../repositories/prisma-family-memb
 import { FamilyBudget } from '../entities/family-budget.entity';
 import { CreateFamilyBudgetDto } from '../dto/create-family-budget.dto';
 import { UpdateFamilyBudgetDto } from '../dto/update-family-budget.dto';
+import { UserDomainService } from '../../users/services/user-domain.service';
 
 @Injectable()
 export class FamilyBudgetService {
   constructor(
     private readonly familyBudgetRepository: PrismaFamilyBudgetRepository,
     private readonly familyMemberRepository: PrismaFamilyMemberRepository,
+    private readonly userDomainService: UserDomainService,
   ) {}
 
   async create(
@@ -106,6 +108,12 @@ export class FamilyBudgetService {
       throw new BadRequestException('You do not have permission to view budget summary for this group');
     }
     
-    return this.familyBudgetRepository.getGroupBudgetSummary(groupId);
+    const summary = await this.familyBudgetRepository.getGroupBudgetSummary(groupId);
+    
+    // Add budget health status
+    const activeBudgets = await this.familyBudgetRepository.findActiveByGroup(groupId);
+    summary.budgetHealth = this.userDomainService.calculateBudgetHealth(activeBudgets);
+    
+    return summary;
   }
 }

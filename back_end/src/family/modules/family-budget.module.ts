@@ -5,14 +5,17 @@ import { FamilyBudgetService } from '../services/family-budget.service';
 import { PrismaFamilyBudgetRepository } from '../repositories/prisma-family-budget.repository';
 import { FamilyGroupModule } from './family-group.module';
 import { PrismaFamilyMemberRepository } from '../repositories/prisma-family-member.repository';
+import { UserDomainService } from '../../users/services/user-domain.service';
+import { FamilyTransactionContributionModule } from './family-transaction-contribution.module';
 
 @Module({
-  imports: [PrismaModule, FamilyGroupModule],
+  imports: [PrismaModule, FamilyGroupModule, FamilyTransactionContributionModule],
   controllers: [FamilyBudgetController],
   providers: [
     FamilyBudgetService,
     PrismaFamilyBudgetRepository,
-    PrismaFamilyMemberRepository
+    PrismaFamilyMemberRepository,
+    UserDomainService
   ],
   exports: [FamilyBudgetService, PrismaFamilyBudgetRepository]
 })

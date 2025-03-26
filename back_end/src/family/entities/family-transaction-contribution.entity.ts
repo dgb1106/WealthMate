@@ -8,6 +8,7 @@ interface SimplifiedTransaction {
   description?: string;
   userId?: string;
   created_at?: Date;
+  categoryId?: string;
   user?: {
     id: string;
     name: string;
@@ -48,6 +49,7 @@ export class FamilyTransactionContribution {
   group?: SimplifiedGroup;
   familyBudget?: SimplifiedBudget;
   familyGoal?: SimplifiedGoal;
+  contribution: { id: string; amount: number; description: any; userId: any; user: { id: string; name: any; } | undefined; };
   
   constructor(partial: Partial<FamilyTransactionContribution>) {
     Object.assign(this, partial);

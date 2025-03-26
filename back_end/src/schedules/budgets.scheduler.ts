@@ -20,8 +20,8 @@ export class BudgetsScheduler {
     try {
       const today = new Date();
       
-      // Find and delete all budgets where end_date has passed
-      const result = await this.prisma.budgets.deleteMany({
+      // Find and delete all personal budgets where end_date has passed
+      const personalResult = await this.prisma.budgets.deleteMany({
         where: {
           end_date: {
             lt: today
@@ -29,7 +29,31 @@ export class BudgetsScheduler {
         }
       });
       
-      this.logger.log(`Successfully cleaned up ${result.count} expired budgets`);
+      // For family budgets, we simply log the expired ones
+      // In the future, you may want to add 'archived' and 'archived_at' fields to your Prisma schema
+      const expiredFamilyBudgets = await this.prisma.familyBudgets.findMany({
+        where: {
+          end_date: {
+            lt: today
+          }
+        },
+        include: {
+          group: {
+            select: {
+              name: true
+            }
+          }
+        }
+      });
+      
+      // Log information about expired family budgets
+      this.logger.log(`Found ${expiredFamilyBudgets.length} expired family budgets`);
+      
+      // Optional: You could create a record of expired budgets in another table if needed
+      // Or consider adding fields to your schema if you need to track archived budgets
+      
+      this.logger.log(`Successfully cleaned up ${personalResult.count} expired personal budgets`);
+      this.logger.log(`Processed ${expiredFamilyBudgets.length} expired family budgets`);
     } catch (error) {
       this.logger.error(`Failed to clean up expired budgets: ${error.message}`);
       this.logger.error(error.stack);

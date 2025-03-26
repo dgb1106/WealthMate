@@ -245,6 +245,26 @@ export class PrismaFamilyBudgetRepository implements FamilyBudgetRepository {
     return FamilyBudget.fromPrismaArray(budgets);
   }
 
+  async findActiveByCategory(groupId: string, categoryId: string): Promise<FamilyBudget[]> {
+    const today = new Date();
+    
+    const budgets = await this.prisma.familyBudgets.findMany({
+      where: {
+        groupId: BigInt(groupId),
+        categoryId: BigInt(categoryId),
+        start_date: { lte: today },
+        end_date: { gte: today }
+      },
+      include: {
+        category: true,
+        creator: true
+      },
+      orderBy: { end_date: 'asc' }
+    });
+
+    return FamilyBudget.fromPrismaArray(budgets);
+  }
+
   async incrementSpentAmount(id: string, amount: number): Promise<FamilyBudget> {
     const budget = await this.prisma.familyBudgets.findUnique({
       where: { id: BigInt(id) }
