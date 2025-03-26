@@ -169,6 +169,19 @@ export class BudgetsService {
   }
 
   /**
+   * Updates a budget's spent amount with the calculated total from transactions
+   * Used by the scheduler for accurate budget tracking
+   */
+  async updateBudgetWithCalculatedAmount(
+    budgetId: string,
+    userId: string,
+    calculatedAmount: number
+  ): Promise<void> {
+    // Update the budget with the precise total from transactions
+    await this.budgetRepository.updateSpentAmount(budgetId, userId, calculatedAmount);
+  }
+
+  /**
    * Ensures that no budget exists for the given category.
    * Throws a ConflictException if a budget already exists.
    */
