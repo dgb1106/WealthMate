@@ -67,8 +67,8 @@ export class FamilyInvitationController {
   })
   @ApiResponse({ status: 200, description: 'List of invitations for the current user' })
   async findMyInvitations(@Req() req) {
-    const userId = req.user.userId;
-    const invitations = await this.familyInvitationService.findMyInvitations(userId);
+    const email = req.user.email;
+    const invitations = await this.familyInvitationService.findMyInvitations(email);
     return { 
       success: true, 
       data: invitations.map(invitation => invitation.toResponseFormat()) 
@@ -100,8 +100,8 @@ export class FamilyInvitationController {
   @ApiResponse({ status: 400, description: 'Bad request or invitation already processed' })
   @ApiResponse({ status: 404, description: 'Invitation not found' })
   async rejectInvitation(@Param('id') id: string, @Req() req) {
-    const userId = req.user.userId;
-    await this.familyInvitationService.rejectInvitation(id, userId);
+    const email = req.user.email;
+    await this.familyInvitationService.rejectInvitation(id, email);
     return { success: true, message: 'Invitation rejected successfully' };
   }
 
