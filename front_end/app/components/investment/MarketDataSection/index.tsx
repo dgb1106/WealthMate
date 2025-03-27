@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { Table, Card, Typography, Spin, Tag } from 'antd';
-import { UpOutlined, DownOutlined } from '@ant-design/icons';
+import { Table, Card, Typography, Spin, Tag, Button } from 'antd';
+import { UpOutlined, DownOutlined, ReloadOutlined } from '@ant-design/icons';
 import useMarketData from '@/hooks/useMarketData';
 import styles from './styles.module.css';
 
@@ -14,7 +14,14 @@ interface MarketDataItem {
   price: number;
 }
 
-// Helper component for displaying price change
+interface ExchangeRateItem {
+  currency_code: string;
+  currency_name: string;
+  buy_price_cash: string;
+  buy_price_online: string;
+  sell_price: string;
+}
+
 const PriceChange: React.FC<{ value: number; percent: number }> = ({ value, percent }) => {
   const isPositive = value >= 0;
   return (
@@ -26,7 +33,6 @@ const PriceChange: React.FC<{ value: number; percent: number }> = ({ value, perc
   );
 };
 
-// Market Indices Table
 export const MarketIndicesTable: React.FC<{ data: MarketDataItem[]; loading: boolean }> = ({ data, loading }) => {
   const columns = [
     {
@@ -41,7 +47,6 @@ export const MarketIndicesTable: React.FC<{ data: MarketDataItem[]; loading: boo
       key: 'name',
       render: (text: string, record: MarketDataItem) => {
         if (text === 'N/A') {
-          // Map specific Vietnamese indices to appropriate names
           const vnIndicesMap: {[key: string]: string} = {
             'VN30': 'Chỉ số VN30',
             'HNXUpcomIndex': 'Chỉ số Upcom',
@@ -82,13 +87,66 @@ export const MarketIndicesTable: React.FC<{ data: MarketDataItem[]; loading: boo
           rowKey="code"
           className={styles.dataTable}
           size="small"
+          scroll={{ y: 150 }}
         />
       </Spin>
     </Card>
   );
 };
 
-// Commodities Table
+export const ExchangeRatesTable: React.FC<{ data: ExchangeRateItem[]; loading: boolean }> = ({ data, loading }) => {
+  const columns = [
+    {
+      title: 'Tên ngoại tệ',
+      dataIndex: 'currency_name',
+      key: 'currency_name',
+      width: '40%',
+      render: (text: string, record: ExchangeRateItem) => (
+        <div>
+          <div>{text}</div>
+          <small style={{ color: '#888' }}>{record.currency_code}</small>
+        </div>
+      ),
+    },
+    {
+      title: 'Mua tiền mặt',
+      dataIndex: 'buy_price_cash',
+      key: 'buy_price_cash',
+      width: '20%',
+      render: (text: string) => text === '-' ? '-' : text,
+    },
+    {
+      title: 'Mua chuyển khoản',
+      dataIndex: 'buy_price_online',
+      key: 'buy_price_online',
+      width: '20%',
+    },
+    {
+      title: 'Bán',
+      dataIndex: 'sell_price',
+      key: 'sell_price',
+      width: '20%',
+    },
+  ];
+
+  return (
+    <Card className={styles.dataCard}>
+      <Title level={4}>Tỷ giá ngoại tệ</Title>
+      <Spin spinning={loading}>
+        <Table 
+          dataSource={data} 
+          columns={columns} 
+          pagination={false} 
+          rowKey="currency_code"
+          className={styles.dataTable}
+          size="small"
+          scroll={{ y: 150 }}
+        />
+      </Spin>
+    </Card>
+  );
+};
+
 export const CommoditiesTable: React.FC<{ data: MarketDataItem[]; loading: boolean }> = ({ data, loading }) => {
   const columns = [
     {
@@ -137,7 +195,6 @@ export const CommoditiesTable: React.FC<{ data: MarketDataItem[]; loading: boole
   );
 };
 
-// Cryptos Table
 export const CryptosTable: React.FC<{ data: MarketDataItem[]; loading: boolean }> = ({ data, loading }) => {
   const columns = [
     {
@@ -186,19 +243,18 @@ export const CryptosTable: React.FC<{ data: MarketDataItem[]; loading: boolean }
   );
 };
 
-// The main container component for all market data
 const MarketDataSection: React.FC = () => {
   const { 
     indices, 
     commodities, 
     cryptos, 
+    exchangeRates,
     loading, 
     fetchAllMarketData 
   } = useMarketData();
 
   useEffect(() => {
     fetchAllMarketData();
-    // Set up a refresh interval every 5 minutes
     const refreshInterval = setInterval(() => {
       fetchAllMarketData();
     }, 5 * 60 * 1000);
@@ -208,9 +264,27 @@ const MarketDataSection: React.FC = () => {
 
   return (
     <div className={styles.marketDataContainer}>
-      <Title level={3}>Thông tin thị trường</Title>
+      <Title level={3}>
+        Thông tin thị trường
+        <Button 
+          icon={<ReloadOutlined />} 
+          onClick={fetchAllMarketData}
+          type="text"
+          size="small"
+          style={{ marginLeft: 8 }}
+        />
+      </Title>
       <div className={styles.tablesContainer}>
-        <MarketIndicesTable data={indices} loading={loading.indices} />
+        {/* First row with indices and exchange rates side by side */}
+        <div className={styles.topTablesRow}>
+          <div className={styles.halfWidthTable}>
+            <MarketIndicesTable data={indices} loading={loading.indices} />
+          </div>
+          <div className={styles.halfWidthTable}>
+            <ExchangeRatesTable data={exchangeRates} loading={loading.exchangeRates} />
+          </div>
+        </div>
+        {/* Second row with commodities and cryptos */}
         <div className={styles.smallTablesRow}>
           <CommoditiesTable data={commodities} loading={loading.commodities} />
           <CryptosTable data={cryptos} loading={loading.cryptos} />

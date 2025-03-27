@@ -8,14 +8,24 @@ interface MarketDataItem {
   price: number;
 }
 
+interface ExchangeRateItem {
+  currency_code: string;
+  currency_name: string;
+  buy_price_cash: string;
+  buy_price_online: string;
+  sell_price: string;
+}
+
 const useMarketData = () => {
   const [indices, setIndices] = useState<MarketDataItem[]>([]);
   const [commodities, setCommodities] = useState<MarketDataItem[]>([]);
   const [cryptos, setCryptos] = useState<MarketDataItem[]>([]);
+  const [exchangeRates, setExchangeRates] = useState<ExchangeRateItem[]>([]);
   const [loading, setLoading] = useState({
     indices: true,
     commodities: true,
     cryptos: true,
+    exchangeRates: true,
   });
 
   const fetchIndices = useCallback(async () => {
@@ -63,11 +73,27 @@ const useMarketData = () => {
     }
   }, []);
 
+  const fetchExchangeRates = useCallback(async () => {
+    try {
+      setLoading(prev => ({ ...prev, exchangeRates: true }));
+      const response = await fetch(`${process.env.NEXT_PUBLIC_SECONDARY_API_URL}/exchange-rates`);
+      if (!response.ok) throw new Error('Failed to fetch exchange rates');
+      const data = await response.json();
+      setExchangeRates(data);
+    } catch (error) {
+      console.error('Error fetching exchange rates:', error);
+    } finally {
+      setLoading(prev => ({ ...prev, exchangeRates: false }));
+    }
+  }, []);
+
   const fetchAllMarketData = useCallback(() => {
     fetchIndices();
     fetchCommodities();
     fetchCryptos();
-  }, [fetchIndices, fetchCommodities, fetchCryptos]);
+    fetchExchangeRates();
+  }, [fetchIndices, fetchCommodities, fetchCryptos, fetchExchangeRates]);
+  
   useEffect(() => {
     console.log('useMarketData hook initialized, fetching data...');
     fetchAllMarketData();
@@ -77,11 +103,13 @@ const useMarketData = () => {
     indices,
     commodities,
     cryptos,
+    exchangeRates,
     loading,
     fetchAllMarketData,
     fetchIndices,
     fetchCommodities,
     fetchCryptos,
+    fetchExchangeRates
   };
 };
 
