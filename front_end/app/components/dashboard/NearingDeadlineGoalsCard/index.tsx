@@ -50,7 +50,7 @@ const NearingDeadlineGoalsCard: React.FC = () => {
       title={
         <div className={styles.cardTitle}>
           <ClockCircleOutlined className={styles.titleIcon} />
-          <Typography.Text strong>Mục tiêu sắp đến hạn</Typography.Text>
+          <h2 className={styles.title}>Mục tiêu sắp đến hạn</h2>
         </div>
       }
       className={styles.card}

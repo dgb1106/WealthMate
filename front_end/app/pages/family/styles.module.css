@@ -75,6 +75,7 @@
     justify-content: flex-end;
     gap: 8px;
     margin-bottom: 0;
+    width: 100%;
 }
 
 .invitationsList {

@@ -43,7 +43,8 @@ const MostSpentCategoriesChart: React.FC = () => {
   }, []);
 
   return (
-    <Card title="Các danh mục chi tiêu nhiều nhất trong tháng vừa rồi" className={styles.card}>
+    <Card className={styles.card}>
+      <h2 className={styles.title}>Các danh mục chi tiêu nhiều nhất trong tháng vừa rồi</h2>
       {loading ? (
         <Spin />
       ) : (
