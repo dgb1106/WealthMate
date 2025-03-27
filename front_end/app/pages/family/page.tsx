@@ -25,7 +25,9 @@ interface FamilyMember {
 interface Invitation {
   id: string;
   groupId: string;
+  groupName?: string;
   inviterId: string;
+  inviterName?: string;
   inviteeEmail: string;
   status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED';
   created_at: Date;
@@ -33,6 +35,8 @@ interface Invitation {
   group?: FamilyGroup;
   inviter?: any;
   message?: string;
+  isValid?: boolean;
+  isExpired?: boolean;
 }
 
 const FamilyPage: React.FC = () => {
@@ -418,51 +422,43 @@ const FamilyPage: React.FC = () => {
             label: 'Lời mời của bạn',
             children: (
               <div className={styles.invitationsList}>
-                {invitations.length === 0 ? (
+                {invitations.filter(invitation => invitation.status === 'PENDING').length === 0 ? (
                   <div className={styles.emptyState}>
-                    <p>Bạn chưa có lời mời nào</p>
+                    <p>Bạn chưa có lời mời nào đang chờ phản hồi</p>
                   </div>
                 ) : (
-                  invitations.map(invitation => (
-                    <Card key={invitation.id} className={styles.invitationCard}>
-                      <div className={styles.invitationContent}>
-                        <div className={styles.invitationInfo}>
-                          <h3>Lời mời tham gia nhóm: {invitation.group?.name}</h3>
-                          <p>Người mời: {invitation.inviter?.username || 'Không xác định'}</p>
-                          {invitation.message && (
-                            <p className={styles.invitationMessage}>{invitation.message}</p>
-                          )}
-                          <p className={styles.invitationDate}>
-                            Ngày mời: {new Date(invitation.created_at).toLocaleDateString('vi-VN')}
-                          </p>
+                  invitations
+                    .filter(invitation => invitation.status === 'PENDING')
+                    .map(invitation => (
+                      <Card key={invitation.id} className={styles.invitationCard}>
+                        <div className={styles.invitationContent}>
+                          <div className={styles.invitationInfo}>
+                            <h3>Lời mời tham gia nhóm: {invitation.groupName || invitation.group?.name || 'Không xác định'}</h3>
+                            <p>Người mời: {invitation.inviterName || invitation.inviter?.username || 'Không xác định'}</p>
+                            {invitation.message && (
+                              <p className={styles.invitationMessage}>{invitation.message}</p>
+                            )}
+                            <p className={styles.invitationDate}>
+                              Ngày mời: {new Date(invitation.created_at).toLocaleDateString('vi-VN')}
+                            </p>
+                          </div>
+                          <div className={styles.invitationActions}>
+                            <Button 
+                              type="primary" 
+                              onClick={() => handleAcceptInvitation(invitation.id)}
+                            >
+                              Chấp nhận
+                            </Button>
+                            <Button 
+                              danger 
+                              onClick={() => handleRejectInvitation(invitation.id)}
+                            >
+                              Từ chối
+                            </Button>
+                          </div>
                         </div>
-                        <div className={styles.invitationActions}>
-                          {invitation.status === 'PENDING' ? (
-                            <>
-                              <Button 
-                                type="primary" 
-                                onClick={() => handleAcceptInvitation(invitation.id)}
-                              >
-                                Chấp nhận
-                              </Button>
-                              <Button 
-                                danger 
-                                onClick={() => handleRejectInvitation(invitation.id)}
-                              >
-                                Từ chối
-                              </Button>
-                            </>
-                          ) : (
-                            <span className={`${styles.invitationStatus} ${styles[invitation.status.toLowerCase()]}`}>
-                              {invitation.status === 'ACCEPTED' ? 'Đã chấp nhận' :
-                               invitation.status === 'REJECTED' ? 'Đã từ chối' :
-                               invitation.status === 'EXPIRED' ? 'Đã hết hạn' : invitation.status}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </Card>
-                  ))
+                      </Card>
+                    ))
                 )}
               </div>
             ),
