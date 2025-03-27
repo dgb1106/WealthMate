@@ -54,7 +54,7 @@
   }
 
   .filterSelect {
-    min-width: 100px;
+    min-width: 50px;
     border-radius: 20px;
   }
 
@@ -81,16 +81,28 @@
     }
   }
 
-  .tableContainer {
-    margin-bottom: 20px;
+  .filters {
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
   }
   
-  .negativeAmount {
-    color: #ff4d4f;
-    font-weight: 500;
+  .filterCol {
+    display: flex;
+    align-items: center;
   }
   
-  .positiveAmount {
-    color: #52c41a;
-    font-weight: 500;
+  .filterSelect {
+    max-width: 200px;
+  }
+
+  .filterButtonsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  
+  .filterSelect {
+    margin-right: 8px;
   }

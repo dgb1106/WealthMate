@@ -4,6 +4,10 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'WealthMate',
   description: 'Take control of your financial future',
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
 }
 
 export default function RootLayout({

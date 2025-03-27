@@ -37,12 +37,6 @@ const AnalystPage: React.FC = () => {
 
         <Row gutter={[24, 24]} style={{ marginTop: "24px" }}>
           <Col xs={24}>
-            <CashFlowTrendChart />
-          </Col>
-        </Row>
-
-        <Row gutter={[24, 24]} style={{ marginTop: "24px" }}>
-          <Col xs={24}>
             <TrendAnalysisChart />
           </Col>
         </Row>

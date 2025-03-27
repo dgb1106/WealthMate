@@ -80,17 +80,3 @@
       box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);
     }
   }
-
-  .tableContainer {
-    margin-bottom: 20px;
-  }
-  
-  .negativeAmount {
-    color: #ff4d4f;
-    font-weight: 500;
-  }
-  
-  .positiveAmount {
-    color: #52c41a;
-    font-weight: 500;
-  }

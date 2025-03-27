@@ -1,18 +1,27 @@
 'use client'
 
 import React from 'react';
-import { Modal, Button, Descriptions } from 'antd';
-import { Transaction } from '@/hooks/useTransactions';
+import { Modal, Button, Descriptions, Tag } from 'antd';
+import { RecurringTransaction, Frequency } from '@/hooks/useTransactions';
 
-interface TransactionDetailModalProps {
+interface RecurringTransactionDetailModalProps {
   visible: boolean;
-  transaction: Transaction | null;
+  transaction: RecurringTransaction | null;
   onClose: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }
 
-const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
+const frequencyLabels = {
+  [Frequency.DAILY]: 'Hằng ngày',
+  [Frequency.WEEKLY]: 'Hằng tuần',
+  [Frequency.BIWEEKLY]: 'Hai tuần/lần',
+  [Frequency.MONTHLY]: 'Hằng tháng',
+  [Frequency.QUARTERLY]: 'Hằng quý',
+  [Frequency.YEARLY]: 'Hằng năm',
+};
+
+const RecurringTransactionDetailModal: React.FC<RecurringTransactionDetailModalProps> = ({
   visible,
   transaction,
   onClose,
@@ -27,23 +36,12 @@ const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
     }).format(value).replace(/\s/g, '');
   };
 
-  // Format ngày tháng sang định dạng tiếng Việt
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-  };
-
   if (!transaction) return null;
 
   return (
     <Modal
       visible={visible}
-      title="Chi tiết giao dịch"
+      title="Chi tiết giao dịch định kỳ"
       onCancel={onClose}
       footer={[
         <Button key="close" onClick={onClose}>
@@ -61,16 +59,27 @@ const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
         <Descriptions.Item label="Mô tả">{transaction.description}</Descriptions.Item>
         <Descriptions.Item label="Số tiền">
           <span style={{ color: transaction.amount < 0 ? '#ff4d4f' : '#52c41a' }}>
-            {formatCurrencyDirectly(Math.abs(transaction.amount * 1000))}
+            {formatCurrencyDirectly(Math.abs(transaction.amount))}
           </span>
         </Descriptions.Item>
         <Descriptions.Item label="Danh mục">{transaction.category.name}</Descriptions.Item>
-        <Descriptions.Item label="Ngày tạo">
-          {formatDate(transaction.created_at)}
+        <Descriptions.Item label="Tần suất">
+          {frequencyLabels[transaction.frequency]}
+        </Descriptions.Item>
+        <Descriptions.Item label="Ngày bắt đầu">
+          {new Date(transaction.start_date).toLocaleDateString('vi-VN')}
+        </Descriptions.Item>
+        {transaction.end_date && (
+          <Descriptions.Item label="Ngày kết thúc">
+            {new Date(transaction.end_date).toLocaleDateString('vi-VN')}
+          </Descriptions.Item>
+        )}
+        <Descriptions.Item label="Lần tiếp theo">
+          {new Date(transaction.next_occurrence).toLocaleDateString('vi-VN')}
         </Descriptions.Item>
       </Descriptions>
     </Modal>
   );
 };
 
-export default TransactionDetailModal;
+export default RecurringTransactionDetailModal;

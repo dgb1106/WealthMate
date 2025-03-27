@@ -6,6 +6,7 @@ import InvestmentTable from '@/components/investment/InvestmentTable';
 import InvestmentForm from '@/components/investment/InvestmentForm';
 import InvestmentDetailModal from '@/components/investment/InvestmentDetailModal';
 import InvestmentFilters from '@/components/investment/InvestmentFilters';
+import MarketDataSection from '@/components/investment/MarketDataSection';
 import useInvestments from '@/hooks/useInvestments';
 import { Button, Form, Modal, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
@@ -83,6 +84,9 @@ const InvestmentPage: React.FC = () => {
           onClick={() => setModalVisible(true)}
         />
       </div>
+
+      {/* Add the Market Data Section here, above the filters */}
+      <MarketDataSection />
 
       <InvestmentFilters 
         selectedMonth={selectedMonth}
