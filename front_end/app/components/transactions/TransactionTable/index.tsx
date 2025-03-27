@@ -29,6 +29,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
       dataIndex: 'created_at',
       key: 'created_at',
       render: (text: string) => dayjs(text).format('DD MMM'),
+      width: '15%',
     },
     {
       title: 'Lượng tiền',
@@ -41,16 +42,19 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           {adjustedAmount < 0 ? '-' : '+'}{formattedAmount}
         </span>;
       },
+      width: '25%',
     },
     {
       title: 'Mô tả',
       dataIndex: 'description',
       key: 'description',
+      width: '35%',
     },
     {
       title: 'Danh mục',
       dataIndex: ['category', 'name'],
       key: 'category',
+      width: '25%',
     },
   ];
 
@@ -60,12 +64,18 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
       columns={columns} 
       rowKey="id" 
       loading={loading}
-      pagination={pagination}
+      pagination={{
+        ...pagination,
+        pageSize: 5,
+        size: 'small'
+      }}
       className={styles.tableContainer}
       onRow={(record) => ({
         onClick: () => onRowClick(record),
         style: { cursor: 'pointer' }
       })}
+      size="small"
+      scroll={{ y: 200 }}
     />
   );
 };
