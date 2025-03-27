@@ -1,14 +1,18 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Card, Spin } from "antd";
+import { Card, Spin, List, Typography } from "antd";
 import axios from "axios";
-import { PieChart, Pie, Tooltip, Legend, Cell, ResponsiveContainer } from "recharts";
 import styles from "./styles.module.css";
 
-const COLORS = ["#6ce5e8", "#41b8d5", "#2d8bba", "#2f5f98", "#31356e"];
+const { Title, Text } = Typography;
 
-const MostSpentCategoriesChart: React.FC = () => {
-  const [data, setData] = useState([]);
+interface CategorySpending {
+  name: string;
+  value: number;
+}
+
+const MostSpentCategoriesCard: React.FC = () => {
+  const [data, setData] = useState<CategorySpending[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,7 +35,10 @@ const MostSpentCategoriesChart: React.FC = () => {
             value: Math.abs(Number(item.totalAmount.d[0])) * 1000,
           }));          
 
-        setData(categories);
+        const sortedCategories: CategorySpending[] = categories.sort((a: CategorySpending, b: CategorySpending) => b.value - a.value);
+        const top3Categories = sortedCategories.slice(0, 3);
+
+        setData(top3Categories);
       } catch (error) {
         console.error("Error fetching most spent categories:", error);
       } finally {
@@ -42,26 +49,46 @@ const MostSpentCategoriesChart: React.FC = () => {
     fetchMostSpentCategories();
   }, []);
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('vi-VN', { 
+      style: 'currency', 
+      currency: 'VND',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
   return (
-    <Card className={styles.card}>
-      <h2 className={styles.title}>Các danh mục chi tiêu nhiều nhất trong tháng vừa rồi</h2>
+    <Card className={styles.card} size="small">
+      <Title level={5} className={styles.title}>
+        Top chi tiêu tháng này
+      </Title>
       {loading ? (
-        <Spin />
+        <div className={styles.loadingContainer}>
+          <Spin size="small" />
+        </div>
       ) : (
-        <ResponsiveContainer width="100%" height={400}>
-          <PieChart>
-            <Pie data={data} dataKey="value" nameKey="name" outerRadius={120}>
-              {data.map((_, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip formatter={(value) => new Intl.NumberFormat().format(Number(value))} />
-            <Legend />
-          </PieChart>
-        </ResponsiveContainer>
+        <List
+          itemLayout="horizontal"
+          dataSource={data}
+          renderItem={(item, index) => (
+            <List.Item className={styles.listItem}>
+              <div className={styles.categoryRank}>#{index + 1}</div>
+              <div className={styles.categoryInfo}>
+                <div className={styles.categoryRow}>
+                  <Text strong className={styles.categoryName}>{item.name}</Text>
+                  <Text className={styles.categoryAmount}>
+                    {formatCurrency(item.value)}
+                  </Text>
+                </div>
+              </div>
+            </List.Item>
+          )}
+          locale={{ emptyText: "Không có dữ liệu" }}
+        />
       )}
     </Card>
   );
 };
 
-export default MostSpentCategoriesChart;
+export default MostSpentCategoriesCard;

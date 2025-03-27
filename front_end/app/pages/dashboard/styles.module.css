@@ -4,7 +4,6 @@
   grid-template-rows: auto auto auto auto auto;
   gap: 10px;
   width: 100%;
-  
 }
 
 .div1 {
@@ -29,10 +28,15 @@
 
 .div9 {
   grid-column: 1 / 4;
-  grid-row: 4 / 6;
+  grid-row: 4 / -1;
 }
 
 .div8 {
   grid-column: 4 / 6;
-  grid-row: 4 / 6;
+  grid-row: 4 / 5;
+}
+
+.div10 {
+  grid-column: 4 / 6;
+  grid-row: 5 / 6;
 }
