@@ -378,4 +378,82 @@ export class PrismaFamilyGoalRepository implements FamilyGoalRepository {
       overallCompletionPercentage: Math.round((completedGoals.length / Math.max(1, goals.length)) * 100)
     };
   }
+
+  async addFundsToGoal(id: string, userId: string, amount: number): Promise<FamilyGoal> {
+    const goal = await this.prisma.familyGoals.findUnique({
+      where: { id: BigInt(id) },
+      include: { group: true }
+    });
+
+    if (!goal) {
+      throw new NotFoundException(`Goal with ID ${id} not found`);
+    }
+
+    // Calculate new saved amount and update status if needed
+    const newSavedAmount = Number(goal.saved_amount) + amount;
+    
+    // Determine new status
+    let newStatus = goal.status;
+    if (newSavedAmount >= Number(goal.target_amount)) {
+      newStatus = GoalStatus.COMPLETED;
+    } else if (newStatus === GoalStatus.PENDING && newSavedAmount > 0) {
+      newStatus = GoalStatus.IN_PROGRESS;
+    }
+
+    const updatedGoal = await this.prisma.familyGoals.update({
+      where: { id: BigInt(id) },
+      data: {
+        saved_amount: newSavedAmount,
+        status: newStatus
+      },
+      include: {
+        creator: true,
+        group: true
+      }
+    });
+
+    return FamilyGoal.fromPrisma(updatedGoal);
+  }
+
+  async withdrawFundsFromGoal(id: string, userId: string, amount: number): Promise<FamilyGoal> {
+    const goal = await this.prisma.familyGoals.findUnique({
+      where: { id: BigInt(id) },
+      include: { group: true }
+    });
+
+    if (!goal) {
+      throw new NotFoundException(`Goal with ID ${id} not found`);
+    }
+
+    // Check if there are sufficient funds
+    if (Number(goal.saved_amount) < amount) {
+      throw new BadRequestException(`Insufficient funds. Available: ${goal.saved_amount}, Requested: ${amount}`);
+    }
+
+    // Calculate new saved amount
+    const newSavedAmount = Number(goal.saved_amount) - amount;
+    
+    // Determine new status
+    let newStatus = goal.status;
+    if (newSavedAmount <= 0) {
+      newStatus = GoalStatus.PENDING;
+    } else if (newSavedAmount < Number(goal.target_amount) && goal.status === GoalStatus.COMPLETED) {
+      newStatus = GoalStatus.IN_PROGRESS;
+    }
+
+   
+    const updatedGoal = await this.prisma.familyGoals.update({
+      where: { id: BigInt(id) },
+        data: {
+          saved_amount: newSavedAmount,
+          status: newStatus
+        },
+        include: {
+          creator: true,
+          group: true
+        }
+      });
+
+    return FamilyGoal.fromPrisma(updatedGoal);
+  }
 }

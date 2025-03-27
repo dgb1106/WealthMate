@@ -5,6 +5,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { PrismaGoalRepository } from './repositories/prisma-goal.repository';
 import { GoalDomainService } from './services/goal-domain.service';
 import { TransactionsModule } from 'src/transactions/transactions.module';
+import { DateUtilsService } from '../common/services/date-utils.service';
 
 @Module({
   imports: [
@@ -15,8 +16,12 @@ import { TransactionsModule } from 'src/transactions/transactions.module';
   providers: [
     GoalsService, 
     PrismaGoalRepository,
-    GoalDomainService
+    GoalDomainService,
+    DateUtilsService
   ],
-  exports: [GoalsService]
+  exports: [
+    GoalsService,
+    GoalDomainService
+  ]
 })
 export class GoalsModule {}

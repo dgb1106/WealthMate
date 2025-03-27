@@ -4,9 +4,15 @@ import { PrismaFamilyGoalRepository } from '../repositories/prisma-family-goal.r
 import { FamilyGoalService } from '../services/family-goal.service';
 import { FamilyGoalController } from '../controllers/family-goal.controller';
 import { PrismaFamilyMemberRepository } from '../repositories/prisma-family-member.repository';
+import { TransactionsModule } from 'src/transactions/transactions.module'; // Import TransactionsModule instead
+import { GoalsModule } from 'src/goals/goals.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [
+    PrismaModule,
+    GoalsModule,
+    TransactionsModule,
+  ],
   controllers: [FamilyGoalController],
   providers: [
     FamilyGoalService,
