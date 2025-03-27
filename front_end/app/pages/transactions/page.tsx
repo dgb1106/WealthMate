@@ -282,7 +282,7 @@ const TransactionsPage: React.FC = () => {
           transactions={recurringTransactions}
           loading={recurringLoading}
           onRowClick={(transaction) => {
-            setSelectedRecurringTransaction(transaction);
+            setSelectedRecurringTransaction(transaction as RecurringTransaction);
             setRecurringDetailModalVisible(true);
           }}
           pagination={{
