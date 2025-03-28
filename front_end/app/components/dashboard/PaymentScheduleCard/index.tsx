@@ -73,7 +73,6 @@ const PaymentScheduleCard = () => {
     fetchRecurring();
   }, [authToken]);
 
-  // Format ngày tháng sang định dạng tiếng Việt
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('vi-VN', {
@@ -124,7 +123,7 @@ const PaymentScheduleCard = () => {
                     <td className={styles.txDescription}>{tx.description}</td>
                     <td className={styles.txCategory}>{tx.categoryName}</td>
                     <td className={`${styles.txAmount} ${tx.type === 'INCOME' ? styles.income : styles.expense}`}>
-                      {tx.amount.toLocaleString('vi-VN')} VND
+                      {(tx.amount * 1000).toLocaleString('vi-VN')} VND
                     </td>
                     <td className={styles.txFrequency}>
                       {frequencyMap[tx.frequency] || tx.frequency}

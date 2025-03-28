@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { message } from 'antd';
+import axios from 'axios';
 
 export enum Frequency {
   DAILY = "DAILY",
@@ -185,14 +186,23 @@ const useTransactions = () => {
       }
       
       const data = await response.json();
-      
-      // Handle pagination response
       if (data.data && typeof data.total === 'number') {
-        setRecurringTransactions(data.data);
+        const transformedData = data.data.map((transaction: RecurringTransaction) => ({
+          ...transaction,
+          amount: transaction.amount * 1000 
+        }));
+        
+        setRecurringTransactions(transformedData);
         setRecurringTotal(data.total);
       } else {
-        setRecurringTransactions(Array.isArray(data) ? data : []);
-        setRecurringTotal(Array.isArray(data) ? data.length : 0);
+        const transactions = Array.isArray(data) ? data : [];
+        const transformedData = transactions.map((transaction: RecurringTransaction) => ({
+          ...transaction,
+          amount: transaction.amount * 1000
+        }));
+        
+        setRecurringTransactions(transformedData);
+        setRecurringTotal(transactions.length);
       }
     } catch (error) {
       console.error('Failed to fetch recurring transactions:', error);
@@ -204,37 +214,33 @@ const useTransactions = () => {
     }
   };
 
-  const addTransaction = async (values: TransactionValues) => {
+  const addTransaction = async (values: { categoryId: string; amount: string; description: string; }) => {
     try {
-      const category = predefinedCategories.find(c => c.id === values.categoryId);
-      const amount = parseInt(values.amount, 10);
-      const signedAmount = category?.type === "Chi phí" ? -Math.abs(amount) / 1000 : Math.abs(amount) / 1000;
-      const requestData = {
-        categoryId: values.categoryId,
-        amount: signedAmount,
-        description: values.description
-      };
-
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transactions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(requestData),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Server error:', errorText);
-        throw new Error('Thêm Giao dịch thất bại');
+      const category = predefinedCategories.find(cat => cat.id === values.categoryId);
+      let amount = parseFloat(values.amount) / 1000;
+      if (category && category.type === "Chi phí") {
+        amount = Math.abs(amount);
       }
-
+      
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/transactions`,
+        {
+          ...values,
+          amount: amount
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
       message.success('Thêm Giao dịch thành công');
       fetchTransactions('all', 'all', 'all', 'all');
     } catch (error) {
-      console.error('Failed to add transaction:', error);
+      console.error('Error adding transaction:', error);
       message.error('Thêm Giao dịch thất bại');
     }
   };
@@ -243,7 +249,7 @@ const useTransactions = () => {
     try {
       const category = predefinedCategories.find(c => c.id === values.categoryId);
       const amount = parseInt(values.amount, 10);
-      const signedAmount = category?.type === "Chi phí" ? -Math.abs(amount) / 1000 : Math.abs(amount) / 1000;
+      const signedAmount = category?.type === "Chi phí" ? Math.abs(amount) / 1000 : Math.abs(amount) / 1000;
 
       const requestData = {
         categoryId: values.categoryId,
@@ -299,17 +305,16 @@ const useTransactions = () => {
     try {
       const category = predefinedCategories.find(c => c.id === values.categoryId);
       const amount = parseInt(values.amount, 10);
-      const signedAmount = category?.type === "Chi phí" ? -Math.abs(amount) / 1000 : Math.abs(amount) / 1000;
-      
+      const signedAmount = category?.type === "Chi phí" ? Math.abs(amount) / 1000 : Math.abs(amount) / 1000;
       const requestData = {
         categoryId: values.categoryId,
         amount: signedAmount,
         description: values.description,
         frequency: values.frequency,
-        startDate: values.startDate,
-        endDate: values.endDate || null
+        next_occurence: values.next_occurence
       };
 
+      console.log('Sending recurring transaction data:', requestData);
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/recurring-transactions`, {
         method: 'POST',
@@ -337,7 +342,7 @@ const useTransactions = () => {
     try {
       const category = predefinedCategories.find(c => c.id === values.categoryId);
       const amount = parseInt(values.amount, 10);
-      const signedAmount = category?.type === "Chi phí" ? -Math.abs(amount) / 1000 : Math.abs(amount) / 1000;
+      const signedAmount = category?.type === "Chi phí" ? Math.abs(amount) / 1000 : Math.abs(amount) / 1000;
 
       const requestData = {
         categoryId: values.categoryId,
