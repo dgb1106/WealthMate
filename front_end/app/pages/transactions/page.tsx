@@ -125,7 +125,12 @@ const TransactionsPage: React.FC = () => {
   }, [selectedRecurringCategory, selectedFrequency, recurringCurrentPage, recurringPageSize]);
 
   const handleAddTransaction = async (values: { categoryId: string; amount: string; description: string; }) => {
-    await addTransaction(values);
+    const positiveAmount = Math.abs(parseFloat(values.amount)).toString();
+    const submissionValues = {
+      ...values,
+      amount: positiveAmount
+    };
+    await addTransaction(submissionValues);
     setModalVisible(false);
     form.resetFields();
   };
