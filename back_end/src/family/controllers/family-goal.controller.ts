@@ -5,6 +5,8 @@ import { CreateFamilyGoalDto } from '../dto/create-family-goal.dto';
 import { UpdateFamilyGoalDto } from '../dto/update-family-goal.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { PaginationDto } from '../../common/dto/pagination.dto';
+import { GoalFundsOperationDto } from '../dto/goal-funds-operation.dto';
+import { group } from 'console';
 
 @ApiTags('family-goals')
 @ApiBearerAuth()
@@ -124,5 +126,54 @@ export class FamilyGoalController {
     const userId = req.user.userId;
     await this.familyGoalService.remove(id, userId);
     return { success: true, message: 'Goal deleted successfully' };
+  }
+
+  @Post(':id/add-funds')
+  @ApiOperation({ summary: 'Thêm tiền vào mục tiêu gia đình' })
+  @ApiParam({ name: 'groupId', description: 'Family group ID' })
+  @ApiParam({ name: 'id', description: 'Goal ID' })
+  @ApiBody({ type: GoalFundsOperationDto })
+  @ApiResponse({ status: 200, description: 'Funds successfully added to the goal.' })
+  @ApiResponse({ status: 400, description: 'Bad request or insufficient permissions.' })
+  @ApiResponse({ status: 404, description: 'Goal not found.' })
+  async addFunds(
+    @Param('groupId') groupId: string,
+    @Param('id') id: string,
+    @Body() fundsDto: GoalFundsOperationDto,
+    @Request() req,
+  ) {
+    const userId = req.user.userId;
+    const goal = await this.familyGoalService.addFundsToGoal(
+      groupId,
+      id, 
+      userId, 
+      fundsDto.amount,
+    );
+    return { success: true, data: goal.toResponseFormat() };
+  }
+
+  @Post(':id/withdraw-funds')
+  @ApiOperation({ summary: 'Rút tiền từ mục tiêu gia đình' })
+  @ApiParam({ name: 'groupId', description: 'Family group ID' })
+  @ApiParam({ name: 'id', description: 'Goal ID' })
+  @ApiBody({ type: GoalFundsOperationDto })
+  @ApiResponse({ status: 200, description: 'Funds successfully withdrawn from the goal.' })
+  @ApiResponse({ status: 400, description: 'Bad request or insufficient funds/permissions.' })
+  @ApiResponse({ status: 404, description: 'Goal not found.' })
+  async withdrawFunds(
+    @Param('groupId') groupId: string,
+    @Param('id') id: string,
+    @Body() fundsDto: GoalFundsOperationDto,
+    @Request() req,
+  ) {
+    const userId = req.user.userId;
+    const goal = await this.familyGoalService.withdrawFundsFromGoal(
+      groupId,
+      id, 
+      userId, 
+      fundsDto.amount, 
+      fundsDto.description || 'Rút tiền từ mục tiêu gia đình',
+    );
+    return { success: true, data: goal.toResponseFormat() };
   }
 }

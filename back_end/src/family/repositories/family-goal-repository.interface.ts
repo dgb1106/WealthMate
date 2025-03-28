@@ -12,4 +12,6 @@ export interface FamilyGoalRepository {
   incrementSavedAmount(id: string, amount: number): Promise<FamilyGoal>;
   getGoalSummary(id: string): Promise<any>;
   getGroupGoalsSummary(groupId: string): Promise<any>;
+  addFundsToGoal(id: string, userId: string, amount: number, transactionId?: string): Promise<FamilyGoal>;
+  withdrawFundsFromGoal(id: string, userId: string, amount: number, transactionId?: string): Promise<FamilyGoal>;
 }
