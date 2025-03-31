@@ -62,7 +62,7 @@ export class AiUtilsService {
         }
     }
 
-    async getTranscriptionFromSpeech(audioFile: Buffer): Promise<string> {
+    async getTranscriptionFromSpeech(audioFile: Buffer, mood: string): Promise<string> {
         try {
             const FormData = require('form-data');
             const formData = new FormData();
@@ -70,6 +70,7 @@ export class AiUtilsService {
                 filename: 'audio.wav',
                 contentType: 'audio/wav',
             });
+            formData.append('mood', mood);
             const response = await firstValueFrom(
                 this.httpService.post(`${this.baseUrl}/speech_transcribe`, formData, {
                     timeout: 30000,
@@ -103,7 +104,7 @@ export class AiUtilsService {
         }
     }
 
-    async scanBill(imageFile: Buffer) {
+    async scanBill(imageFile: Buffer, mood: string) {
         try {
             const FormData = require('form-data');
             const formData = new FormData();
@@ -111,6 +112,7 @@ export class AiUtilsService {
                 filename: 'bill.jpeg',
                 contentType: 'image/jpeg',
             });
+            formData.append('mood', mood);
             const response = await firstValueFrom(
                 this.httpService.post(`${this.baseUrl}/scan_bills`, formData, {
                     timeout: 30000,

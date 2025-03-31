@@ -63,8 +63,11 @@ export class AiUtilsController {
     @ApiResponse({ status: 500, description: 'Lỗi server.' })
     @ApiConsumes('multipart/form-data')
     @UseInterceptors(FileInterceptor('file'))
-    async getTranscriptionFromSpeech(@UploadedFile() audioFile: Express.Multer.File) {
-        return this.aiUtilsService.getTranscriptionFromSpeech(audioFile.buffer);
+    async getTranscriptionFromSpeech(
+        @UploadedFile() audioFile: Express.Multer.File,
+        @Body('mood') mood: string
+    ) {
+        return this.aiUtilsService.getTranscriptionFromSpeech(audioFile.buffer, mood);
     }
 
     @Post('image-to-transaction')
@@ -74,8 +77,11 @@ export class AiUtilsController {
     @ApiResponse({ status: 500, description: 'Lỗi server.' })
     @ApiConsumes('multipart/form-data')
     @UseInterceptors(FileInterceptor('file'))
-    async getTransactionFromImage(@UploadedFile() imageFile: Express.Multer.File) {
-        return this.aiUtilsService.scanBill(imageFile.buffer);
+    async getTransactionFromImage(
+        @UploadedFile() imageFile: Express.Multer.File,
+        @Body('mood') mood: string
+    ) {
+        return this.aiUtilsService.scanBill(imageFile.buffer, mood);
     }
 
     @Get('budget-suggestion')
