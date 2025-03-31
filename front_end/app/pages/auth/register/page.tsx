@@ -3,6 +3,8 @@ import Head from 'next/head';
 import AuthLayout from '@/layouts/AuthLayout/index';
 import {RegisterForm} from '@/components/auth/RegisterForm';
 import type { Metadata } from 'next';
+import myImage from '@/assets/images/14.png';
+import { TruckFilled } from '@ant-design/icons';
 
 export const metadata: Metadata = {
   title: 'Đăng ký | WealthMate',
@@ -18,7 +20,7 @@ const RegisterPage: React.FC = () => {
       </Head>
       <AuthLayout 
       title="Tạo tài khoản của bạn"
-      imageSrc="/png/14.png"
+      isRegister={true}
     >
       <RegisterForm />
     </AuthLayout>

@@ -32,7 +32,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <AuthLayout title="Đăng nhập WealthMate">
+    <AuthLayout title="Đăng nhập WealthMate" isRegister={false}>
       <LoginForm />
     </AuthLayout>
   );
