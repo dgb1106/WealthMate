@@ -6,6 +6,7 @@ import { FamilyBudgetModule } from './modules/family-budget.module';
 import { FamilyGroupModule } from './modules/family-group.module';
 import { FamilyInvitation } from './entities/family-invitation.entity';
 import { FamilyInvitationModule } from './modules/family-invitation.module';
+import { CleanupExpiredInvitationsTask } from './tasks/cleanup-expired-invitations.task';
 
 @Module({
   imports: [
@@ -15,6 +16,9 @@ import { FamilyInvitationModule } from './modules/family-invitation.module';
     FamilyBudgetModule,
     FamilyGroupModule,
     FamilyInvitationModule,
+  ],
+  providers: [
+    CleanupExpiredInvitationsTask,
   ],
   exports: [
     FamilyTransactionContributionModule,

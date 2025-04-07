@@ -12,8 +12,6 @@ import { GoalsModule } from './goals/goals.module';
 import { RecurringTransactionsModule } from './recurring-transactions/recurring-transactions.module';
 import { CategoriesModule } from './categories/categories.module';
 import { LoansModule } from './loans/loans.module';
-import { LoansController } from './loans/loans.controller';
-import { LoansService } from './loans/loans.service';
 import { AiUtilsModule } from './ai-utils/ai-utils.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -43,7 +41,6 @@ import { FamilyModule } from './family/family.module';
       max: 100,
     }),
     ScheduleModule.forRoot(),
-    SchedulesModule,
     FamilyModule,
   ],
   controllers: [AppController],

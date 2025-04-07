@@ -15,7 +15,6 @@ import { ScheduleModule } from '@nestjs/schedule';
     PrismaModule, 
     FamilyGroupModule, 
     FamilyTransactionContributionModule,
-    ScheduleModule.forRoot() // Register the schedule module
   ],
   controllers: [FamilyBudgetController],
   providers: [

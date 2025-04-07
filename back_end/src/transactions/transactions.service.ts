@@ -453,7 +453,7 @@ export class TransactionService {
   }
   
   /**
-   * Delete a transaction with proper error handling and cache invalidation
+   *   a transaction with proper error handling and cache invalidation
    */
   async deleteTransaction(userId: string, id: string): Promise<any> {
     return this.prisma.$transaction(async (prisma) => {
