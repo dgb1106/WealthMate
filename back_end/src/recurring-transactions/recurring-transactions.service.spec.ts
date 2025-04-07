@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { RecurringTransactionsService } from './recurring-transactions.service';
+import { RecurringTransactionService } from './recurring-transactions.service';
 
 describe('RecurringTransactionsService', () => {
-  let service: RecurringTransactionsService;
+  let service: RecurringTransactionService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [RecurringTransactionsService],
+      providers: [RecurringTransactionService],
     }).compile();
 
-    service = module.get<RecurringTransactionsService>(RecurringTransactionsService);
+    service = module.get<RecurringTransactionService>(RecurringTransactionService);
   });
 
   it('should be defined', () => {

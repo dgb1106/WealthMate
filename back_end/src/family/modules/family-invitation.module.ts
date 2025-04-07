@@ -9,7 +9,7 @@ import { FamilyGroupModule } from './family-group.module';
 import { CleanupExpiredInvitationsTask } from '../tasks/cleanup-expired-invitations.task';
 
 @Module({
-  imports: [PrismaModule, ScheduleModule.forRoot(), FamilyGroupModule],
+  imports: [PrismaModule, FamilyGroupModule],
   controllers: [FamilyInvitationController],
   providers: [
     FamilyInvitationService,

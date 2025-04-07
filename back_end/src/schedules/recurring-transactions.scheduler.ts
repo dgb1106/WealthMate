@@ -8,7 +8,9 @@ export class RecurringTransactionsScheduler {
   
   constructor(
     private recurringTxDomainService: RecurringTransactionDomainService
-  ) {}
+  ) {
+    this.logger.warn('RecurringTransactionsScheduler initialized');
+  }
 
   /**
    * Run every day at midnight to process recurring transactions
