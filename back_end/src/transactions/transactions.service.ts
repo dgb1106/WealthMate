@@ -476,7 +476,17 @@ export class TransactionService {
         // Update user balance
         const updatedUser = await this.usersService.increaseBalance(userId, balanceAdjustment);
         
-        // Delete the transaction
+        const familyTransactionContribution = await this.prisma.familyTransactionContributions.findFirst({
+          where: { transactionId: BigInt(id) }
+        }); 
+        
+        if (familyTransactionContribution) {
+          // Delete the family transaction contribution if it exists
+          await prisma.familyTransactionContributions.delete({
+            where: { id: familyTransactionContribution.id }
+          });
+        }
+        
         await this.transactionRepository.delete(id, userId);
         
         // Clear all related caches
