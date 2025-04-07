@@ -476,8 +476,11 @@ export class TransactionService {
         // Update user balance
         const updatedUser = await this.usersService.increaseBalance(userId, balanceAdjustment);
         
-        const familyTransactionContribution = await this.prisma.familyTransactionContributions.findFirst({
-          where: { transactionId: BigInt(id) }
+        const familyTransactionContribution = await prisma.familyTransactionContributions.findFirst({
+          where: { transactionId: BigInt(id) },
+          select: {
+            id: true
+          }
         }); 
         
         if (familyTransactionContribution) {
