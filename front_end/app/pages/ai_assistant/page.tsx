@@ -171,12 +171,16 @@ const AiAssistantPage: React.FC = () => {
   };
 
   // --- Hàm Upload hình ảnh ---
-  const resizeImage = (file: File, maxWidth = 1024, maxHeight = 1024): Promise<Blob> => {
+  const resizeImage = (file: File, maxWidth = 800, maxHeight = 800): Promise<Blob> => {
     return new Promise((resolve, reject) => {
       const img = new Image();
       const reader = new FileReader();
 
       reader.onload = (e: any) => { img.src = e.target.result; };
+
+      reader.onerror = (e) => {
+        reject(new Error('Failed to read file'));
+      };
 
       img.onload = () => {
         const canvas = document.createElement('canvas');
@@ -184,8 +188,8 @@ const AiAssistantPage: React.FC = () => {
 
         if (width > maxWidth || height > maxHeight) {
           const scale = Math.min(maxWidth / width, maxHeight / height);
-          width *= scale;
-          height *= scale;
+          width = Math.floor(width * scale);
+          height = Math.floor(height * scale);
         }
 
         canvas.width = width;
@@ -194,13 +198,26 @@ const AiAssistantPage: React.FC = () => {
         const ctx = canvas.getContext('2d')!;
         ctx.drawImage(img, 0, 0, width, height);
 
+        // Try using a different format - JPEG is usually well-supported
         canvas.toBlob((blob) => {
           if (blob) {
-            resolve(blob);
+            // Check the blob size - if it's too large, reduce quality further
+            if (blob.size > 1024 * 1024) { // If larger than 1MB
+              canvas.toBlob((smallerBlob) => {
+                if (smallerBlob) resolve(smallerBlob);
+                else reject(new Error('Failed to create smaller blob'));
+              }, 'image/jpeg', 0.6); // Lower quality
+            } else {
+              resolve(blob);
+            }
           } else {
             reject(new Error('Failed to create blob from canvas'));
           }
-        }, 'image/jpeg', 0.8);
+        }, 'image/jpeg', 0.8); // Using JPEG with 80% quality
+      };
+
+      img.onerror = () => {
+        reject(new Error('Failed to load image'));
       };
 
       reader.readAsDataURL(file);
@@ -215,35 +232,69 @@ const AiAssistantPage: React.FC = () => {
     input.onchange = async (e: any) => {
       const file = e.target.files[0];
       if (file) {
-        const token = localStorage.getItem('authToken');
-        console.log('Auth Token:', token);
-        const formData = new FormData();
-        const resizedBlob = await resizeImage(file);
-        formData.append('file', resizedBlob, 'resized.jpg');
+        const hideLoadingMsg = message.loading('Đang xử lý ảnh...', 0);
 
         try {
+          const token = localStorage.getItem('authToken');
+          if (!token) {
+            throw new Error('Không tìm thấy token đăng nhập, vui lòng đăng nhập lại');
+          }
+
+          console.log('Đang xử lý ảnh:', file.name, 'kích thước:', (file.size / 1024).toFixed(2) + 'KB');
+
+          const formData = new FormData();
+          const resizedBlob = await resizeImage(file);
+
+          console.log('Kích thước ảnh sau khi resize:', (resizedBlob.size / 1024).toFixed(2) + 'KB');
+
+          // Thêm file và mood vào formData
+          formData.append('file', resizedBlob, 'resized.jpg');
+          formData.append('mood', preferredMood); // Thêm mood từ state
+
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+          console.log('Gửi request đến:', `${apiUrl}/ai-utils/image-to-transaction`);
+
           const response = await axios.post(
-            `${process.env.NEXT_PUBLIC_API_URL}/ai-utils/image-to-transaction`,
+            `${apiUrl}/ai-utils/image-to-transaction`,
             formData,
-            { headers: { 'Authorization': `Bearer ${token}` }, timeout: 60000 }
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data',
+              },
+              timeout: 60000,
+              onUploadProgress: (progressEvent) => {
+                const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 100));
+                console.log(`Upload progress: ${percentCompleted}%`);
+              },
+            }
           );
 
-          const [categoryName, amountString] = Object.entries(response.data)[0] as [string, string];
-          const category = predefinedCategories.find(c => c.name === categoryName);
-          const amount = parseInt(amountString.replace(/\D/g, ''), 10);
+          console.log('Response status:', response.status);
+          console.log('Response data:', response.data);
+
+          const { amount, category, description, chat_response } = response.data;
+          if (!amount || !category || !description) {
+            throw new Error('Dữ liệu trả về từ server không hợp lệ');
+          }
+
+          setChatHistory(prev => [...prev, { type: 'bot', content: chat_response }]);
+
+          const categoryObject = predefinedCategories.find(c => c.name === category);
+          const amountValue = parseInt(amount.replace(/\D/g, ''), 10);
 
           Modal.confirm({
             title: 'Tạo giao dịch mới',
             width: 600,
             content: (
               <Form layout="vertical" form={form}>
-                <Form.Item name="description" label="Mô tả">
+                <Form.Item name="description" label="Mô tả" initialValue={description}>
                   <Input placeholder="Nhập mô tả giao dịch" />
                 </Form.Item>
-                <Form.Item name="amount" label="Lượng" initialValue={amount}>
+                <Form.Item name="amount" label="Lượng" initialValue={amountValue}>
                   <Input type="number" placeholder="Nhập lượng" />
                 </Form.Item>
-                <Form.Item name="categoryId" label="Danh mục" initialValue={category?.id}>
+                <Form.Item name="categoryId" label="Danh mục" initialValue={categoryObject?.id}>
                   <Select>
                     {predefinedCategories.map(c => (
                       <Select.Option key={c.id} value={c.id}>{c.name}</Select.Option>
@@ -255,28 +306,40 @@ const AiAssistantPage: React.FC = () => {
             onOk: async () => {
               const values = await form.validateFields();
               const signedAmount = predefinedCategories.find(c => c.id === values.categoryId)?.type === 'Chi phí'
-                ? Math.abs(values.amount)/1000
-                : Math.abs(values.amount)/1000;
+                ? Math.abs(values.amount) / 1000
+                : Math.abs(values.amount) / 1000;
 
               const requestData = {
                 categoryId: values.categoryId,
                 amount: signedAmount,
-                description: values.description
+                description: values.description,
               };
 
               try {
-                await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/transactions`, requestData, {
-                  headers: { 'Authorization': `Bearer ${token}` }
+                await axios.post(`${apiUrl}/transactions`, requestData, {
+                  headers: { 'Authorization': `Bearer ${token}` },
                 });
                 message.success('Thêm Giao dịch thành công');
-              } catch {
-                message.error('Thêm Giao dịch thất bại');
+              } catch (err: any) {
+                console.error('Lỗi khi thêm giao dịch:', err);
+                message.error('Thêm Giao dịch thất bại: ' + (err.response?.data?.message || err.message));
               }
             },
           });
         } catch (error: any) {
           console.error('Error uploading image:', error);
-          message.error(error.response?.data?.message || error.message);
+          if (error.response) {
+            console.error('Server error response:', error.response.status);
+            console.error('Server error data:', error.response.data);
+            message.error(`Lỗi máy chủ (${error.response.status}): ${error.response.data?.message || 'Không thể xử lý ảnh'}`);
+          } else if (error.request) {
+            console.error('No response received:', error.request);
+            message.error('Không nhận được phản hồi từ máy chủ. Vui lòng kiểm tra kết nối mạng.');
+          } else {
+            message.error('Lỗi: ' + error.message);
+          }
+        } finally {
+          hideLoadingMsg();
         }
       }
     };
@@ -284,12 +347,10 @@ const AiAssistantPage: React.FC = () => {
     input.click();
   };
 
-
   // --- Hàm ghi âm voice ---
   const handleVoiceRecord = async () => {
     try {
       if (!isRecording) {
-        // Bắt đầu ghi âm
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         const mediaRecorder = new MediaRecorder(stream, {
           mimeType: 'audio/webm', 
@@ -333,13 +394,55 @@ const AiAssistantPage: React.FC = () => {
             }
   
             const data = await response.json();
-            const text = data.text || data.transcription || data.result || "No text returned";
-          
-            Modal.info({
-              title: 'Transcribed Text',
-              content: text,
+            
+            const { amount, category, description, chat_response } = data;
+            
+            setChatHistory(prev => [...prev, { type: 'bot', content: chat_response }]);
+            
+            const categoryObject = predefinedCategories.find(c => c.name === category);
+            const amountValue = parseInt(amount.replace(/\D/g, ''), 10);
+            
+            Modal.confirm({
+              title: 'Tạo giao dịch mới',
               width: 600,
-              okText: 'Close',
+              content: (
+                <Form layout="vertical" form={form}>
+                  <Form.Item name="description" label="Mô tả" initialValue={description}>
+                    <Input placeholder="Nhập mô tả giao dịch" />
+                  </Form.Item>
+                  <Form.Item name="amount" label="Lượng" initialValue={amountValue}>
+                    <Input type="number" placeholder="Nhập lượng" />
+                  </Form.Item>
+                  <Form.Item name="categoryId" label="Danh mục" initialValue={categoryObject?.id}>
+                    <Select>
+                      {predefinedCategories.map(c => (
+                        <Select.Option key={c.id} value={c.id}>{c.name}</Select.Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Form>
+              ),
+              onOk: async () => {
+                const values = await form.validateFields();
+                const signedAmount = predefinedCategories.find(c => c.id === values.categoryId)?.type === 'Chi phí'
+                  ? Math.abs(values.amount)/1000
+                  : Math.abs(values.amount)/1000;
+
+                const requestData = {
+                  categoryId: values.categoryId,
+                  amount: signedAmount,
+                  description: values.description
+                };
+
+                try {
+                  await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/transactions`, requestData, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+                  });
+                  message.success('Thêm Giao dịch thành công');
+                } catch {
+                  message.error('Thêm Giao dịch thất bại');
+                }
+              },
             });
             
             message.success('Audio processed successfully');
@@ -452,10 +555,10 @@ const AiAssistantPage: React.FC = () => {
         <div className={styles.suggestions}>
           <button
             className={styles.suggestionButton}
-            onClick={() => handleSuggestionClick('Dự đoán giá Bitcoin')}
+            onClick={() => handleSuggestionClick('Gợi ý kế hoạch chi tiêu')}
             disabled={isLoading}
           >
-            Dự đoán giá Bitcoin
+            Gợi ý kế hoạch chi tiêu
           </button>
           <button
             className={styles.suggestionButton}
