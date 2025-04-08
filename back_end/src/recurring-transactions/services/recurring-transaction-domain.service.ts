@@ -48,31 +48,34 @@ export class RecurringTransactionDomainService {
    */
   async processDueTransactions(): Promise<{ processedCount: number; transactions: any[]; errors: string[] }> {
     const today = new Date();
-    const dueTransactions = await this.recurringTxRepository.findDueTransactions(today);
-    const createdTransactions: any[] = [];
-    const errors: string[] = [];
-    
-    this.logger.log(`Found ${dueTransactions.length} due recurring transactions to process`);
-    
-    for (const recurringTx of dueTransactions) {
-      try {
-        const result = await this.processTransaction(recurringTx);
-        if (result) {
-          createdTransactions.push(result);
-          this.logger.log(`Successfully processed recurring transaction ID: ${recurringTx.id}`);
+
+    return await this.prisma.$transaction(async (prisma) => {
+      const dueTransactions = await this.recurringTxRepository.findDueTransactions(today);
+      const createdTransactions: any[] = [];
+      const errors: string[] = [];
+      
+      this.logger.log(`Found ${dueTransactions.length} due recurring transactions to process`);
+      
+      for (const recurringTx of dueTransactions) {
+        try {
+          const result = await this.processTransaction(recurringTx);
+          if (result) {
+            createdTransactions.push(result);
+            this.logger.log(`Successfully processed recurring transaction ID: ${recurringTx.id}`);
+          }
+        } catch (error) {
+          const errorMessage = `Error processing recurring transaction ${recurringTx.id}: ${error.message}`;
+          this.logger.error(errorMessage);
+          errors.push(errorMessage);
         }
-      } catch (error) {
-        const errorMessage = `Error processing recurring transaction ${recurringTx.id}: ${error.message}`;
-        this.logger.error(errorMessage);
-        errors.push(errorMessage);
       }
-    }
-    
-    return {
-      processedCount: createdTransactions.length,
-      transactions: createdTransactions,
-      errors
-    };
+      
+      return {
+        processedCount: createdTransactions.length,
+        transactions: createdTransactions,
+        errors
+      };
+    });
   }
 
   /**

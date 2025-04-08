@@ -453,7 +453,7 @@ export class TransactionService {
   }
   
   /**
-   * Delete a transaction with proper error handling and cache invalidation
+   *   a transaction with proper error handling and cache invalidation
    */
   async deleteTransaction(userId: string, id: string): Promise<any> {
     return this.prisma.$transaction(async (prisma) => {
@@ -476,7 +476,20 @@ export class TransactionService {
         // Update user balance
         const updatedUser = await this.usersService.increaseBalance(userId, balanceAdjustment);
         
-        // Delete the transaction
+        const familyTransactionContribution = await prisma.familyTransactionContributions.findFirst({
+          where: { transactionId: BigInt(id) },
+          select: {
+            id: true
+          }
+        }); 
+        
+        if (familyTransactionContribution) {
+          // Delete the family transaction contribution if it exists
+          await prisma.familyTransactionContributions.delete({
+            where: { id: familyTransactionContribution.id }
+          });
+        }
+        
         await this.transactionRepository.delete(id, userId);
         
         // Clear all related caches

@@ -21,7 +21,7 @@ export class PrismaRecurringTransactionRepository implements RecurringTransactio
       next_occurence: new Date(createDto.next_occurence)
     });
     
-    // Save to database
+    // Save to database67
     const recurringTx = await this.prisma.recurringTransactions.create({
       data: {
         userId: entity.userId,
