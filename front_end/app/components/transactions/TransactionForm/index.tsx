@@ -35,12 +35,22 @@ interface TransactionFormProps {
 }
 
 const TransactionForm: React.FC<TransactionFormProps> = ({ form, onFinish, onFinishFailed, isEdit }) => {
+  const handleValuesChange = (changedValues: any) => {
+    if (changedValues.amount) {
+      const numValue = parseFloat(changedValues.amount);
+      if (!isNaN(numValue) && numValue < 0) {
+        form.setFieldsValue({ amount: Math.abs(numValue).toString() });
+      }
+    }
+  };
+
   return (
     <Form
       form={form}
-      layout="vertical"
       onFinish={onFinish}
       onFinishFailed={onFinishFailed}
+      layout="vertical"
+      onValuesChange={handleValuesChange}
     >
       <Form.Item
         name="description"

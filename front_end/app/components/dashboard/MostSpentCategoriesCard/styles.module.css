@@ -1,5 +1,87 @@
 .card {
-    width: 100%;
-    height: 500px;
-  }
-  
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.card :global(.ant-card-body) {
+  padding: 12px !important;
+}
+
+.title {
+  margin-bottom: 8px !important;
+  font-size: 16px !important;
+  font-weight: bold !important;
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60px;
+}
+
+.listItem {
+  padding: 4px 0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0;
+}
+
+.categoryRank {
+  font-size: 12px;
+  font-weight: bold;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.categoryInfo {
+  flex: 1;
+}
+
+.categoryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.categoryName {
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60%;
+}
+
+.categoryAmount {
+  font-size: 13px;
+  color: #ff4d4f;
+  font-weight: 500;
+}
+
+.listItem:nth-child(1) .categoryRank {
+  background-color: #ffd700;
+  color: #fff;
+}
+
+.listItem:nth-child(2) .categoryRank {
+  background-color: #c0c0c0;
+  color: #fff;
+}
+
+.listItem:nth-child(3) .categoryRank {
+  background-color: #cd7f32;
+  color: #fff;
+}
+
+/* Override ant-list-item padding */
+.listItem :global(.ant-list-item) {
+  padding: 4px 0;
+}

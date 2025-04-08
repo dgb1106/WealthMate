@@ -1,17 +1,42 @@
+'use client'
+
 import { useState, useEffect } from 'react';
 import { message } from 'antd';
+import axios from 'axios';
 
+export enum Frequency {
+  DAILY = "DAILY",
+  WEEKLY = "WEEKLY",
+  MONTHLY = "MONTHLY",
+  BIWEEKLY = "BIWEEKLY",
+  QUARTERLY = "QUARTERLY",
+  YEARLY = "YEARLY"
+}
 
-interface Transaction {
+export interface Transaction {
   id: string;
   created_at: string;
   amount: number;
   description: string;
   category: {
+    id: string;
     name: string;
   };
 }
 
+export interface RecurringTransaction {
+  id: string;
+  description: string;
+  amount: number;
+  category: {
+    id: string;
+    name: string;
+  };
+  frequency: Frequency;
+  start_date: string;
+  end_date?: string;
+  next_occurrence: string;
+}
 
 interface TransactionValues {
   categoryId: string;
@@ -46,9 +71,20 @@ const predefinedCategories = [
 
 const useTransactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([]);
   const [loading, setLoading] = useState(false);
+  const [recurringLoading, setRecurringLoading] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [recurringTotal, setRecurringTotal] = useState(0);
 
-  const fetchTransactions = async (selectedMonth: string, selectedYear: string, selectedType: string, selectedCategory: string) => {
+  const fetchTransactions = async (
+    selectedMonth: string, 
+    selectedYear: string, 
+    selectedType: string, 
+    selectedCategory: string,
+    page: number = 1,
+    pageSize: number = 10
+  ) => {
     setLoading(true);
     try {
       const token = localStorage.getItem('authToken');
@@ -75,6 +111,13 @@ const useTransactions = () => {
         endpoint = `${process.env.NEXT_PUBLIC_API_URL}/transactions/expenses`;
       }
 
+      // Add pagination parameters
+      if (!endpoint.includes('?')) {
+        endpoint += `?page=${page}&limit=${pageSize}`;
+      } else {
+        endpoint += `&page=${page}&limit=${pageSize}`;
+      }
+
       const response = await fetch(endpoint, {
         headers: {
           'Content-Type': 'application/json',
@@ -85,47 +128,119 @@ const useTransactions = () => {
         throw new Error('Lấy thông tin thất bại');
       }
       const data = await response.json();
-      setTransactions(Array.isArray(data) ? data : []);
+      
+      // Handle pagination response (assuming API returns { data: [...], total: number })
+      if (data.data && typeof data.total === 'number') {
+        setTransactions(data.data);
+        setTotal(data.total);
+      } else {
+        setTransactions(Array.isArray(data) ? data : []);
+        setTotal(Array.isArray(data) ? data.length : 0);
+      }
     } catch (error) {
       console.error('Failed to fetch transactions:', error);
       message.error('Lấy thông tin thất bại');
       setTransactions([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
   };
 
-  const addTransaction = async (values: TransactionValues) => {
+  const fetchRecurringTransactions = async (
+    selectedCategory: string = 'all',
+    selectedFrequency: Frequency | 'all' = 'all',
+    page: number = 1,
+    pageSize: number = 10
+  ) => {
+    setRecurringLoading(true);
     try {
-      const category = predefinedCategories.find(c => c.id === values.categoryId);
-      const amount = parseInt(values.amount, 10);
-      const signedAmount = category?.type === "Chi phí" ? Math.abs(amount) / 1000 : Math.abs(amount) / 1000;
-      const requestData = {
-        categoryId: values.categoryId,
-        amount: signedAmount,
-        description: values.description
-      };
-
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transactions`, {
-        method: 'POST',
+      let endpoint = `${process.env.NEXT_PUBLIC_API_URL}/recurring-transactions`;
+      
+      // Add parameters
+      if (selectedCategory !== 'all') {
+        endpoint = `${process.env.NEXT_PUBLIC_API_URL}/recurring-transactions/category/${selectedCategory}`;
+      }
+      
+      if (selectedFrequency !== 'all') {
+        endpoint = `${process.env.NEXT_PUBLIC_API_URL}/recurring-transactions/frequency/${selectedFrequency}`;
+      }
+      
+      // Add pagination
+      if (!endpoint.includes('?')) {
+        endpoint += `?page=${page}&limit=${pageSize}`;
+      } else {
+        endpoint += `&page=${page}&limit=${pageSize}`;
+      }
+
+      const response = await fetch(endpoint, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(requestData),
       });
-
+      
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Server error:', errorText);
-        throw new Error('Thêm Giao dịch thất bại');
+        throw new Error('Lấy thông tin giao dịch định kỳ thất bại');
       }
+      
+      const data = await response.json();
+      if (data.data && typeof data.total === 'number') {
+        const transformedData = data.data.map((transaction: RecurringTransaction) => ({
+          ...transaction,
+          amount: transaction.amount * 1000 
+        }));
+        
+        setRecurringTransactions(transformedData);
+        setRecurringTotal(data.total);
+      } else {
+        const transactions = Array.isArray(data) ? data : [];
+        const transformedData = transactions.map((transaction: RecurringTransaction) => ({
+          ...transaction,
+          amount: transaction.amount * 1000
+        }));
+        
+        setRecurringTransactions(transformedData);
+        setRecurringTotal(transactions.length);
+      }
+    } catch (error) {
+      console.error('Failed to fetch recurring transactions:', error);
+      message.error('Lấy thông tin giao dịch định kỳ thất bại');
+      setRecurringTransactions([]);
+      setRecurringTotal(0);
+    } finally {
+      setRecurringLoading(false);
+    }
+  };
 
+  const addTransaction = async (values: { categoryId: string; amount: string; description: string; }) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const category = predefinedCategories.find(cat => cat.id === values.categoryId);
+      let amount = parseFloat(values.amount) / 1000;
+      if (category && category.type === "Chi phí") {
+        amount = Math.abs(amount);
+      }
+      
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/transactions`,
+        {
+          ...values,
+          amount: amount
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
       message.success('Thêm Giao dịch thành công');
       fetchTransactions('all', 'all', 'all', 'all');
     } catch (error) {
-      console.error('Failed to add transaction:', error);
+      console.error('Error adding transaction:', error);
       message.error('Thêm Giao dịch thất bại');
     }
   };
@@ -186,8 +301,20 @@ const useTransactions = () => {
     }
   };
 
-  const addRecurringTransaction = async (transactionData: any) => {
+  const addRecurringTransaction = async (values: any) => {
     try {
+      const category = predefinedCategories.find(c => c.id === values.categoryId);
+      const amount = parseInt(values.amount, 10);
+      const signedAmount = category?.type === "Chi phí" ? Math.abs(amount) / 1000 : Math.abs(amount) / 1000;
+      const requestData = {
+        categoryId: values.categoryId,
+        amount: signedAmount,
+        description: values.description,
+        frequency: values.frequency,
+        next_occurence: values.next_occurence
+      };
+
+      console.log('Sending recurring transaction data:', requestData);
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/recurring-transactions`, {
         method: 'POST',
@@ -195,7 +322,7 @@ const useTransactions = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(transactionData),
+        body: JSON.stringify(requestData),
       });
 
       if (!response.ok) {
@@ -204,21 +331,87 @@ const useTransactions = () => {
       }
 
       message.success('Tạo giao dịch định kỳ thành công');
-      fetchTransactions('all', 'all', 'all', 'all');
+      fetchRecurringTransactions();
     } catch (error: any) {
       console.error('Error adding recurring transaction:', error);
       message.error(error.message || 'Đã xảy ra lỗi khi tạo giao dịch định kỳ');
     }
   };
 
+  const updateRecurringTransaction = async (id: string, values: any) => {
+    try {
+      const category = predefinedCategories.find(c => c.id === values.categoryId);
+      const amount = parseInt(values.amount, 10);
+      const signedAmount = category?.type === "Chi phí" ? Math.abs(amount) / 1000 : Math.abs(amount) / 1000;
+
+      const requestData = {
+        categoryId: values.categoryId,
+        amount: signedAmount,
+        description: values.description,
+        frequency: values.frequency,
+        startDate: values.startDate,
+        endDate: values.endDate || null
+      };
+
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/recurring-transactions/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Chỉnh sửa giao dịch định kỳ thất bại');
+      }
+
+      message.success('Chỉnh sửa giao dịch định kỳ thành công');
+      fetchRecurringTransactions();
+    } catch (error) {
+      console.error('Failed to update recurring transaction:', error);
+      message.error('Chỉnh sửa giao dịch định kỳ thất bại');
+    }
+  };
+
+  const deleteRecurringTransaction = async (id: string) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/recurring-transactions/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Xoá giao dịch định kỳ thất bại');
+      }
+
+      message.success('Xoá giao dịch định kỳ thành công');
+      fetchRecurringTransactions();
+    } catch (error) {
+      console.error('Failed to delete recurring transaction:', error);
+      message.error('Xoá giao dịch định kỳ thất bại');
+    }
+  };
+
   return {
     transactions,
+    recurringTransactions,
     loading,
+    recurringLoading,
+    total,
+    recurringTotal,
     fetchTransactions,
+    fetchRecurringTransactions,
     addTransaction,
     updateTransaction,
     deleteTransaction,
     addRecurringTransaction,
+    updateRecurringTransaction,
+    deleteRecurringTransaction,
   };
 };
 

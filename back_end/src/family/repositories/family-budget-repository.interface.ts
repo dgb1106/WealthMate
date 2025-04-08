@@ -10,6 +10,7 @@ export interface FamilyBudgetRepository {
   remove(id: string, userId: string): Promise<void>;
   findActiveByGroup(groupId: string): Promise<FamilyBudget[]>;
   findByCategory(groupId: string, categoryId: string): Promise<FamilyBudget[]>;
+  findActiveByCategory(groupId: string, categoryId: string): Promise<FamilyBudget[]>;
   incrementSpentAmount(id: string, amount: number): Promise<FamilyBudget>;
   getGroupBudgetSummary(groupId: string): Promise<any>;
 }

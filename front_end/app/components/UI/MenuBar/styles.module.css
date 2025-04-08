@@ -4,11 +4,26 @@
     font-weight: 600;
     color: #004aad;
 }
+
+.logoContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+.logoImage {
+  object-fit: contain;
+}
+.logoName {
+  object-fit: contain;
+} 
+
 .navContainer {
     display: flex;
     height: fit-content;
     flex-direction: column;
     background-color: #ffffff;
+    /*padding: 5px 5px;*/
     padding: 5px 5px;
     gap: 20px;
 }

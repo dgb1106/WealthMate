@@ -1,57 +1,74 @@
 'use client'
-import React from 'react';
-import { Modal, Button } from 'antd';
-import dayjs from 'dayjs';
-import styles from './styles.module.css';
 
-// Define the props interface
+import React from 'react';
+import { Modal, Button, Descriptions } from 'antd';
+import { Transaction } from '@/hooks/useTransactions';
+
 interface TransactionDetailModalProps {
   visible: boolean;
-  transaction: {
-    id: string;
-    description: string;
-    amount: number;
-    created_at: string;
-    category: {
-      id: string;
-      name: string;
-    };
-  } | null; // Allow transaction to be null
+  transaction: Transaction | null;
   onClose: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }
 
-const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({ visible, transaction, onClose, onEdit, onDelete }) => {
+const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
+  visible,
+  transaction,
+  onClose,
+  onEdit,
+  onDelete,
+}) => {
+  // Hàm định dạng tiền tệ trực tiếp trong component
+  const formatCurrencyDirectly = (value: number): string => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(value).replace(/\s/g, '');
+  };
+
+  // Format ngày tháng sang định dạng tiếng Việt
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+  };
+
+  if (!transaction) return null;
+
   return (
     <Modal
-      title="Chi tiết Giao dịch"
-      open={visible}
+      visible={visible}
+      title="Chi tiết giao dịch"
       onCancel={onClose}
       footer={[
-        <Button key="delete" danger onClick={onDelete}>
-          Delete
+        <Button key="close" onClick={onClose}>
+          Đóng
         </Button>,
         <Button key="edit" type="primary" onClick={onEdit}>
-          Edit
+          Chỉnh sửa
         </Button>,
-        <Button key="close" onClick={onClose}>
-          Close
-        </Button>
+        <Button key="delete" type="primary" danger onClick={onDelete}>
+          Xóa
+        </Button>,
       ]}
     >
-      {transaction && (
-        <div className={styles.transactionDetails}>
-          <p><strong>Thời gian:</strong> {dayjs(transaction.created_at).format('MMMM D, YYYY')}</p>
-          <p><strong>Lượng:</strong> <span className={transaction.amount < 0 ? styles.negativeAmount : styles.positiveAmount}>
-            {transaction.amount < 0 ? '-' : '+'}{new Intl.NumberFormat('en-US').format(Math.abs(transaction.amount * 1000))}
-          </span></p>
-          <p><strong>Mô tả:</strong> {transaction.description}</p>
-          <p><strong>Danh mục:</strong> {transaction.category.name}</p>
-          <p><strong>Loại:</strong> {transaction.amount < 0 ? 'Chi phí' : 'Thu nhập'}</p>
-          <p><strong>ID Giao dịch:</strong> {transaction.id}</p>
-        </div>
-      )}
+      <Descriptions bordered column={1}>
+        <Descriptions.Item label="Mô tả">{transaction.description}</Descriptions.Item>
+        <Descriptions.Item label="Số tiền">
+          <span style={{ color: transaction.amount < 0 ? '#ff4d4f' : '#52c41a' }}>
+            {formatCurrencyDirectly(Math.abs(transaction.amount * 1000))}
+          </span>
+        </Descriptions.Item>
+        <Descriptions.Item label="Danh mục">{transaction.category.name}</Descriptions.Item>
+        <Descriptions.Item label="Ngày tạo">
+          {formatDate(transaction.created_at)}
+        </Descriptions.Item>
+      </Descriptions>
     </Modal>
   );
 };

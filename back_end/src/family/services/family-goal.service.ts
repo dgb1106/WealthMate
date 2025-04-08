@@ -5,12 +5,18 @@ import { FamilyGoal } from '../entities/family-goal.entity';
 import { CreateFamilyGoalDto } from '../dto/create-family-goal.dto';
 import { UpdateFamilyGoalDto } from '../dto/update-family-goal.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
-
+import { PrismaService } from '../../prisma/prisma.service';
+import { GoalDomainService } from '../../goals/services/goal-domain.service';
+import { ContributionType } from '../../common/enums/enum';
+import { TransactionService } from '../../transactions/transactions.service';
 @Injectable()
 export class FamilyGoalService {
   constructor(
     private readonly familyGoalRepository: PrismaFamilyGoalRepository,
     private readonly familyMemberRepository: PrismaFamilyMemberRepository,
+    private readonly prisma: PrismaService,
+    private readonly goalDomainService: GoalDomainService,
+    private readonly transactionService: TransactionService,
   ) {}
 
   async create(
@@ -138,5 +144,128 @@ export class FamilyGoalService {
     }
     
     return this.familyGoalRepository.getGroupGoalsSummary(groupId);
+  }
+
+  async addFundsToGoal(
+    groupId: string,
+    id: string, 
+    userId: string, 
+    amount: number,
+  ): Promise<FamilyGoal> {
+    const goal = await this.familyGoalRepository.findOne(id);
+      
+    if (!goal) {
+      throw new NotFoundException(`Goal with ID ${id} not found`);
+    }
+
+    if (goal.groupId !== groupId) {
+      throw new BadRequestException(`Goal with ID ${id} does not belong to group with ID ${groupId}`);
+    }
+  
+    // Check if user is a member of this group
+    const isMember = await this.familyMemberRepository.isGroupMember(userId, goal.groupId);
+    if (!isMember) {
+      throw new BadRequestException('You do not have permission to add funds to this goal');
+    }
+  
+    // Validate the funds addition
+    this.goalDomainService.validateAddFunds(amount);
+  
+    // Create transaction and contribution in a single transaction
+    return this.prisma.$transaction(async (prisma) => {
+      // 1. Create a personal transaction (expense)
+      const transaction = await this.transactionService.createTransaction(userId, {
+        categoryId: '20', 
+        amount: amount,
+        description: `Thêm tiền vào mục tiêu của gia đình: ${goal.name}`,
+      });
+  
+      // 2. Create the family contribution
+      await prisma.familyTransactionContributions.create({
+        data: {
+          transactionId: BigInt(transaction.id),
+          groupId: BigInt(goal.groupId),
+          amount: amount,
+          contributionType: ContributionType.GOAL,
+          targetId: BigInt(id),
+          userId: userId,
+          created_at: new Date()
+        }
+      });
+      
+      // 3. Update the goal's saved amount
+      const updatedGoal = await this.familyGoalRepository.addFundsToGoal(
+        id, 
+        userId, 
+        amount, 
+      );
+      
+      return updatedGoal;
+    });
+  }
+
+  async withdrawFundsFromGoal(
+    groupId: string,
+    id: string, 
+    userId: string, 
+    amount: number,
+    description: string,
+  ): Promise<FamilyGoal> {
+    // First find the goal to validate
+    const goal = await this.familyGoalRepository.findOne(id);
+    
+    if (!goal) {
+      throw new NotFoundException(`Goal with ID ${id} not found`);
+    }
+
+    if (goal.groupId !== groupId) {
+      throw new BadRequestException(`Goal with ID ${id} does not belong to group with ID ${groupId}`);
+    }
+    
+    // Check permissions - admin/owner or goal creator
+    const member = await this.familyMemberRepository.findByUserAndGroup(userId, goal.groupId);
+    
+    if (!member || (!member.isAdmin() && goal.created_by !== userId)) {
+      throw new BadRequestException('You do not have permission to withdraw funds from this goal');
+    }
+
+    // Validate the withdrawal
+    this.goalDomainService.validateWithdrawFunds(amount);
+
+    // Create transaction and update goal in a single transaction
+    return this.prisma.$transaction(async (prisma) => {
+      // 1. Create a personal transaction (income)
+      const transaction = await prisma.transactions.create({
+        data: {
+          userId: userId,
+          categoryId: BigInt(21), // Assuming 1 is for Savings/Goal
+          amount: amount, // Positive amount as it's an income
+          created_at: new Date(),
+          description: `Withdrawal from ${goal.name} + ${description}`,
+        }
+      });
+      
+      // 2. Create the family contribution (negative amount)
+      await prisma.familyTransactionContributions.create({
+        data: {
+          transactionId: transaction.id,
+          groupId: BigInt(goal.groupId),
+          amount: amount,
+          contributionType: ContributionType.GOAL,
+          targetId: BigInt(id),
+          userId: userId,
+          created_at: new Date()
+        }
+      });
+      
+      // 3. Update the goal's saved amount
+      const updatedGoal = await this.familyGoalRepository.withdrawFundsFromGoal(
+        id, 
+        userId, 
+        amount, 
+      );
+      
+      return updatedGoal;
+    });
   }
 }

@@ -1,18 +1,29 @@
 .card {
-    height:260px;
-    width: 660px;
+    height:100%;
+    width: 100%;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    padding: 1rem;
   }
   
   .cardTitle {
     display: flex;
     align-items: center;
-    font-size: 16px;
+  }
+
+  .title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #333;
+    flex-shrink: 0; /* Không cho phép tiêu đề co lại */
   }
   
   .titleIcon {
     margin-right: 8px;
     color: #ff4d4f;
     font-size: 18px;
+    margin-bottom: 16px;
+    align-items: center;
   }
   
   .loadingContainer {

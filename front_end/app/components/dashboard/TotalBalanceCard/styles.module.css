@@ -1,5 +1,5 @@
 .card {
-  width: 250px; /* Thu nhỏ card */
+  width: 100%; /* Thu nhỏ card */
   background: #fff;
   border-radius: 8px;
   padding: 16px;

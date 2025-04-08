@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { Form, Input, Button, Select, DatePicker } from 'antd';
+import { Form, Input, Button, Select, DatePicker, message } from 'antd';
 import dayjs from 'dayjs';
 import locale from 'antd/lib/date-picker/locale/vi_VN';
 
@@ -61,10 +61,13 @@ const RecurringTransactionForm: React.FC<RecurringTransactionFormProps> = ({
   isEdit 
 }) => {
   const handleFormFinish = (values: any) => {
-    // Format the date to ISO string for API
+    if (!values.next_occurence) {
+      message.error('Vui lòng chọn ngày cho lần giao dịch tiếp theo');
+      return;
+    }
     const formattedValues = {
       ...values,
-      next_occurence: values.next_occurence?.format('YYYY-MM-DD'),
+      next_occurence: values.next_occurence.toISOString(),
     };
     
     onFinish(formattedValues);
@@ -131,7 +134,23 @@ const RecurringTransactionForm: React.FC<RecurringTransactionFormProps> = ({
       <Form.Item
         name="next_occurence"
         label="Lần gia hạn tiếp theo"
-        rules={[{ required: true, message: 'Lần gia hạn tiếp theo là bắt buộc' }]}
+        rules={[
+          { required: true, message: 'Lần gia hạn tiếp theo là bắt buộc' },
+          {
+            validator: (_, value) => {
+              if (!value) {
+                return Promise.reject('Vui lòng chọn ngày cho lần giao dịch tiếp theo');
+              }
+              if (!dayjs(value).isValid()) {
+                return Promise.reject('Ngày không hợp lệ');
+              }
+              if (dayjs(value).isBefore(dayjs().startOf('day'))) {
+                return Promise.reject('Ngày không thể trong quá khứ');
+              }
+              return Promise.resolve();
+            }
+          }
+        ]}
       >
         <DatePicker 
           locale={locale}

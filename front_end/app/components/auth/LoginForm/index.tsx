@@ -43,6 +43,30 @@ export const LoginForm: React.FC = () => {
       if (response.ok) {
         if (data.token) {
           localStorage.setItem('authToken', data.token);
+          
+          try {
+            const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/profile`, {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${data.token}`,
+                'Content-Type': 'application/json',
+              },
+              credentials: 'include'
+            });
+            
+            const profileData = await profileResponse.json();
+            
+            if (profileResponse.ok && profileData.id && profileData.email) {
+              localStorage.setItem('userId', profileData.id);
+              if (profileData.email) {
+                localStorage.setItem('userEmail', profileData.email);
+              }
+            } else {
+              console.error('Failed to fetch user profile:', profileData);
+            }
+          } catch (profileError) {
+            console.error('Error fetching user profile:', profileError);
+          }
         }
         router.push('/pages/dashboard');
       } else {
@@ -102,4 +126,4 @@ export const LoginForm: React.FC = () => {
       </div>
     </form>
   );
-}; 
+};
