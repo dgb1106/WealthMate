@@ -4,7 +4,6 @@ import { CreateBudgetDto } from './dto/create-budget.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
-import { BudgetSchedulerService } from './services/budget-scheduler.service';
 
 @ApiTags('budgets')
 @Controller('budgets')
@@ -12,8 +11,7 @@ import { BudgetSchedulerService } from './services/budget-scheduler.service';
 @ApiBearerAuth()
 export class BudgetsController {
   constructor(
-    private readonly budgetsService: BudgetsService,
-    private readonly budgetSchedulerService: BudgetSchedulerService
+    private readonly budgetsService: BudgetsService
   ) {}
 
   @Post()
@@ -101,14 +99,6 @@ export class BudgetsController {
     @Query('amount') amount: number
   ) {
     return this.budgetsService.increaseSpentAmount(id, req.user.userId, amount);
-  }
-
-  @Post('refresh-all')
-  @ApiOperation({ summary: 'Refresh all budgets with calculated transaction totals' })
-  @ApiResponse({ status: 200, description: 'Budgets refreshed successfully.' })
-  @UseGuards(JwtAuthGuard)
-  async refreshAllBudgets() {
-    return this.budgetSchedulerService.manualUpdateAllBudgets();
   }
 
   @Delete(':id')

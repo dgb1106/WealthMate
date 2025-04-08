@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { BudgetsService } from './budgets.service';
 import { BudgetsController } from './budgets.controller';
 import { BudgetDomainService } from './services/budget-domain.service';
-import { BudgetSchedulerService } from './services/budget-scheduler.service';
 import { PrismaBudgetRepository } from './repositories/prisma-budget.repository';
 import { PrismaModule } from '../prisma/prisma.module';
 import { DateUtilsService } from '../common/services/date-utils.service';
@@ -15,13 +14,13 @@ import { DateUtilsService } from '../common/services/date-utils.service';
   providers: [
     BudgetsService,
     BudgetDomainService,
-    BudgetSchedulerService,
+    DateUtilsService,
     {
       provide: 'BudgetRepository',
-      useClass: PrismaBudgetRepository,
-    },
-    DateUtilsService,
+      useClass: PrismaBudgetRepository
+    }
   ],
   exports: [BudgetsService]
 })
 export class BudgetsModule {}
+  

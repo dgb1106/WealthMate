@@ -3,15 +3,19 @@ import { RecurringTransactionsScheduler } from './recurring-transactions.schedul
 import { JwtTokensScheduler } from './JwtTokens';
 import { PrismaModule } from '../prisma/prisma.module';
 import { RecurringTransactionsModule } from '../recurring-transactions/recurring-transactions.module';
+import { BudgetsScheduler } from './budgets.scheduler';
+import { BudgetsModule } from 'src/budgets/budgets.module';
 
 @Module({
   imports: [
     PrismaModule,
-    RecurringTransactionsModule
+    RecurringTransactionsModule,
+    BudgetsModule,
   ],
   providers: [
     RecurringTransactionsScheduler,
-    JwtTokensScheduler
+    JwtTokensScheduler,
+    BudgetsScheduler,
   ],
 })
 export class SchedulesModule {}

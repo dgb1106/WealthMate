@@ -1,6 +1,5 @@
 import { Controller, Get, Post, Body, Param, Delete, Put, UseGuards, Req, Request } from '@nestjs/common';
 import { FamilyBudgetService } from '../services/family-budget.service';
-import { FamilyBudgetSchedulerService } from '../services/family-budget-scheduler.service';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { CreateFamilyBudgetDto } from '../dto/create-family-budget.dto';
 import { UpdateFamilyBudgetDto } from '../dto/update-family-budget.dto';
@@ -20,7 +19,6 @@ import {
 export class FamilyBudgetController {
   constructor(
     private readonly familyBudgetService: FamilyBudgetService,
-    private readonly familyBudgetSchedulerService: FamilyBudgetSchedulerService
   ) {}
 
   @Post()
@@ -164,13 +162,5 @@ export class FamilyBudgetController {
     const userId = req.user.userId;
     await this.familyBudgetService.remove(id, userId);
     return { success: true, message: 'Budget deleted successfully' };
-  }
-
-  @Post('refresh-all')
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Manually trigger budget refresh for all active budgets' })
-  @ApiResponse({ status: 200, description: 'Budgets successfully refreshed' })
-  async refreshAllBudgets(@Request() req): Promise<any> {
-    return this.familyBudgetSchedulerService.manualUpdateAllActiveBudgets();
   }
 }

@@ -1,15 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
+import { BudgetsService } from '../budgets/budgets.service';
 
 @Injectable()
 export class BudgetsScheduler {
   private readonly logger = new Logger(BudgetsScheduler.name);
-  private isRecalculating = false; // Flag to prevent concurrent executions
+  private isProcessing = false;
   
   constructor(
+    private readonly budgetsService: BudgetsService,
     private readonly prisma: PrismaService
-  ) {}
+  ) {
+    this.logger.log('BudgetSchedulerService initialized');
+  }
 
   /**
    * Run every day at 1:00 AM to clean up expired budgets
@@ -54,197 +58,194 @@ export class BudgetsScheduler {
     }
   }
 
-  @Cron('0 0 23 * * *') // Run at 11:00 PM every day
-  async recalculateBudgetSpentAmounts() {
-    if (this.isRecalculating) {
-      this.logger.warn('Budget recalculation already in progress, skipping');
+  /**
+   * Daily job to update all budget spent amounts based on actual transactions
+   * Runs every day at 3:00 AM to avoid conflicts with other schedulers
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_3AM)
+  async updateAllBudgetsSpentAmounts() {
+    if (this.isProcessing) {
+      this.logger.warn('Budget update already in progress, skipping');
       return;
     }
 
-    this.isRecalculating = true;
-    this.logger.log('Starting budget spent amount recalculation');
+    this.isProcessing = true;
+    this.logger.log('Starting daily budget spent amount update');
     
     try {
-      // Process personal budgets
-      const personalBudgets = await this.prisma.budgets.findMany({
-        where: {
-          end_date: {
-            gte: new Date() // Only active budgets
-          }
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true
-            }
-          }
-        }
-      });
-      
-      this.logger.log(`Found ${personalBudgets.length} active personal budgets to recalculate`);
-      
-      // Process each personal budget
-      for (const budget of personalBudgets) {
-        try {
-          const existingTransactions = await this.prisma.transactions.aggregate({
-            where: {
-              userId: budget.user.id,
-              categoryId: BigInt(budget.categoryId),
-              created_at: {
-                gte: budget.start_date,
-                lte: budget.end_date
-              }
-            },
-            _sum: {
-              amount: true
-            }
-          });
-
-          const spentAmount = existingTransactions._sum.amount || 0;
-          await this.prisma.budgets.update({
-            where: {
-              id: budget.id
-            },
-            data: {
-              spent_amount: spentAmount
-            }
-          });
-          
-          this.logger.log(`Updated personal budget ${budget.id} for user ${budget.user.email}: spent amount = ${spentAmount}`);
-        } catch (budgetError) {
-          // Log error but continue processing other budgets
-          this.logger.error(`Error updating personal budget ${budget.id}: ${budgetError.message}`);
-        }
-      }
+      await this.updatePersonalBudgets();
+      await this.updateFamilyBudgets();
+      this.logger.log('Completed daily budget spent amount update');
     } catch (error) {
-      this.logger.error(`Failed to recalculate budget spent amounts: ${error.message}`);
-      this.logger.error(error.stack);
+      this.logger.error(`Failed to update budgets: ${error.message}`, error.stack);
     } finally {
-      this.isRecalculating = false;
+      this.isProcessing = false;
     }
   }
 
-  @Cron('0 0 23 * * *') // Run at 11:00 PM every day
-  async recalculateFamilyBudgetSpentAmounts() {
-    if (this.isRecalculating) {
-      this.logger.warn('Budget recalculation already in progress, skipping');
-      return;
-    }
-
-    this.isRecalculating = true;
-    this.logger.log('Starting budget spent amount recalculation');
-    
+   /**
+   * Update all active personal budgets
+   */
+   private async updatePersonalBudgets(): Promise<void> {
     try {
-      // Process personal budgets
-      const personalBudgets = await this.prisma.budgets.findMany({
-        where: {
-          end_date: {
-            gte: new Date() // Only active budgets
-          }
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-            }
-          }
-        }
-      });
+      // Get all active personal budgets
+      const personalBudgets = await this.budgetsService.getCurrentBudgets('all');
       
-      this.logger.log(`Found ${personalBudgets.length} active personal budgets to recalculate`);
+      this.logger.log(`Found ${personalBudgets.length} active personal budgets to update`);
       
       // Process each personal budget
       for (const budget of personalBudgets) {
         try {
-          const existingTransactions = await this.prisma.transactions.aggregate({
-            where: {
-              userId: budget.user.id,
-              categoryId: BigInt(budget.categoryId),
-              created_at: {
-                gte: budget.start_date,
-                lte: budget.end_date
-              }
-            },
-            _sum: {
-              amount: true
-            }
-          });
+          const spentAmount = await this.calculatePersonalBudgetSpentAmount(
+            budget.userId,
+            budget.categoryId,
+            budget.start_date,
+            budget.end_date
+          );
+          
+          if (spentAmount === undefined) {
+            this.logger.warn(`Spent amount for budget ${budget.id} is undefined`);
+            continue;
+          }
 
-          const spentAmount = existingTransactions._sum.amount || 0;
-          await this.prisma.budgets.update({
-            where: {
-              id: budget.id
-            },
-            data: {
-              spent_amount: spentAmount
-            }
-          });
-          this.logger.log(`Updated personal budget ${budget.id} for user ${budget.user.id}: spent amount = ${spentAmount}`);
-        } catch (budgetError) {
-          // Log error but continue processing other budgets
-          this.logger.error(`Error updating personal budget ${budget.id}: ${budgetError.message}`);
+          if (spentAmount !== Number(budget.spent_amount)) {
+            await this.budgetsService.updateBudgetWithCalculatedAmount(
+              budget.id,
+              budget.userId,
+              spentAmount
+            );
+          }
+          
+          this.logger.debug(
+            `Updated personal budget ${budget.id} for user ${budget.userId}: spent amount = ${spentAmount}`
+          );
+        } catch (error) {
+          this.logger.error(
+            `Error updating personal budget ${budget.id}: ${error.message}`, 
+            error.stack
+          );
         }
       }
+    } catch (error) {
+      this.logger.error(`Failed to update personal budgets: ${error.message}`, error.stack);
+    }
+  }
 
-      // Process family budgets
+  private async updateFamilyBudgets(): Promise<void> {
+    try {
+      // Get all active family budgets
       const familyBudgets = await this.prisma.familyBudgets.findMany({
         where: {
           end_date: {
-            gte: new Date() // Only active budgets
-          }
-        },
-        include: {
-          group: {
-            select: {
-              id: true,
-              name: true
-            }
+            lt: new Date()
           }
         }
       });
-
-      this.logger.log(`Found ${familyBudgets.length} active family budgets to recalculate`);
-
+      
+      this.logger.log(`Found ${familyBudgets.length} active family budgets to update`);
+      
       // Process each family budget
       for (const budget of familyBudgets) {
         try {
-          const existingTransactions = await this.prisma.familyTransactionContributions.aggregate({
-            where: {
-              groupId: budget.group.id,
-              created_at: {
-                gte: budget.start_date,
-                lte: budget.end_date
-              },
-              targetId: budget.id
-            },
-            _sum: {
-              amount: true
-            }
-          });
+          const spentAmount = await this.calculateFamilyBudgetSpentAmount(
+            budget.groupId.toString(),
+            budget.id.toString(),
+            budget.start_date,
+            budget.end_date
+          );
+          
+          if (spentAmount === undefined) {
+            this.logger.warn(`Spent amount for family budget ${budget.id} is undefined`);
+            continue;
+          }
 
-          const spentAmount = existingTransactions._sum.amount || 0;
-          await this.prisma.familyBudgets.update({
-            where: {
-              id: budget.id
-            },
-            data: {
-              spent_amount: spentAmount
-            }
-          });
-          this.logger.log(`Updated family budget ${budget.id} for group ${budget.group.name}: spent amount = ${spentAmount}`);
-        } catch (budgetError) {
-          // Log error but continue processing other budgets
-          this.logger.error(`Error updating family budget ${budget.id}: ${budgetError.message}`);
+          if (spentAmount !== Number(budget.spent_amount)) {
+            await this.prisma.familyBudgets.update({
+              where: {
+                id: budget.id
+              },
+              data: {
+                spent_amount: spentAmount
+              }
+            });
+          }
+          
+          this.logger.debug(
+            `Updated family budget ${budget.id} for group ${budget.groupId}: spent amount = ${spentAmount}`
+          );
+        } catch (error) {
+          this.logger.error(
+            `Error updating family budget ${budget.id}: ${error.message}`, 
+            error.stack
+          );
         }
       }
+    } catch (error) {
+      this.logger.error(`Failed to update family budgets: ${error.message}`, error.stack);
     }
-    catch (error) {
-      this.logger.error(`Failed to recalculate family budget spent amounts: ${error.message}`);
-      this.logger.error(error.stack);
-    }
-    finally {
-      this.isRecalculating = false;
-    }
+  }
+
+  /**
+   * Calculates the total spent amount from transactions for a personal budget
+   */
+  private async calculatePersonalBudgetSpentAmount(
+    userId: string,
+    categoryId: string,
+    startDate: Date,
+    endDate: Date
+  ): Promise<number> {
+    const transactions = await this.prisma.transactions.aggregate({
+      where: {
+        userId,
+        categoryId: BigInt(categoryId),
+        created_at: {
+          gte: startDate,
+          lte: endDate
+        }
+      },
+      _sum: {
+        amount: true
+      }
+    });
+
+    return transactions._sum.amount ? Math.abs(Number(transactions._sum.amount)) : 0;
+  }
+
+  /**
+   * Calculates the total spent amount from transactions for a family budget
+   */
+  private async calculateFamilyBudgetSpentAmount(
+    groupId: string,
+    budgetId: string,
+    startDate: Date,
+    endDate: Date
+  ): Promise<number> {
+    const contributions = await this.prisma.familyTransactionContributions.aggregate({
+      where: {
+        groupId: BigInt(groupId),
+        created_at: {
+          gte: startDate,
+          lte: endDate
+        },
+        targetId: BigInt(budgetId)
+      },
+      _sum: {
+        amount: true
+      }
+    });
+
+    return contributions._sum.amount ? Math.abs(Number(contributions._sum.amount)) : 0;
+  }
+
+  /**
+   * Manually trigger budget update for testing or admin functions
+   */
+  async manualUpdateAllBudgets(): Promise<{ success: boolean; message: string }> {
+    await this.updateAllBudgetsSpentAmounts();
+    return { 
+      success: true, 
+      message: 'All budget spent amounts have been updated based on transaction totals' 
+    };
+  }
 }
-}
+
