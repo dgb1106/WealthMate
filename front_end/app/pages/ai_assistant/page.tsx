@@ -351,6 +351,12 @@ const AiAssistantPage: React.FC = () => {
   const handleVoiceRecord = async () => {
     try {
       if (!isRecording) {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          message.error('Vui lòng đăng nhập để sử dụng tính năng này');
+          return;
+        }
+
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         const mediaRecorder = new MediaRecorder(stream, {
           mimeType: 'audio/webm', 
@@ -366,6 +372,8 @@ const AiAssistantPage: React.FC = () => {
         });
         
         mediaRecorder.addEventListener('stop', async () => {
+          const hideLoadingMsg = message.loading('Đang xử lý âm thanh...', 0);
+
           try {
             const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
             
@@ -374,34 +382,55 @@ const AiAssistantPage: React.FC = () => {
             const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
             
             const wavBlob = await audioBufferToWav(audioBuffer);
+
+            form.resetFields();
             
             const formData = new FormData();
             formData.append('file', wavBlob, 'audio.wav');
+            formData.append('mood', preferredMood);
             
-            const loadingMessage = message.loading('Processing audio...', 0);
+            /// const loadingMessage = message.loading('Processing audio...', 0);
             
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai-utils/speech-to-text`, {
-              method: 'POST',
-              body: formData,
-            });
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+            console.log('Gửi request đến:', `${apiUrl}/ai-utils/speech-to-text`);
             
-            loadingMessage();
+            const response = await axios.post(
+              `${apiUrl}/ai-utils/speech-to-text`,
+              formData,
+              {
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'multipart/form-data',
+                },
+                timeout: 60000,
+                onUploadProgress: (progressEvent) => {
+                  const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 100));
+                  console.log(`Upload progress: ${percentCompleted}%`);
+                },
+              }
+            );
+
+            hideLoadingMsg();
             
-            if (!response.ok) {
-              const errorText = await response.text();
-              console.error('Server error response:', errorText);
-              throw new Error(`Failed to process audio: ${response.status}`);
+            console.log('Response status:', response.status);
+            console.log('Response data:', response.data);
+            
+            const { amount, category, description, chat_response } = response.data;
+            if (!amount || !category || !description) {
+              throw new Error('Dữ liệu trả về từ server không hợp lệ');
             }
-  
-            const data = await response.json();
-            
-            const { amount, category, description, chat_response } = data;
             
             setChatHistory(prev => [...prev, { type: 'bot', content: chat_response }]);
             
             const categoryObject = predefinedCategories.find(c => c.name === category);
             const amountValue = parseInt(amount.replace(/\D/g, ''), 10);
             
+            form.setFieldsValue({
+              description: description,
+              amount: amountValue,
+              categoryId: categoryObject?.id
+            });
+
             Modal.confirm({
               title: 'Tạo giao dịch mới',
               width: 600,
@@ -436,17 +465,21 @@ const AiAssistantPage: React.FC = () => {
 
                 try {
                   await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/transactions`, requestData, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+                    headers: { 'Authorization': `Bearer ${token}` }
                   });
                   message.success('Thêm Giao dịch thành công');
                 } catch {
                   message.error('Thêm Giao dịch thất bại');
                 }
               },
+              onCancel: () => {
+                form.resetFields();
+              }
             });
             
             message.success('Audio processed successfully');
           } catch (error) {
+            hideLoadingMsg();
             console.error('Error processing audio:', error);
             message.error('Failed to process audio');
           }
