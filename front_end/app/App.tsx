@@ -5,6 +5,15 @@ import LoginPage from './pages/auth/login/page';
 import RegisterPage from './pages/auth/register/page';
 import DashboardPage from './pages/dashboard/page';
 import TransactionsPage from './pages/transactions/page';
+import AiAssistantPage from './pages/ai_assistant/page';
+import ProfilePage from './pages/profile/page';
+import BudgetsPage from './pages/budgets/page';
+import ReportsPage from './pages/analytics/page';
+import GoalsPage from './pages/goals/page';
+import FamilyPage from './pages/family/page';
+import LoansPage from './pages/loans/page';
+import InvestmentPage from './pages/investment/page';
+
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -51,6 +60,78 @@ const App: React.FC = () => {
           element={
             <ProtectedRoute>
               <TransactionsPage />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/pages/ai_assistant"
+          element={
+            <ProtectedRoute>
+              <AiAssistantPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/pages/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/pages/budgets"
+          element={
+            <ProtectedRoute>
+              <BudgetsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/pages/reports"
+          element={
+            <ProtectedRoute>
+              <ReportsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/pages/goals"
+          element={
+            <ProtectedRoute>
+              <GoalsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/pages/family"
+          element={
+            <ProtectedRoute>
+              <FamilyPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/pages/loans"
+          element={
+            <ProtectedRoute>
+              <LoansPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/pages/investment"
+          element={
+            <ProtectedRoute>
+              <InvestmentPage />
             </ProtectedRoute>
           }
         />
