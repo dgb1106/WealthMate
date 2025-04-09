@@ -50,6 +50,14 @@ export const authService = {
         throw new Error(errorMessage);
       }
       
+      // Store token in localStorage if it exists in the response
+      if (responseData.token) {
+        localStorage.setItem('authToken', responseData.token);
+        console.log('Stored auth token in localStorage');
+      } else {
+        console.error('No token received in login response');
+      }
+      
       // Authentication is successful
       return responseData as LoginResponse;
     } catch (error) {
@@ -58,29 +66,41 @@ export const authService = {
     }
   },
 
-  register: async (data: RegisterFormData): Promise<{user: User, token: string, message: string}> => {
+  register: async (data: RegisterFormData): Promise<any> => {
     try {
+      console.log('Register request to:', `${process.env.NEXT_PUBLIC_API_URL}/auth/register`);
+      
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-          name: data.name,
-          phone: data.phone,
-          city: data.city,
-          district: data.district,
-          job: data.job,
-          preferred_mood: data.preferred_mood,
-          preferred_goal: data.preferred_goal
-        }),
+        body: JSON.stringify(data),
         credentials: 'include',
       });
       
-      const responseData = await response.json();
+      console.log('Registration response status:', response.status);
+      
+      // Capture response data
+      let responseData;
+      try {
+        responseData = await response.json();
+        console.log('Registration response data:', responseData);
+      } catch (err) {
+        console.error('Error parsing JSON:', err);
+        throw new Error('Server response error');
+      }
       
       if (!response.ok) {
-        throw new Error(responseData.message || 'Registration failed');
+        const errorMessage = responseData?.message || `Error ${response.status}: Registration failed`;
+        console.error('Registration failed:', errorMessage);
+        throw new Error(errorMessage);
+      }
+      
+      // Store token in localStorage if it exists in the response
+      if (responseData.token) {
+        localStorage.setItem('authToken', responseData.token);
+        console.log('Stored auth token in localStorage after registration');
+      } else {
+        console.error('No token received in registration response');
       }
       
       return responseData;
@@ -92,9 +112,27 @@ export const authService = {
 
   logout: async (): Promise<void> => {
     try {
+      console.log('Logging out');
+      
+      // Get token from localStorage
+      const token = localStorage.getItem('authToken');
+      
+      // Always remove from localStorage regardless of API call result
+      localStorage.removeItem('authToken');
+      console.log('Removed auth token from localStorage');
+      
+      if (!token) {
+        console.log('No token found, skipping API logout call');
+        return;
+      }
+      
+      // Call logout API
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
         method: 'POST',
         credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
       
       const data = await response.json();
@@ -106,16 +144,28 @@ export const authService = {
       console.log('Logout successful');
     } catch (error) {
       console.error('Logout error:', error);
-      throw error;
+      // Even if API call fails, we have already removed the token
+      // from localStorage, so the user is effectively logged out client-side
     }
   },
 
   getCurrentUser: async (): Promise<User | null> => {
     try {
       console.log('Checking current user auth status');
+      const token = localStorage.getItem('authToken');
+      
+      if (!token) {
+        console.log('No auth token found in localStorage');
+        return null;
+      }
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/check`, {
         method: 'GET',
         credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache',
+        }
       });
       
       console.log('Auth check response status:', response.status);
@@ -131,6 +181,7 @@ export const authService = {
       
       if (!response.ok || !data.isAuthenticated) {
         console.log('User not authenticated');
+        localStorage.removeItem('authToken'); // Clear invalid token
         return null;
       }
       
@@ -147,6 +198,7 @@ export const authService = {
       return null;
     } catch (error) {
       console.error('Error checking authentication:', error);
+      localStorage.removeItem('authToken'); // Clear token on error
       return null;
     }
   },

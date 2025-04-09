@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import LoginPage from './pages/auth/login/page';
 import RegisterPage from './pages/auth/register/page';
@@ -14,18 +14,32 @@ import FamilyPage from './pages/family/page';
 import LoansPage from './pages/loans/page';
 import InvestmentPage from './pages/investment/page';
 
-
+// Enhanced ProtectedRoute with navigation
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
   
+  useEffect(() => {
+    // If not loading and not authenticated, redirect to login
+    if (!isLoading && !isAuthenticated) {
+      console.log('User not authenticated, redirecting to login');
+      navigate('/pages/auth/login', { replace: true });
+    }
+  }, [isAuthenticated, isLoading, navigate]);
+  
+  // Show loading state while checking authentication
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+    </div>;
   }
   
+  // If not authenticated, don't render anything (redirect will happen in useEffect)
   if (!isAuthenticated) {
-    return <Navigate to="/pages/auth/login" />;
+    return null;
   }
   
+  // If authenticated, render the protected content
   return <>{children}</>;
 };
 
