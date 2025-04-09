@@ -232,6 +232,8 @@ const AiAssistantPage: React.FC = () => {
     input.onchange = async (e: any) => {
       const file = e.target.files[0];
       if (file) {
+        form.resetFields();
+        
         const hideLoadingMsg = message.loading('Đang xử lý ảnh...', 0);
 
         try {
@@ -239,21 +241,12 @@ const AiAssistantPage: React.FC = () => {
           if (!token) {
             throw new Error('Không tìm thấy token đăng nhập, vui lòng đăng nhập lại');
           }
-
-          console.log('Đang xử lý ảnh:', file.name, 'kích thước:', (file.size / 1024).toFixed(2) + 'KB');
-
           const formData = new FormData();
           const resizedBlob = await resizeImage(file);
-
-          console.log('Kích thước ảnh sau khi resize:', (resizedBlob.size / 1024).toFixed(2) + 'KB');
-
-          // Thêm file và mood vào formData
           formData.append('file', resizedBlob, 'resized.jpg');
-          formData.append('mood', preferredMood); // Thêm mood từ state
+          formData.append('mood', preferredMood);
 
           const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-          console.log('Gửi request đến:', `${apiUrl}/ai-utils/image-to-transaction`);
-
           const response = await axios.post(
             `${apiUrl}/ai-utils/image-to-transaction`,
             formData,
@@ -269,10 +262,6 @@ const AiAssistantPage: React.FC = () => {
               },
             }
           );
-
-          console.log('Response status:', response.status);
-          console.log('Response data:', response.data);
-
           const { amount, category, description, chat_response } = response.data;
           if (!amount || !category || !description) {
             throw new Error('Dữ liệu trả về từ server không hợp lệ');
