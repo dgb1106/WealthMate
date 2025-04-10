@@ -14,32 +14,32 @@ import FamilyPage from './pages/family/page';
 import LoansPage from './pages/loans/page';
 import InvestmentPage from './pages/investment/page';
 
-// Enhanced ProtectedRoute with navigation
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
+  const hasToken = Boolean(localStorage.getItem('authToken'));
+  if (!hasToken) {
+    console.log('No auth token found, redirecting to login');
+    return <Navigate to="/pages/auth/login" replace />;
+  }
   
   useEffect(() => {
-    // If not loading and not authenticated, redirect to login
     if (!isLoading && !isAuthenticated) {
       console.log('User not authenticated, redirecting to login');
       navigate('/pages/auth/login', { replace: true });
     }
   }, [isAuthenticated, isLoading, navigate]);
   
-  // Show loading state while checking authentication
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">
       <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
     </div>;
   }
   
-  // If not authenticated, don't render anything (redirect will happen in useEffect)
   if (!isAuthenticated) {
-    return null;
+    return <Navigate to="/pages/auth/login" replace />;
   }
   
-  // If authenticated, render the protected content
   return <>{children}</>;
 };
 

@@ -32,8 +32,6 @@ export const authService = {
       });
       
       console.log('Login response status:', response.status);
-      
-      // Capture the response data first
       let responseData;
       try {
         responseData = await response.json();
@@ -42,15 +40,11 @@ export const authService = {
         console.error('Error parsing JSON:', err);
         throw new Error('Server response error');
       }
-      
-      // Then check if the response was successful
       if (!response.ok) {
         const errorMessage = responseData?.message || `Error ${response.status}: Login failed`;
         console.error('Login failed:', errorMessage);
         throw new Error(errorMessage);
       }
-      
-      // Store token in localStorage if it exists in the response
       if (responseData.token) {
         localStorage.setItem('authToken', responseData.token);
         console.log('Stored auth token in localStorage');
@@ -58,7 +52,6 @@ export const authService = {
         console.error('No token received in login response');
       }
       
-      // Authentication is successful
       return responseData as LoginResponse;
     } catch (error) {
       console.error('Login error:', error);
@@ -94,8 +87,6 @@ export const authService = {
         console.error('Registration failed:', errorMessage);
         throw new Error(errorMessage);
       }
-      
-      // Store token in localStorage if it exists in the response
       if (responseData.token) {
         localStorage.setItem('authToken', responseData.token);
         console.log('Stored auth token in localStorage after registration');
@@ -156,6 +147,22 @@ export const authService = {
       
       if (!token) {
         console.log('No auth token found in localStorage');
+        localStorage.removeItem('authToken'); // Clear any invalid token
+        return null;
+      }
+
+      // First check if token is expired
+      try {
+        const tokenData = JSON.parse(atob(token.split('.')[1]));
+        const expirationTime = tokenData.exp * 1000; // Convert to milliseconds
+        if (Date.now() >= expirationTime) {
+          console.log('Token has expired');
+          localStorage.removeItem('authToken');
+          return null;
+        }
+      } catch (e) {
+        console.error('Error parsing token:', e);
+        localStorage.removeItem('authToken');
         return null;
       }
 
@@ -176,6 +183,7 @@ export const authService = {
         console.log('Auth check response data:', data);
       } catch (err) {
         console.error('Error parsing JSON in auth check:', err);
+        localStorage.removeItem('authToken');
         return null;
       }
       
