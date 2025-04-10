@@ -83,12 +83,26 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // Check if token exists in localStorage
+        const token = localStorage.getItem('authToken');
+        
+        if (!token) {
+          // No token, ensure user is logged out
+          dispatch({ type: 'LOGOUT' });
+          return;
+        }
+        
         const user = await authService.getCurrentUser();
         if (user) {
           dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+        } else {
+          // No user returned despite token, clear auth state
+          dispatch({ type: 'LOGOUT' });
         }
       } catch (error) {
         console.error('Auth check failed', error);
+        // On error, log out
+        dispatch({ type: 'LOGOUT' });
       } finally {
         dispatch({ type: 'AUTH_CHECKED' });
       }
