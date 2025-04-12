@@ -41,6 +41,7 @@ import { FamilyModule } from './family/family.module';
       max: 100,
     }),
     ScheduleModule.forRoot(),
+    SchedulesModule,
     FamilyModule,
   ],
   controllers: [AppController],
