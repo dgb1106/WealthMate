@@ -21,7 +21,7 @@ export class FamilyBudgetController {
     private readonly familyBudgetService: FamilyBudgetService,
   ) {}
 
-  @Post()
+  @Post(':groupId')
   @ApiOperation({ 
     summary: 'Create a new budget for a family group',
     description: 'Creates a new budget for the specified family group. User must be a member with budget management permissions.'
@@ -41,7 +41,7 @@ export class FamilyBudgetController {
     return { success: true, data: budget.toResponseFormat() };
   }
 
-  @Get()
+  @Get(':groupId')
   @ApiOperation({ 
     summary: 'Get all budgets for a family group',
     description: 'Retrieves all budgets for the specified family group. User must be a member of the group.'
@@ -59,7 +59,7 @@ export class FamilyBudgetController {
     };
   }
 
-  @Get('active')
+  @Get(':groupId/active')
   @ApiOperation({ 
     summary: 'Get all active budgets for a family group',
     description: 'Retrieves active budgets (current date falls within budget period) for the specified family group.'
@@ -76,7 +76,7 @@ export class FamilyBudgetController {
     };
   }
 
-  @Get('category/:categoryId')
+  @Get(':groupId/category/:categoryId')
   @ApiOperation({ 
     summary: 'Get all budgets by category for a family group',
     description: 'Retrieves all budgets for a specific category in the family group.'
@@ -98,7 +98,7 @@ export class FamilyBudgetController {
     };
   }
 
-  @Get('summary')
+  @Get(':groupId/summary')
   @ApiOperation({ 
     summary: 'Get budget summary for a family group',
     description: 'Retrieves a summary of all budgets for the family group, including totals and statistics.'
