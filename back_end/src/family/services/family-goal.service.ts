@@ -120,22 +120,6 @@ export class FamilyGoalService {
     return this.familyGoalRepository.findActiveByGroup(groupId);
   }
 
-  async getGoalSummary(id: string, userId: string): Promise<any> {
-    const goal = await this.familyGoalRepository.findOne(id);
-    
-    if (!goal) {
-      throw new NotFoundException(`Goal with ID ${id} not found`);
-    }
-
-    // Check if user is a member of this group
-    const isMember = await this.familyMemberRepository.isGroupMember(userId, goal.groupId);
-    if (!isMember) {
-      throw new BadRequestException('You do not have permission to view this goal');
-    }
-    
-    return this.familyGoalRepository.getGoalSummary(id);
-  }
-
   async getGroupGoalsSummary(groupId: string, userId: string): Promise<any> {
     // Check if user is a member of this group
     const isMember = await this.familyMemberRepository.isGroupMember(userId, groupId);
@@ -187,7 +171,6 @@ export class FamilyGoalService {
           groupId: BigInt(goal.groupId),
           amount: amount,
           contributionType: ContributionType.GOAL,
-          targetId: BigInt(id),
           userId: userId,
           created_at: new Date()
         }
@@ -252,7 +235,6 @@ export class FamilyGoalService {
           groupId: BigInt(goal.groupId),
           amount: amount,
           contributionType: ContributionType.GOAL,
-          targetId: BigInt(id),
           userId: userId,
           created_at: new Date()
         }
