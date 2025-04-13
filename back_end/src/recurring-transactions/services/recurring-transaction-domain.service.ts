@@ -102,11 +102,11 @@ export class RecurringTransactionDomainService {
         // Tính toán ngày xuất hiện tiếp theo
         const nextOccurence = recurringTx.calculateNextOccurrence();
         
-        // Cập nhật ngày xuất hiện tiếp theo cho giao dịch định kỳ
-        await this.prisma.recurringTransactions.update({
-          where: { id: BigInt(recurringTx.id) },
-          data: { next_occurence: nextOccurence }
-        });
+        await this.recurringTxRepository.updateNextOccurrence(
+          recurringTx.id, 
+          recurringTx.userId, 
+          nextOccurence
+        );
         
         // Trả về kết quả
         return {
