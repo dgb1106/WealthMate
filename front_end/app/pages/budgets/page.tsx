@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button, Modal, Form, Input, Select, message, Tabs } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, BulbOutlined } from '@ant-design/icons';
 import MainLayout from '@/layouts/MainLayout';
 import BudgetCard from '@/components/budgets/budgetCard';
 import dayjs from 'dayjs';
@@ -268,10 +268,153 @@ const BudgetsPage: React.FC = () => {
     });
   };
 
+  const handleSuggestBudget = async () => {
+    const hide = message.loading('Đang tạo ngân sách gợi ý...', 0);
+    
+    try {
+      // Verify authentication
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        message.error('Vui lòng đăng nhập để sử dụng tính năng này');
+        return;
+      }
+      
+      // Get the current month's start and end dates
+      const now = new Date();
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      
+      const startDate = firstDay.toISOString().split('T')[0];
+      const endDate = lastDay.toISOString().split('T')[0];
+      
+      // Get income value (you might want to fetch this from user profile or input)
+      let income = 1200000; // Default value, replace with actual user income if available
+      
+      try {
+        const incomeResponse = await fetch('https://wealthmate.onrender.com/transactions/income/current-month', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (incomeResponse.ok) {
+          const incomeData = await incomeResponse.json();
+          // Make sure to handle the actual response structure
+          if (incomeData && typeof incomeData === 'number' && incomeData > 0) {
+            income = incomeData * 1000; // Convert from thousands to actual value
+          } else if (incomeData && typeof incomeData.income === 'number' && incomeData.income > 0) {
+            income = incomeData.income * 1000; // Alternative structure
+          }
+          console.log(`Đã lấy thu nhập tháng này: ${income.toLocaleString('vi-VN')} VNĐ`);
+        } else {
+          console.warn('Không thể lấy thông tin thu nhập, sử dụng giá trị mặc định');
+        }
+      } catch (incomeError) {
+        console.error('Lỗi khi lấy thu nhập:', incomeError);
+        // Continue with default income value
+      }
+
+      // Fetch budget suggestions
+      const response = await fetch(`https://wealthmate.onrender.com/ai-utils/budget-suggestion?income=${income}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Lỗi API (${response.status}): Không thể lấy gợi ý ngân sách`);
+      }
+      
+      const suggestions = await response.json();
+      
+      // Check if suggestions are empty
+      if (!suggestions || Object.keys(suggestions).length === 0) {
+        message.info('Không tìm thấy gợi ý ngân sách nào.');
+        return;
+      }
+      
+      // Create budgets from suggestions
+      let createdCount = 0;
+      let failedCount = 0;
+      
+      for (const [categoryName, amount] of Object.entries(suggestions)) {
+        try {
+          // Find category ID by name
+          const normalizedCategoryName = categoryName.replace("Hóa", "Hoá");
+
+          const category = predefinedCategories.find(c => c.name === normalizedCategoryName);
+          if (!category) {
+            console.warn(`Không tìm thấy danh mục "${categoryName}" trong hệ thống`);
+            failedCount++;
+            continue;
+          }
+          
+          // Create budget with the suggested amount
+          const amountValue = parseFloat(amount as string) / 1000; // Convert to the format expected by the API
+          
+          const budgetPayload = {
+            categoryId: category.id,
+            limit_amount: amountValue,
+            start_date: startDate,
+            end_date: endDate,
+            spent_amount: 0
+          };
+          
+          const createResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/budgets`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(budgetPayload)
+          });
+          
+          if (createResponse.ok) {
+            createdCount++;
+          } else {
+            console.error(`Không thể tạo ngân sách cho ${categoryName}:`, await createResponse.text());
+            failedCount++;
+          }
+        } catch (error) {
+          console.error(`Lỗi khi tạo ngân sách cho ${categoryName}:`, error);
+          failedCount++;
+        }
+      }
+      
+      // Show results
+      if (createdCount > 0) {
+        message.success(`Đã tạo ${createdCount} ngân sách gợi ý thành công`);
+        fetchBudgets(); // Refresh the budget list
+      }
+      
+      if (failedCount > 0) {
+        message.warning(`Không thể tạo ${failedCount} ngân sách`);
+      }
+      
+    } catch (error) {
+      console.error('Lỗi khi tạo ngân sách gợi ý:', error);
+      message.error('Không thể tạo ngân sách gợi ý: ' + 
+        (error instanceof Error ? error.message : 'Lỗi không xác định'));
+    } finally {
+      hide();
+    }
+  };
+
   return (
     <MainLayout>
       <div className={styles.pageHeader}>
         <h1>Ngân Sách</h1>
+        <div className={styles.headerButtons}>
+        <Button
+          type="primary" 
+          onClick={handleSuggestBudget}
+        >
+          Gợi ý Ngân sách
+        </Button>
         <Button
           type="primary"
           shape="circle"
@@ -280,6 +423,7 @@ const BudgetsPage: React.FC = () => {
           onClick={handleAddButton}
           className={styles.addButton}
         />
+      </div>
       </div>
 
       <Tabs
