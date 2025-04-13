@@ -48,26 +48,18 @@ export class FamilyTransactionContributionService {
       enrichedDto
     );
 
-    // If contribution is created successfully and it's a BUDGET type, update the family budget
-    if (
-      contribution && 
-      contribution.contributionType === ContributionType.BUDGET && 
-      contribution.transaction && 
-      contribution.transaction.categoryId && 
-      contribution.transaction.created_at
-    ) {
-      try {
+
+    try {
         await this.updateFamilyBudgets(
           contribution.groupId, 
-          contribution.transaction.categoryId,
+          createContributionDto.categoryId,
           Math.abs(contribution.amount),
-          contribution.transaction.created_at
+          new Date(),
         );
-      } catch (error) {
+    } catch (error) {
         console.error('Failed to update family budget:', error);
         // We don't throw here as we don't want to fail the entire operation just because budget update failed
       }
-    }
 
     return contribution;
   }
@@ -132,6 +124,7 @@ export class FamilyTransactionContributionService {
   ): Promise<void> {
     // Find active budgets for this category and group
     const activeBudgets = await this.familyBudgetRepository.findActiveByCategory(groupId, categoryId);
+    console.log(activeBudgets);
     
     // Update spent amount for each matching active budget
     for (const budget of activeBudgets) {
