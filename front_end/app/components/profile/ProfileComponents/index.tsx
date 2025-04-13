@@ -59,7 +59,7 @@ const ProfileComponents: React.FC<ProfileComponentsProps> = ({
   }
 
   if (!profile) {
-    return <div className={styles.errorContainer}>User profile not found</div>;
+    return <div className={styles.errorContainer}>Không thấy profile người dùng</div>;
   }
 
   return (

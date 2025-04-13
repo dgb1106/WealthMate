@@ -60,7 +60,7 @@ const FamilyBudgets: React.FC<FamilyBudgetProps> = ({ groupId }) => {
   const fetchBudgets = async () => {
     try {
         const token = localStorage.getItem('authToken');
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/family-budgets`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/family-budgets/${groupId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -117,7 +117,7 @@ const FamilyBudgets: React.FC<FamilyBudgetProps> = ({ groupId }) => {
 
       console.log('Sending payload:', payload); // Debug log
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/family-budgets`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/family-budgets/${groupId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

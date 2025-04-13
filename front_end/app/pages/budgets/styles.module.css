@@ -7,7 +7,7 @@
 
 .budgetsContainer {
   display: grid;
-  grid-template-columns: 3fr 1fr;
+  grid-template-columns: 3fr 1.5fr;
   gap: 1rem;
   width: 100%;
   align-items: start;
@@ -32,9 +32,13 @@
 .rightColumn {
   grid-column: 2;
   position: relative;
-  min-height: 100%;
   width: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
+
   
 .headerButtons {
   display: flex;

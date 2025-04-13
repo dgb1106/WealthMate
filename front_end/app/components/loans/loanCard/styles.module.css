@@ -3,13 +3,14 @@
     border-radius: 8px;
     height: 180px;
     width: 285px;
+    display: flex;
+    flex-direction: column;
   }
-    
+
   .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 0px;
     padding: 6px;
     height: 20px;
     margin-bottom: 1rem;
@@ -42,33 +43,31 @@
   }
     
   .customBody {
+    flex: 1;
     display: flex;
-    justify-content: space-between;
-    align-items: stretch; 
     gap: 1rem;
-    width: 100%;
     height: 100%;
   }
   
   .section {
-    flex: 1; 
+    flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     background: #d7e1ff;
     border-radius: 12px;
-    padding: 0.5rem;
-  }  
+  }
+  
   
   .label {
-    font-size: 1rem;
+    font-size: 0.8rem;
     color: #666;
     margin-bottom: 4px;
   }
   
   .value {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: #1890ff;
   }

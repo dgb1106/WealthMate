@@ -23,7 +23,7 @@ const LoanCard: React.FC<LoanCardProps> = ({ loan, onEdit, onRepaymentPlan }) =>
     const { total_amount, remaining_amount, name, interest_rate } = loan;
     const displayTotalAmount = total_amount * 1000;
     const daysLeft = dayjs(loan.due_date).diff(dayjs(), 'day');
-    const percentage = Math.min(Math.max((remaining_amount / displayTotalAmount) * 100, 0), 100);
+    const percentage = Math.min(Math.max((remaining_amount * 1000 / displayTotalAmount) * 100, 0), 100);
 
     return (
         <Card className={styles.card}>

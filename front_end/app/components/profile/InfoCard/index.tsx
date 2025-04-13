@@ -44,25 +44,25 @@ const InfoCard: React.FC<InfoCardProps> = ({ profile, onUpdateClick, onPasswordC
         
         <div className={styles.profileContent}>
           <div className={styles.infoGroup}>
-            <h3 className={styles.sectionTitle}>Contact Information</h3>
+            <h3 className={styles.sectionTitle}>Thông tin liên lạc</h3>
             <div className={styles.infoItem}>
               <span className={styles.infoLabel}>Email:</span>
               <span className={styles.infoValue}>{profile.email}</span>
             </div>
             <div className={styles.infoItem}>
-              <span className={styles.infoLabel}>Phone Number:</span>
+              <span className={styles.infoLabel}>Số điện thoại:</span>
               <span className={styles.infoValue}>{profile.phone}</span>
             </div>
             <div className={styles.infoItem}>
-              <span className={styles.infoLabel}>Address:</span>
+              <span className={styles.infoLabel}>Địa chỉ:</span>
               <span className={styles.infoValue}>{profile.district}, {profile.city}</span>
             </div>
           </div>
           
           <div className={styles.infoGroup}>
-            <h3 className={styles.sectionTitle}>Financial Information</h3>
+            <h3 className={styles.sectionTitle}>Thông tin tài chính</h3>
             <div className={styles.infoItem}>
-              <span className={styles.infoLabel}>Primary Financial Goal:</span>
+              <span className={styles.infoLabel}>Mục tiêu tài chính:</span>
               <span className={styles.infoValue}>
                 {profile.preferredGoal === PreferredGoal.SAVING ? 'Saving Money' : 
                  profile.preferredGoal === PreferredGoal.INVESTMENT ? 'Growing Investments' : 
@@ -70,7 +70,7 @@ const InfoCard: React.FC<InfoCardProps> = ({ profile, onUpdateClick, onPasswordC
               </span>
             </div>
             <div className={styles.infoItem}>
-              <span className={styles.infoLabel}>Preferred Feedback Style:</span>
+              <span className={styles.infoLabel}>Phong cách phản hồi:</span>
               <span className={styles.infoValue}>
                 {profile.preferredMood === PreferredMood.ENCOURAGEMENT ? 'Encouraging' : 
                  profile.preferredMood === PreferredMood.IRRITATION ? 'Direct/Strict' : 
@@ -84,13 +84,13 @@ const InfoCard: React.FC<InfoCardProps> = ({ profile, onUpdateClick, onPasswordC
               className={`${styles.actionButton} ${styles.updateButton}`}
               onClick={onUpdateClick}
             >
-              Update information
+              Cập nhật Thông tin
             </button>
             <button 
               className={`${styles.actionButton} ${styles.passwordButton}`}
               onClick={onPasswordClick}
             >
-              Change password
+              Thay đổi mật khẩu
             </button>
           </div>
         </div>

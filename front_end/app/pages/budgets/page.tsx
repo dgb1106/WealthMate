@@ -5,12 +5,13 @@ import { Button, Modal, Form, Input, Select, message, Tabs, Table } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import MainLayout from '@/layouts/MainLayout';
 import BudgetCard from '@/components/budgets/budgetCard';
-import LoanCard from '@/components/budgets/loanCard';
+import LoanCard from '@/components/loans/loanCard';
 import dayjs from 'dayjs';
 import styles from './styles.module.css';
 import CategoryChart from '@/components/budgets/chart';
+import HighInterestLoanTable from '@/components/loans/HighInterestLoanTable';
+import PaymentPriorityTable from '@/components/loans/PaymentPriorityTable';
 
-// Định nghĩa interface dựa trên cấu trúc backend
 interface Budget {
   id: string;
   categoryId: string;
@@ -19,8 +20,8 @@ interface Budget {
     name: string;
     type: string;
   };
-  limit_amount: number;   // Số tiền đang lưu dưới dạng "nghìn VNĐ"
-  spent_amount: number;   // Tương tự, tùy backend
+  limit_amount: number;
+  spent_amount: number; 
   start_date: string;
   end_date: string;
 }
@@ -40,11 +41,33 @@ interface Loan {
 }
 
 interface RepaymentPlanItem {
-  payment_date: string; // or Date, but strings are safer with JSON
+  payment_date: string;
   payment_amount: number;
   principal_payment: number;
   interest_payment: number;
   remaining_principal: number;
+}
+
+interface HighInterestLoan {
+  id: string;
+  name: string;
+  interest_rate: number;
+}
+
+interface PaymentPriorityLoan {
+  id: string;
+  name: string;
+  interest_rate: number;
+  monthly_interest: number;
+}
+
+interface PortfolioAnalysis {
+  total_debt: number;
+  monthly_payment: number;
+  debt_to_payment_ratio: number | string;
+  high_interest_loans: HighInterestLoan[];
+  payment_priority: PaymentPriorityLoan[];
+  recommendations: string[];
 }
 
 
@@ -86,8 +109,8 @@ const BudgetsPage: React.FC = () => {
   const [paymentForm] = Form.useForm();
   const [repaymentPlan, setRepaymentPlan] = useState<RepaymentPlanItem[]>([]);
   const [repaymentModalVisible, setRepaymentModalVisible] = useState(false);
+  const [portfolioAnalysis, setPortfolioAnalysis] = useState<PortfolioAnalysis | null>(null);
 
-  // Lấy danh sách budget theo view
   const fetchBudgets = async () => {
     setLoading(true);
     try {
@@ -161,6 +184,7 @@ const BudgetsPage: React.FC = () => {
   useEffect(() => {
     fetchBudgets();
     fetchLoans();
+    fetchPortfolioAnalysis();
   }, [budgetView, loanView]);
 
   const getCategoryTotals = () => {
@@ -439,12 +463,13 @@ const BudgetsPage: React.FC = () => {
       const token = localStorage.getItem('authToken');
       const amountInUnits = Number(amount) / 1000;
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/loans/${id}/payment?amount=${amountInUnits}`, { //chưa có
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/loans/${id}/payment?amount=${amountInUnits}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({ amount: amountInUnits }),
       });
 
       if (!response.ok) {
@@ -480,14 +505,59 @@ const BudgetsPage: React.FC = () => {
       }
   
       const repaymentData = await response.json();
+
+      
       setRepaymentPlan(Array.isArray(repaymentData) ? repaymentData : []);
+      const updatedRepaymentPlan = repaymentData.map((item: any) => ({
+        ...item,
+        payment_amount: item.payment_amount * 1000,
+        principal_payment: item.principal_payment * 1000,
+        interest_payment: item.interest_payment * 1000,
+        remaining_principal: item.remaining_principal * 1000,
+      }));
   
-      message.success('Lấy kế hoạch trả nợ thành công');
+      setRepaymentPlan(Array.isArray(updatedRepaymentPlan) ? updatedRepaymentPlan : []);
     } catch (error) {
       console.error('Failed to fetch repayment plan:', error);
       message.error('Lấy kế hoạch trả nợ thất bại');
     }
   };
+
+  const fetchPortfolioAnalysis = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+  
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/loans/analysis/portfolio`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Không thể lấy phân tích danh mục khoản vay');
+      }
+  
+      const analysisData: PortfolioAnalysis = await response.json();
+  
+      const formattedData: PortfolioAnalysis = {
+        ...analysisData,
+        total_debt: analysisData.total_debt * 1000,
+        monthly_payment: analysisData.monthly_payment * 1000,
+        payment_priority: analysisData.payment_priority.map((item) => ({
+          ...item,
+          monthly_interest: item.monthly_interest * 1000,
+        })),
+      };
+  
+      setPortfolioAnalysis(formattedData);
+    } catch (error) {
+      console.error('Failed to fetch loan portfolio analysis:', error);
+      message.error('Lấy phân tích danh mục khoản vay thất bại');
+    }
+  };  
 
   const handleAddBudgetButton = () => {
     setCurrentBudgetId(null);
@@ -656,9 +726,12 @@ const BudgetsPage: React.FC = () => {
                       <LoanCard key={loan.id} loan={loan} onEdit={handleEditLoanButton} onRepaymentPlan={handleRepaymentPlanButton} />
                     ))}
                   </div>
-                  <div className={styles.rightColumn}>
-
-                  </div>
+                  {portfolioAnalysis && (
+                    <div className={styles.rightColumn}>
+                      <HighInterestLoanTable loans={portfolioAnalysis.high_interest_loans} />
+                      <PaymentPriorityTable loans={portfolioAnalysis.payment_priority} />
+                    </div>
+                  )}
                 </div>
               </>
             ),
