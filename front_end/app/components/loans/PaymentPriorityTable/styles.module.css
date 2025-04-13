@@ -1,0 +1,32 @@
+.card {
+    margin: 0;
+    border-radius: 0.5rem;
+    height: fit-content; /* Let it grow based on content height */
+    width: 100%; /* Prevent horizontal overflow */
+    max-width: 100%; /* Optional, ensures it doesn't exceed container */
+    overflow: hidden; /* Prevent horizontal scroll */
+  }  
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .header p {
+    margin: 0;
+    font-weight: 500;
+    font-size: 1rem;
+  }
+  
+  .body {
+    display: flex;
+  }
+  
+.tableContainer {
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    width: 100%
+  }
