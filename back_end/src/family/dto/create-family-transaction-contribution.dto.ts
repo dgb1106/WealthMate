@@ -48,7 +48,4 @@ export class CreateFamilyTransactionContributionDto {
   })
   @IsEnum(ContributionType)
   contributionType: ContributionType;
-
-  // Used internally, not exposed to API
-  targetId?: string;
 }

@@ -292,50 +292,6 @@ export class PrismaFamilyGoalRepository implements FamilyGoalRepository {
     return FamilyGoal.fromPrisma(updatedGoal);
   }
 
-  async getGoalSummary(id: string): Promise<any> {
-    const goal = await this.prisma.familyGoals.findUnique({
-      where: { id: BigInt(id) },
-      include: {
-        creator: true,
-        group: true,
-        contributions: {
-          include: {
-            transaction: {
-              include: {
-                user: true
-              }
-            }
-          },
-          orderBy: {
-            created_at: 'desc'
-          },
-          take: 10
-        }
-      }
-    });
-
-    if (!goal) {
-      throw new NotFoundException(`Goal with ID ${id} not found`);
-    }
-
-    const familyGoal = FamilyGoal.fromPrisma(goal);
-
-    // Format contributions
-    const recentContributions = goal.contributions.map(contribution => ({
-      id: String(contribution.id),
-      amount: Number(contribution.amount),
-      date: contribution.created_at,
-      userId: contribution.transaction.userId,
-      userName: contribution.transaction.user.name,
-      transactionId: String(contribution.transactionId)
-    }));
-
-    return {
-      ...familyGoal.toResponseFormat(),
-      recentContributions
-    };
-  }
-
   async getGroupGoalsSummary(groupId: string): Promise<any> {
     const group = await this.prisma.familyGroups.findUnique({
       where: { id: BigInt(groupId) }
