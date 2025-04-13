@@ -227,7 +227,6 @@ export class BudgetsScheduler {
           gte: startDate,
           lte: endDate
         },
-        targetId: BigInt(budgetId)
       },
       _sum: {
         amount: true

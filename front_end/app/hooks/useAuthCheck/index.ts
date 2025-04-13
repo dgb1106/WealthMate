@@ -15,6 +15,24 @@ export const useAuthCheck = () => {
         if (!token) {
           setIsAuthenticated(false);
           setIsLoading(false);
+          localStorage.removeItem('authToken');
+          return;
+        }
+        try {
+          const tokenData = JSON.parse(atob(token.split('.')[1]));
+          const expirationTime = tokenData.exp * 1000; 
+          if (Date.now() >= expirationTime) {
+            console.log('Token has expired');
+            localStorage.removeItem('authToken');
+            setIsAuthenticated(false);
+            setIsLoading(false);
+            return;
+          }
+        } catch (e) {
+          console.error('Error parsing token:', e);
+          localStorage.removeItem('authToken');
+          setIsAuthenticated(false);
+          setIsLoading(false);
           return;
         }
         
@@ -30,6 +48,9 @@ export const useAuthCheck = () => {
         if (response.ok) {
           const data = await response.json();
           setIsAuthenticated(data.isAuthenticated);
+          if (!data.isAuthenticated) {
+            localStorage.removeItem('authToken');
+          }
         } else {
           console.error('Auth check failed:', response.status, response.statusText);
           localStorage.removeItem('authToken');
@@ -37,6 +58,7 @@ export const useAuthCheck = () => {
         }
       } catch (error) {
         console.error('Auth check error:', error);
+        localStorage.removeItem('authToken');
         setIsAuthenticated(false);
       } finally {
         setIsLoading(false);

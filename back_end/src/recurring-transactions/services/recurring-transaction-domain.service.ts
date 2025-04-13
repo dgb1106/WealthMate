@@ -100,7 +100,8 @@ export class RecurringTransactionDomainService {
         );
         
         // Tính toán ngày xuất hiện tiếp theo
-        const nextOccurence = recurringTx.calculateNextOccurrence();
+        const nextOccurence = recurringTx.calculateNextOccurrence(recurringTx.next_occurence);
+        console.log(nextOccurence)
         
         await this.recurringTxRepository.updateNextOccurrence(
           recurringTx.id, 
