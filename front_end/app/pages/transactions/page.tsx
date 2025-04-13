@@ -14,6 +14,7 @@ import { Button, Form, Modal, message, Dropdown, Menu, Divider, Typography } fro
 import { PlusOutlined, DownOutlined } from '@ant-design/icons';
 import styles from './styles.module.css';
 import RecurringTransactionForm from '@/components/transactions/RecurringTransactionForm';
+import GroupTransactionForm from '@/components/transactions/GroupTransactionForm';
 
 const { Title } = Typography;
 
@@ -62,6 +63,7 @@ const TransactionsPage: React.FC = () => {
     addRecurringTransaction,
     updateRecurringTransaction,
     deleteRecurringTransaction,
+    addGroupTransaction,
   } = useTransactions();
 
   // Regular transaction states
@@ -85,6 +87,10 @@ const TransactionsPage: React.FC = () => {
   const [selectedRecurringTransaction, setSelectedRecurringTransaction] = useState<RecurringTransaction | null>(null);
   const [selectedRecurringCategory, setSelectedRecurringCategory] = useState<string>("all");
   const [selectedFrequency, setSelectedFrequency] = useState<string>("all");
+
+  // Group transaction states
+  const [groupModalVisible, setGroupModalVisible] = useState(false);
+  const [groupForm] = Form.useForm();
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -169,6 +175,12 @@ const TransactionsPage: React.FC = () => {
     }
   };
 
+  const handleAddGroupTransaction = async (values: any) => {
+    await addGroupTransaction(values);
+    setGroupModalVisible(false);
+    groupForm.resetFields();
+  };
+
   const onFinishFailed = (errorInfo: any) => {
     console.log('Failed:', errorInfo);
     message.error('Có lỗi xảy ra khi gửi biểu mẫu.');
@@ -196,6 +208,11 @@ const TransactionsPage: React.FC = () => {
           key: '2',
           label: 'Tạo giao dịch định kì mới',
           onClick: () => setRecurringModalVisible(true),
+        },
+        {
+          key: '3',
+          label: 'Tạo giao dịch nhóm',
+          onClick: () => setGroupModalVisible(true),
         },
       ]}
     />
@@ -351,6 +368,24 @@ const TransactionsPage: React.FC = () => {
         <RecurringTransactionForm 
           form={recurringForm}
           onFinish={handleAddRecurringTransaction}
+          onFinishFailed={onFinishFailed}
+          isEdit={false}
+        />
+      </Modal>
+
+      {/* Modal thêm giao dịch nhóm */}
+      <Modal
+        visible={groupModalVisible}
+        title="Thêm giao dịch nhóm mới"
+        onCancel={() => {
+          setGroupModalVisible(false);
+          groupForm.resetFields();
+        }}
+        footer={null}
+      >
+        <GroupTransactionForm 
+          form={groupForm}
+          onFinish={handleAddGroupTransaction}
           onFinishFailed={onFinishFailed}
           isEdit={false}
         />

@@ -397,6 +397,62 @@ const useTransactions = () => {
     }
   };
 
+  const addGroupTransaction = async (values: { 
+    groupId: string;
+    categoryId: string;
+    amount: number;
+    description: string;
+    contributionType: string;
+  }) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const transactionResponse = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/transactions`,
+        {
+          categoryId: values.categoryId,
+          amount: values.amount,
+          description: values.description
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      if (!transactionResponse.data.success) {
+        throw new Error('Tạo giao dịch thất bại');
+      }
+      const transactionId = transactionResponse.data.data.id;
+      
+      const groupResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/family/groups/${values.groupId}/contributions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          transactionId: transactionId,
+          categoryId: values.categoryId,
+          groupId: values.groupId,
+          amount: values.amount,
+          contributionType: values.contributionType
+        }),
+      });
+
+      if (!groupResponse.ok) {
+        throw new Error('Tạo giao dịch nhóm thất bại');
+      }
+
+      message.success('Tạo giao dịch nhóm thành công');
+      fetchTransactions('all', 'all', 'all', 'all');
+    } catch (error) {
+      console.error('Failed to add group transaction:', error);
+      message.error('Tạo giao dịch nhóm thất bại');
+    }
+  };
+
   return {
     transactions,
     recurringTransactions,
@@ -412,6 +468,7 @@ const useTransactions = () => {
     addRecurringTransaction,
     updateRecurringTransaction,
     deleteRecurringTransaction,
+    addGroupTransaction,
   };
 };
 
