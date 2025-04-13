@@ -173,29 +173,49 @@ export class FamilyBudgetService {
     startDate: Date,
     endDate: Date
   ): Promise<number> {
-    // Find all budget contributions that match the group and category within the date range
+    // Lấy danh sách transaction IDs thỏa mãn điều kiện
+    const transactions = await this.prisma.transactions.findMany({
+      where: {
+        categoryId: BigInt(categoryId),
+        created_at: {
+          gte: startDate,
+          lte: endDate
+        }
+      },
+      select: {
+        id: true,
+        amount: true
+      }
+    });
+  
+    // Lấy các contributions thuộc những transactions này
     const contributions = await this.prisma.familyTransactionContributions.findMany({
       where: {
         groupId: BigInt(groupId),
         contributionType: ContributionType.BUDGET,
-        transaction: {
-          categoryId: BigInt(categoryId),
-          created_at: {
-            gte: startDate,
-            lte: endDate
-          }
+        transactionId: {
+          in: transactions.map(t => t.id)
         }
       },
-      include: {
-        transaction: true
+      select: {
+        transactionId: true
       }
     });
-
-    // Sum up all the contribution amounts
-    const totalSpent = contributions.reduce((sum, contribution) => {
-      return sum + Number(contribution.amount);
+  
+    // Lấy tập hợp transaction IDs từ contributions
+    const contributionTransactionIds = new Set(
+      contributions.map(c => c.transactionId.toString())
+    );
+  
+    // Tính tổng amount từ transactions mà có trong contributions
+    const totalSpent = transactions.reduce((sum, transaction) => {
+      // Chỉ cộng amount của transaction có trong contributions
+      if (contributionTransactionIds.has(transaction.id.toString())) {
+        return sum + Number(transaction.amount);
+      }
+      return sum;
     }, 0);
-
-    return totalSpent;
+  
+    return Math.abs(totalSpent); // Đảm bảo số dương vì chi tiêu thường là số âm
   }
 }
