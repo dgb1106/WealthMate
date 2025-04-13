@@ -48,12 +48,6 @@ const MenuBar: React.FC = () => {
           </Link>
         </li>
         <li>
-          <Link href="/pages/loans" className={styles.menuItem}>
-            <i className="fi fi-rr-handshake-deal-loan"></i>
-            <span>Khoản Nợ</span>
-          </Link>
-        </li>
-        <li>
           <Link href="/pages/family" className={styles.menuItem}>
             <i className="fi fi-rr-people-roof"></i>
             <span>Gia Đình</span>

@@ -36,12 +36,37 @@
   width: 100%;
 }
   
-.addButton {
-  background-color: #004aad;
+.headerButtons {
+  display: flex;
+  gap: 1rem;
 }
   
 .modalFooter {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.filterContainer {
+  margin-bottom: 16px;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.filters {
+  display: flex;
+  gap: 1rem;
+  border-radius: 1.25rem;
+}
+
+.filterSelect {
+  min-width: 6.25rem;
+  border-radius: 1.25rem;
+}
+
+.tableContainer {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  width: 100%
 }

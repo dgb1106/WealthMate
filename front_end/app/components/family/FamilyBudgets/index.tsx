@@ -60,7 +60,7 @@ const FamilyBudgets: React.FC<FamilyBudgetProps> = ({ groupId }) => {
   const fetchBudgets = async () => {
     try {
         const token = localStorage.getItem('authToken');
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/family-groups/${groupId}/budgets`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/family-budgets`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -117,7 +117,7 @@ const FamilyBudgets: React.FC<FamilyBudgetProps> = ({ groupId }) => {
 
       console.log('Sending payload:', payload); // Debug log
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/family-groups/${groupId}/budgets`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/family-budgets`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -162,7 +162,7 @@ const FamilyBudgets: React.FC<FamilyBudgetProps> = ({ groupId }) => {
         end_date: values.end_date,
       };
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/family-groups/${groupId}/budgets/${currentBudget?.id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/family-budgets/${currentBudget?.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -192,7 +192,7 @@ const FamilyBudgets: React.FC<FamilyBudgetProps> = ({ groupId }) => {
   const handleDeleteBudget = async (id: string) => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/family-groups/${groupId}/budgets/${currentBudget?.id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/family-budgets/${currentBudget?.id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,

@@ -1,0 +1,74 @@
+.card {
+    margin: 0px;
+    border-radius: 8px;
+    height: 180px;
+    width: 285px;
+  }
+    
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0px;
+    padding: 6px;
+    height: 20px;
+    margin-bottom: 1rem;
+  }
+  
+  .header p {
+    font-size: 16px;
+    font-weight: 500;
+    color: black;
+  }
+
+  .headerButtons {
+    display: flex;
+    gap: 1rem;
+  }
+    
+  .editButton {
+    color: #000000;
+    background-color: #d7e1ff;
+    border-radius: 34px;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .editButton:hover {
+    background-color: #1890ff;
+    color: white;
+  }
+    
+  .customBody {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch; 
+    gap: 1rem;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .section {
+    flex: 1; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #d7e1ff;
+    border-radius: 12px;
+    padding: 0.5rem;
+  }  
+  
+  .label {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 4px;
+  }
+  
+  .value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1890ff;
+  }
