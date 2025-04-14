@@ -4,6 +4,8 @@ import { FamilyTransactionContributionRepository } from './family-transaction-co
 import { FamilyTransactionContribution } from '../entities/family-transaction-contribution.entity';
 import { CreateFamilyTransactionContributionDto } from '../dto/create-family-transaction-contribution.dto';
 import { ContributionType } from '../../common/enums/enum';
+import { Goal } from 'src/goals/entities/goal.entity';
+import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
 
 // Define interface for user contributions to fix type errors
 interface UserContribution {
@@ -47,13 +49,6 @@ export class PrismaFamilyTransactionContributionRepository implements FamilyTran
 
       // Handle BUDGET contributions
       if (createContributionDto.contributionType === ContributionType.BUDGET) {
-        const budget = await prisma.familyBudgets.findUnique({
-          where: { id: BigInt(createContributionDto.targetId) }
-        });
-
-        if (!budget) {
-          throw new NotFoundException(`Budget with ID ${createContributionDto.targetId} not found`);
-        }
 
         const contributionData = await prisma.familyTransactionContributions.create({
           data: {
@@ -61,8 +56,6 @@ export class PrismaFamilyTransactionContributionRepository implements FamilyTran
             groupId: BigInt(createContributionDto.groupId),
             amount: createContributionDto.amount,
             contributionType: createContributionDto.contributionType,
-            targetId: BigInt(createContributionDto.targetId),
-            budgetId: BigInt(createContributionDto.targetId),
             created_at: new Date(),
             userId: createContributionDto.userId || userId
           },
@@ -80,13 +73,6 @@ export class PrismaFamilyTransactionContributionRepository implements FamilyTran
       }
       // Handle GOAL contributions
       else if (createContributionDto.contributionType === ContributionType.GOAL) {
-        const goal = await prisma.familyGoals.findUnique({
-          where: { id: BigInt(createContributionDto.targetId) }
-        });
-
-        if (!goal) {
-          throw new NotFoundException(`Goal with ID ${createContributionDto.targetId} not found`);
-        }
 
         const contributionData = await prisma.familyTransactionContributions.create({
           data: {
@@ -94,8 +80,6 @@ export class PrismaFamilyTransactionContributionRepository implements FamilyTran
             groupId: BigInt(createContributionDto.groupId),
             amount: createContributionDto.amount,
             contributionType: createContributionDto.contributionType,
-            targetId: BigInt(createContributionDto.targetId),
-            goalId: BigInt(createContributionDto.targetId),
             created_at: new Date(),
             userId: createContributionDto.userId || userId
           },
@@ -145,22 +129,6 @@ export class PrismaFamilyTransactionContributionRepository implements FamilyTran
               name: true
             }
           },
-          familyBudget: options?.includeDetails ? {
-            include: {
-              category: true
-            }
-          } : {
-            select: {
-              id: true,
-              categoryId: true
-            }
-          },
-          familyGoal: options?.includeDetails ? true : {
-            select: {
-              id: true,
-              name: true
-            }
-          }
         },
         orderBy: { created_at: 'desc' },
         skip,
@@ -187,12 +155,6 @@ export class PrismaFamilyTransactionContributionRepository implements FamilyTran
           }
         },
         group: true,
-        familyBudget: {
-          include: {
-            category: true
-          }
-        },
-        familyGoal: true
       }
     });
 
@@ -214,12 +176,6 @@ export class PrismaFamilyTransactionContributionRepository implements FamilyTran
       include: {
         transaction: true,
         group: true,
-        familyBudget: {
-          include: {
-            category: true
-          }
-        },
-        familyGoal: true
       },
       orderBy: { created_at: 'desc' }
     });
@@ -246,12 +202,6 @@ export class PrismaFamilyTransactionContributionRepository implements FamilyTran
       include: {
         transaction: true,
         group: true,
-        familyBudget: {
-          include: {
-            category: true
-          }
-        },
-        familyGoal: true
       }
     });
 
@@ -260,59 +210,49 @@ export class PrismaFamilyTransactionContributionRepository implements FamilyTran
 
   async remove(id: string): Promise<void> {
     const contribution = await this.prisma.familyTransactionContributions.findUnique({
-      where: { id: BigInt(id) }
+      where: { id: BigInt(id) },
+      include: {
+        transaction: true // Bao gồm transaction để lấy categoryId
+      }
     });
-
+  
     if (!contribution) {
       throw new NotFoundException(`Contribution with ID ${id} not found`);
     }
-
+  
+    if (contribution.contributionType == ContributionType.GOAL) {
+      throw new BadRequestException('Bạn không thể xóa giao dịch đóng góp vào Mục tiêu gia đình, hãy vào phần Mục tiêu gia đình để rút tiền');
+    }
+    
     return this.prisma.$transaction(async (prisma) => {
       // Revert the contribution based on type
-      if (contribution.contributionType === ContributionType.BUDGET && contribution.budgetId) {
-        // Decrease budget spent amount
-        await prisma.familyBudgets.update({
-          where: { id: contribution.budgetId },
-          data: {
-            spent_amount: {
-              decrement: Number(contribution.amount)
-            }
-          }
-        });
-      } 
-      else if (contribution.contributionType === ContributionType.GOAL && contribution.goalId) {
-        // Get the current goal
-        const goal = await prisma.familyGoals.findUnique({
-          where: { id: contribution.goalId }
-        });
+      if (contribution.contributionType === ContributionType.BUDGET) {
+        // Lấy categoryId từ transaction liên quan
+        const categoryId = contribution.transaction.categoryId;
         
-        if (goal) {
-          // Calculate new saved amount
-          const newSavedAmount = Number(goal.saved_amount) - Number(contribution.amount);
-          let newStatus = goal.status;
-          
-          // Update status if needed
-          if (newSavedAmount <= 0) {
-            newStatus = 'PENDING';
-          } else if (newSavedAmount < Number(goal.target_amount) && goal.status === 'COMPLETED') {
-            newStatus = 'IN_PROGRESS';
+        // Tìm budget cho category này trong group
+        const budget = await prisma.familyBudgets.findFirst({
+          where: { 
+            groupId: contribution.groupId,
+            categoryId: categoryId
           }
-          
-          // Update goal
-          await prisma.familyGoals.update({
-            where: { id: contribution.goalId },
+        });
+  
+        if (budget) {
+          // Giảm spent_amount của budget
+          await prisma.familyBudgets.update({
+            where: { id: budget.id },
             data: {
-              saved_amount: newSavedAmount,
-              status: newStatus
+              spent_amount: {
+                decrement: Number(contribution.amount)
+              }
             }
           });
         }
-      }
-
-      // Delete the contribution
-      await prisma.familyTransactionContributions.delete({
-        where: { id: contribution.id }
-      });
+        await prisma.familyTransactionContributions.delete({
+          where: { id: contribution.id }
+        });
+      } 
     });
   }
 
@@ -326,12 +266,6 @@ export class PrismaFamilyTransactionContributionRepository implements FamilyTran
             user: true
           }
         },
-        familyBudget: {
-          include: {
-            category: true
-          }
-        },
-        familyGoal: true
       }
     });
 

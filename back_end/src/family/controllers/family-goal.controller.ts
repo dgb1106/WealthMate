@@ -84,18 +84,6 @@ export class FamilyGoalController {
     return { success: true, data: goal.toResponseFormat() };
   }
 
-  @Get(':id/summary')
-  @ApiOperation({ summary: 'Lấy tóm tắt chi tiết cho một mục tiêu cụ thể' })
-  @ApiParam({ name: 'groupId', description: 'Family group ID' })
-  @ApiParam({ name: 'id', description: 'Goal ID' })
-  @ApiResponse({ status: 200, description: 'Summary of the family goal.' })
-  @ApiResponse({ status: 404, description: 'Goal not found.' })
-  async getGoalSummary(@Param('groupId') groupId: string, @Param('id') id: string, @Request() req) {
-    const userId = req.user.userId;
-    const summary = await this.familyGoalService.getGoalSummary(id, userId);
-    return { success: true, data: summary };
-  }
-
   @Put(':id')
   @ApiOperation({ summary: 'Cập nhật thông tin mục tiêu' })
   @ApiParam({ name: 'groupId', description: 'Family group ID' })

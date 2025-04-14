@@ -10,7 +10,6 @@ export interface FamilyGoalRepository {
   remove(id: string, userId: string): Promise<void>;
   findActiveByGroup(groupId: string): Promise<FamilyGoal[]>;
   incrementSavedAmount(id: string, amount: number): Promise<FamilyGoal>;
-  getGoalSummary(id: string): Promise<any>;
   getGroupGoalsSummary(groupId: string): Promise<any>;
   addFundsToGoal(id: string, userId: string, amount: number, transactionId?: string): Promise<FamilyGoal>;
   withdrawFundsFromGoal(id: string, userId: string, amount: number, transactionId?: string): Promise<FamilyGoal>;
