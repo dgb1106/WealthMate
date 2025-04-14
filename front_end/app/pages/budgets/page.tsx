@@ -618,8 +618,8 @@ const BudgetsPage: React.FC = () => {
       const startDate = formatDate(firstDay);
       const endDate = formatDate(lastDay);
       
-      // Get income value (you might want to fetch this from user profile or input)
-      let income = 1200000; // Default value, replace with actual user income if available
+      // Get income value
+      let income = 1200000; // Default value
       
       try {
         const incomeResponse = await fetch('https://wealthmate.onrender.com/transactions/income/current-month', {
@@ -632,11 +632,10 @@ const BudgetsPage: React.FC = () => {
         
         if (incomeResponse.ok) {
           const incomeData = await incomeResponse.json();
-          // Make sure to handle the actual response structure
           if (incomeData && typeof incomeData === 'number' && incomeData > 0) {
-            income = incomeData * 1000; // Convert from thousands to actual value
+            income = incomeData * 1000;
           } else if (incomeData && typeof incomeData.income === 'number' && incomeData.income > 0) {
-            income = incomeData.income * 1000; // Alternative structure
+            income = incomeData.income * 1000;
           }
           console.log(`Đã lấy thu nhập tháng này: ${income.toLocaleString('vi-VN')} VNĐ`);
         } else {
@@ -644,9 +643,100 @@ const BudgetsPage: React.FC = () => {
         }
       } catch (incomeError) {
         console.error('Lỗi khi lấy thu nhập:', incomeError);
-        // Continue with default income value
       }
-
+      
+      // Fetch budget suggestions with the actual income
+      const response = await fetch(`https://wealthmate.onrender.com/ai-utils/budget-suggestion?income=${income}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Lỗi API (${response.status}): Không thể lấy gợi ý ngân sách`);
+      }
+      
+      const suggestions = await response.json();
+      
+      // Check if suggestions are empty
+      if (!suggestions || Object.keys(suggestions).length === 0) {
+        message.info('Không tìm thấy gợi ý ngân sách nào.');
+        return;
+      }
+      
+      // Create budgets from suggestions
+      let createdCount = 0;
+      let failedCount = 0;
+      
+      for (const [categoryName, amount] of Object.entries(suggestions)) {
+        try {
+          // Normalize the category name to match your predefined categories
+          const normalizedCategoryName = categoryName.replace("Hóa", "Hoá");
+          
+          // Find category ID by name
+          const category = predefinedCategories.find(c => c.name === normalizedCategoryName);
+          if (!category) {
+            console.warn(`Không tìm thấy danh mục "${categoryName}" trong hệ thống`);
+            failedCount++;
+            continue;
+          }
+          
+          // Create budget with the suggested amount
+          const amountValue = parseFloat(amount as string) / 1000;
+          
+          const budgetPayload = {
+            categoryId: category.id,
+            limit_amount: amountValue,
+            start_date: startDate,
+            end_date: endDate,
+            spent_amount: 0
+          };
+          
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+          const baseUrl = apiUrl?.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
+          
+          const createResponse = await fetch(`${baseUrl}/budgets`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(budgetPayload)
+          });
+          
+          if (createResponse.ok) {
+            createdCount++;
+          } else {
+            console.error(`Không thể tạo ngân sách cho ${categoryName}:`, await createResponse.text());
+            failedCount++;
+          }
+        } catch (error) {
+          console.error(`Lỗi khi tạo ngân sách cho ${categoryName}:`, error);
+          failedCount++;
+        }
+      }
+      
+      // Show results
+      if (createdCount > 0) {
+        message.success(`Đã tạo ${createdCount} ngân sách gợi ý thành công`);
+        fetchBudgets(); // Refresh the budget list
+      }
+      
+      if (failedCount > 0) {
+        message.warning(`Không thể tạo ${failedCount} ngân sách`);
+      }
+      
+    } catch (error) {
+      console.error('Lỗi khi tạo ngân sách gợi ý:', error);
+      message.error('Không thể tạo ngân sách gợi ý: ' + 
+        (error instanceof Error ? error.message : 'Lỗi không xác định'));
+    } finally {
+      hide();
+    }
+  };
+  
   const handleAddLoanButton = () => {
     setCurrentLoanId(null);
     setLoanModalVisible(true);
