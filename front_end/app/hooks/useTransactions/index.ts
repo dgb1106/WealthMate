@@ -397,6 +397,75 @@ const useTransactions = () => {
     }
   };
 
+  const addGroupTransaction = async (values: { 
+    groupId: string;
+    categoryId: string;
+    amount: number;
+    description: string;
+    contributionType: string;
+  }) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const transactionResponse = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/transactions`,
+        {
+          categoryId: values.categoryId,
+          amount: values.amount,
+          description: values.description
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      if (!transactionResponse.data) {
+        throw new Error('Tạo giao dịch thất bại');
+      }
+      
+      const transactionData = transactionResponse.data;
+      console.log('Transaction response data:', transactionData);
+      
+      if (!transactionData.id || transactionData.id === undefined) {
+        throw new Error('Không tìm thấy ID giao dịch');
+      }
+
+      const requestBody = {
+        transactionId: String(transactionData.id),
+        categoryId: String(values.categoryId),
+        groupId: values.groupId,
+        amount: Math.abs(values.amount),
+        contributionType: "BUDGET"
+      };
+      
+      console.log('Sending request body:', requestBody);
+      
+      const groupResponse = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/family/groups/${values.groupId}/contributions`,
+        requestBody,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      message.success('Tạo giao dịch nhóm thành công');
+      fetchTransactions('all', 'all', 'all', 'all');
+    } catch (error: any) {
+      console.error('Failed to add group transaction:', error);
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+        message.error(`Tạo giao dịch nhóm thất bại: ${error.response.data.message || error.message}`);
+      } else {
+        message.error('Tạo giao dịch nhóm thất bại');
+      }
+    }
+  };
+
   return {
     transactions,
     recurringTransactions,
@@ -412,6 +481,7 @@ const useTransactions = () => {
     addRecurringTransaction,
     updateRecurringTransaction,
     deleteRecurringTransaction,
+    addGroupTransaction,
   };
 };
 
