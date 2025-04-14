@@ -268,6 +268,13 @@ const BudgetsPage: React.FC = () => {
     });
   };
 
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const handleSuggestBudget = async () => {
     const hide = message.loading('Đang tạo ngân sách gợi ý...', 0);
     
@@ -284,8 +291,8 @@ const BudgetsPage: React.FC = () => {
       const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
       const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
       
-      const startDate = firstDay.toISOString().split('T')[0];
-      const endDate = lastDay.toISOString().split('T')[0];
+      const startDate = formatDate(firstDay);
+      const endDate = formatDate(lastDay);
       
       // Get income value (you might want to fetch this from user profile or input)
       let income = 1200000; // Default value, replace with actual user income if available
