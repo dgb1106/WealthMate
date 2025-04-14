@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Input, Button, DatePicker, message, Modal } from 'antd';
+import { Card, Form, Input, Button, DatePicker, message, Modal, Select } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import styles from './styles.module.css';
 import dayjs from 'dayjs';
@@ -25,8 +25,12 @@ const FamilyGoals: React.FC<FamilyGoalProps> = ({ groupId }) => {
     const [goals, setGoals] = useState<FamilyGoal[]>([]);
     const [loading, setLoading] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
+    const [addFundsModalVisible, setAddFundsModalVisible] = useState(false);
+    const [withdrawFundsModalVisible, setWithdrawFundsModalVisible] = useState(false);
     const [currentGoal, setCurrentGoal] = useState<FamilyGoal | null>(null);
     const [form] = Form.useForm();
+    const [addFundsForm] = Form.useForm();
+    const [withdrawFundsForm] = Form.useForm();
 
     useEffect(() => {
         fetchFamilyGoals();
@@ -75,8 +79,6 @@ const FamilyGoals: React.FC<FamilyGoalProps> = ({ groupId }) => {
             });
       
             const responseData = await response.json();
-            console.log('Response status:', response.status); // Debug log
-            console.log('Response data:', responseData); // Debug log
 
             if (!response.ok) {
                 throw new Error(responseData.message || 'Tạo Mục tiêu thất bại');
@@ -87,7 +89,6 @@ const FamilyGoals: React.FC<FamilyGoalProps> = ({ groupId }) => {
             form.resetFields();
             fetchFamilyGoals();
           } catch (error) {
-            console.error('Failed to create goal:', error);
             message.error(error instanceof Error ? error.message : 'Tạo Mục tiêu thất bại');
         }
     };
@@ -145,6 +146,70 @@ const FamilyGoals: React.FC<FamilyGoalProps> = ({ groupId }) => {
         }
     };
 
+    const handleAddFunds = async (values: any) => {
+        try {
+            const token = localStorage.getItem('authToken');
+            const payload = {
+                amount: values.amount / 1000,
+                description: values.description
+            };
+            
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/family-groups/${groupId}/goals/${values.goalId}/add-funds`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(payload),
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Thêm tiết kiệm thất bại');
+            }
+            
+            message.success('Thêm tiết kiệm thành công');
+            setAddFundsModalVisible(false);
+            addFundsForm.resetFields();
+            fetchFamilyGoals();
+        } catch (error) {
+            console.error('Failed to add funds:', error);
+            message.error(error instanceof Error ? error.message : 'Thêm tiết kiệm thất bại');
+        }
+    };
+    
+    const handleWithdrawFunds = async (values: any) => {
+        try {
+            const token = localStorage.getItem('authToken');
+            const payload = {
+                amount: values.amount / 1000,
+                description: values.description
+            };
+            
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/family-groups/${groupId}/goals/${values.goalId}/withdraw-funds`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(payload),
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Rút tiết kiệm thất bại');
+            }
+            
+            message.success('Rút tiết kiệm thành công');
+            setWithdrawFundsModalVisible(false);
+            withdrawFundsForm.resetFields();
+            fetchFamilyGoals();
+        } catch (error) {
+            console.error('Failed to withdraw funds:', error);
+            message.error(error instanceof Error ? error.message : 'Rút tiết kiệm thất bại');
+        }
+    };
+
     const handleAddButton = () => {
         setCurrentGoal(null);
         setModalVisible(true);
@@ -180,8 +245,14 @@ const FamilyGoals: React.FC<FamilyGoalProps> = ({ groupId }) => {
         <div>
             <div className={styles.container}>
                 <div className={styles.headerButtons}>
-                    <Button type='primary' onClick={handleAddButton}>
+                    <Button type='primary' onClick={handleAddButton} style={{ marginRight: '10px' }}>
                         Tạo Mục tiêu
+                    </Button>
+                    <Button type='primary' onClick={() => setAddFundsModalVisible(true)} style={{ marginRight: '10px' }}>
+                        Thêm tiết kiệm nhóm
+                    </Button>
+                    <Button type='primary' onClick={() => setWithdrawFundsModalVisible(true)}>
+                        Rút tiết kiệm nhóm
                     </Button>
                 </div>
 
@@ -301,10 +372,112 @@ const FamilyGoals: React.FC<FamilyGoalProps> = ({ groupId }) => {
                     </Form.Item>
                 </Form>
             </Modal>
+
+            <Modal
+                title="Thêm tiết kiệm nhóm"
+                open={addFundsModalVisible}
+                onCancel={() => setAddFundsModalVisible(false)}
+                footer={null}
+            >
+                <Form
+                    form={addFundsForm}
+                    layout="vertical"
+                    onFinish={handleAddFunds}
+                >
+                    <Form.Item
+                        name="goalId"
+                        label="Chọn mục tiêu"
+                        rules={[{ required: true, message: 'Vui lòng chọn mục tiêu' }]}
+                    >
+                        <Select placeholder="Chọn mục tiêu">
+                            {goals.map(goal => (
+                                <Select.Option key={goal.id} value={goal.id}>
+                                    {goal.name}
+                                </Select.Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+
+                    <Form.Item
+                        name="amount"
+                        label="Số tiền (VNĐ)"
+                        rules={[{ required: true, message: 'Vui lòng nhập số tiền' }]}
+                    >
+                        <Input type="number" min="0" />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="description"
+                        label="Mô tả"
+                        rules={[{ required: true, message: 'Vui lòng nhập mô tả' }]}
+                    >
+                        <Input.TextArea rows={3} />
+                    </Form.Item>
+
+                    <Form.Item>
+                        <div className={styles.modalFooter}>
+                            <Button type="primary" htmlType="submit">
+                                Xác nhận
+                            </Button>
+                        </div>
+                    </Form.Item>
+                </Form>
+            </Modal>
+
+            <Modal
+                title="Rút tiết kiệm nhóm"
+                open={withdrawFundsModalVisible}
+                onCancel={() => setWithdrawFundsModalVisible(false)}
+                footer={null}
+            >
+                <Form
+                    form={withdrawFundsForm}
+                    layout="vertical"
+                    onFinish={handleWithdrawFunds}
+                >
+                    <Form.Item
+                        name="goalId"
+                        label="Chọn mục tiêu"
+                        rules={[{ required: true, message: 'Vui lòng chọn mục tiêu' }]}
+                    >
+                        <Select placeholder="Chọn mục tiêu">
+                            {goals.map(goal => (
+                                <Select.Option key={goal.id} value={goal.id}>
+                                    {goal.name}
+                                </Select.Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+
+                    <Form.Item
+                        name="amount"
+                        label="Số tiền (VNĐ)"
+                        rules={[{ required: true, message: 'Vui lòng nhập số tiền' }]}
+                    >
+                        <Input type="number" min="0" />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="description"
+                        label="Mô tả"
+                        rules={[{ required: true, message: 'Vui lòng nhập mô tả' }]}
+                    >
+                        <Input.TextArea rows={3} />
+                    </Form.Item>
+
+                    <Form.Item>
+                        <div className={styles.modalFooter}>
+                            <Button type="primary" htmlType="submit">
+                                Xác nhận
+                            </Button>
+                        </div>
+                    </Form.Item>
+                </Form>
+            </Modal>
         </div>
     );
 };
 
-export default FamilyGoals; 
-        
+export default FamilyGoals;
+
 

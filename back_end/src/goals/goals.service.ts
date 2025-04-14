@@ -3,6 +3,7 @@ import { CreateGoalDto } from './dto/create-goal.dto';
 import { UpdateGoalDto } from './dto/update-goal.dto';
 import { PrismaGoalRepository } from './repositories/prisma-goal.repository';
 import { GoalDomainService } from './services/goal-domain.service';
+import { GoalStatus } from 'src/common/enums/enum';
 
 @Injectable()
 export class GoalsService {
@@ -63,6 +64,10 @@ export class GoalsService {
       if (dueDate <= today) {
         throw new BadRequestException('Ngày hoàn thành mục tiêu phải là ngày trong tương lai');
       }
+    }
+
+    if (updateGoalDto.saved_amount && updateGoalDto.target_amount && updateGoalDto.saved_amount >= updateGoalDto.target_amount) {
+      updateGoalDto.status = GoalStatus.COMPLETED;
     }
 
     // Cập nhật mục tiêu qua repository

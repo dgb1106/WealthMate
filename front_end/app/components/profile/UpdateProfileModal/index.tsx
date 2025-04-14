@@ -51,7 +51,7 @@ const UpdateProfileModal: React.FC<UpdateProfileModalProps> = ({
       <div className={styles.modal}>
         {/* Rest of modal content */}
         <div className={styles.modalHeader}>
-          <h3>Update Information</h3>
+          <h3>Cập nhật Thông tin</h3>
           <button 
             className={styles.closeButton}
             onClick={onClose}
@@ -62,7 +62,7 @@ const UpdateProfileModal: React.FC<UpdateProfileModalProps> = ({
         
         <form onSubmit={onSubmit}>
           <div className={styles.formGroup}>
-            <label htmlFor="name">Full Name:</label>
+            <label htmlFor="name">Tên đầy đủ:</label>
             <input
               type="text"
               id="name"
@@ -74,7 +74,7 @@ const UpdateProfileModal: React.FC<UpdateProfileModalProps> = ({
           </div>
           
           <div className={styles.formGroup}>
-            <label htmlFor="phone">Phone Number:</label>
+            <label htmlFor="phone">Số điện thoại:</label>
             <input
               type="tel"
               id="phone"
@@ -85,7 +85,7 @@ const UpdateProfileModal: React.FC<UpdateProfileModalProps> = ({
           </div>
           
           <div className={styles.formGroup}>
-            <label htmlFor="job">Occupation:</label>
+            <label htmlFor="job">Nghề nghiệp:</label>
             <input
               type="text"
               id="job"
@@ -96,7 +96,7 @@ const UpdateProfileModal: React.FC<UpdateProfileModalProps> = ({
           </div>
           
           <div className={styles.formGroup}>
-            <label htmlFor="city">City:</label>
+            <label htmlFor="city">Thành phố:</label>
             <input
               type="text"
               id="city"
@@ -107,7 +107,7 @@ const UpdateProfileModal: React.FC<UpdateProfileModalProps> = ({
           </div>
           
           <div className={styles.formGroup}>
-            <label htmlFor="district">District:</label>
+            <label htmlFor="district">Quận:</label>
             <input
               type="text"
               id="district"
@@ -118,7 +118,7 @@ const UpdateProfileModal: React.FC<UpdateProfileModalProps> = ({
           </div>
           
           <div className={styles.formGroup}>
-            <label htmlFor="preferredMood">Preferred Feedback Style:</label>
+            <label htmlFor="preferredMood">Phong cách phản hồi:</label>
             <select
               id="preferredMood"
               name="preferredMood"
@@ -126,14 +126,14 @@ const UpdateProfileModal: React.FC<UpdateProfileModalProps> = ({
               onChange={onFormChange}
               className={styles.selectField}
             >
-              <option value="">Select feedback style</option>
-              <option value="ENCOURAGEMENT">Encouraging</option>
-              <option value="IRRITATION">Direct/Strict</option>
+              <option value="">Chọn phong cách phản hồi</option>
+              <option value="ENCOURAGEMENT">Động viên</option>
+              <option value="IRRITATION">Nghiêm khắc</option>
             </select>
           </div>
 
           <div className={styles.formGroup}>
-            <label htmlFor="preferredGoal">Primary Financial Goal:</label>
+            <label htmlFor="preferredGoal">Mục tiêu tài chính:</label>
             <select
               id="preferredGoal"
               name="preferredGoal"
@@ -141,9 +141,9 @@ const UpdateProfileModal: React.FC<UpdateProfileModalProps> = ({
               onChange={onFormChange}
               className={styles.selectField}
             >
-              <option value="">Select primary goal</option>
-              <option value="SAVING">Saving Money</option>
-              <option value="INVESTMENT">Growing Investments</option>
+              <option value="">Chọn mục tiêu tài chính</option>
+              <option value="SAVING">Tiết kiệm</option>
+              <option value="INVESTMENT">Phát triển đầu tư</option>
             </select>
           </div>
           
@@ -152,14 +152,14 @@ const UpdateProfileModal: React.FC<UpdateProfileModalProps> = ({
           
           <div className={styles.modalActions}>
             <button type="submit" className={styles.submitButton}>
-              Update
+              Cập nhật
             </button>
             <button 
               type="button" 
               className={styles.cancelButton}
               onClick={onClose}
             >
-              Cancel
+              Huỷ
             </button>
           </div>
         </form>
