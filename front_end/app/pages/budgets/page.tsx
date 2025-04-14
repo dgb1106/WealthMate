@@ -736,7 +736,7 @@ const BudgetsPage: React.FC = () => {
       hide();
     }
   };
-  
+
   const handleAddLoanButton = () => {
     setCurrentLoanId(null);
     setLoanModalVisible(true);
@@ -791,9 +791,14 @@ const BudgetsPage: React.FC = () => {
         <h1>Ngân Sách</h1>
         <div className={styles.headerButtons}>
           {activeTab === '1' ? (
-            <Button type="primary" onClick={handleAddBudgetButton}>
-              Tạo Ngân sách
-            </Button>
+            <>
+              <Button type="primary" onClick={handleSuggestBudget}>
+                Gợi ý ngân sách
+              </Button>
+              <Button type="primary" onClick={handleAddBudgetButton}>
+                Tạo Ngân sách
+              </Button>
+            </>
           ) : (
             <>
               <Button type="primary" onClick={handleAddLoanButton}>
