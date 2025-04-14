@@ -592,6 +592,61 @@ const BudgetsPage: React.FC = () => {
     });
   };
 
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const handleSuggestBudget = async () => {
+    const hide = message.loading('Đang tạo ngân sách gợi ý...', 0);
+    
+    try {
+      // Verify authentication
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        message.error('Vui lòng đăng nhập để sử dụng tính năng này');
+        return;
+      }
+      
+      // Get the current month's start and end dates
+      const now = new Date();
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      
+      const startDate = formatDate(firstDay);
+      const endDate = formatDate(lastDay);
+      
+      // Get income value (you might want to fetch this from user profile or input)
+      let income = 1200000; // Default value, replace with actual user income if available
+      
+      try {
+        const incomeResponse = await fetch('https://wealthmate.onrender.com/transactions/income/current-month', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (incomeResponse.ok) {
+          const incomeData = await incomeResponse.json();
+          // Make sure to handle the actual response structure
+          if (incomeData && typeof incomeData === 'number' && incomeData > 0) {
+            income = incomeData * 1000; // Convert from thousands to actual value
+          } else if (incomeData && typeof incomeData.income === 'number' && incomeData.income > 0) {
+            income = incomeData.income * 1000; // Alternative structure
+          }
+          console.log(`Đã lấy thu nhập tháng này: ${income.toLocaleString('vi-VN')} VNĐ`);
+        } else {
+          console.warn('Không thể lấy thông tin thu nhập, sử dụng giá trị mặc định');
+        }
+      } catch (incomeError) {
+        console.error('Lỗi khi lấy thu nhập:', incomeError);
+        // Continue with default income value
+      }
+
   const handleAddLoanButton = () => {
     setCurrentLoanId(null);
     setLoanModalVisible(true);
