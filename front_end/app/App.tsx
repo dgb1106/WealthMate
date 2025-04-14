@@ -11,7 +11,6 @@ import BudgetsPage from './pages/budgets/page';
 import ReportsPage from './pages/analytics/page';
 import GoalsPage from './pages/goals/page';
 import FamilyPage from './pages/family/page';
-import LoansPage from './pages/loans/page';
 import InvestmentPage from './pages/investment/page';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -128,15 +127,6 @@ const App: React.FC = () => {
           element={
             <ProtectedRoute>
               <FamilyPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/pages/loans"
-          element={
-            <ProtectedRoute>
-              <LoansPage />
             </ProtectedRoute>
           }
         />
