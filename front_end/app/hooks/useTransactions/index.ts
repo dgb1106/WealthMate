@@ -421,35 +421,48 @@ const useTransactions = () => {
         }
       );
       
-      if (!transactionResponse.data.success) {
+      if (!transactionResponse.data) {
         throw new Error('Tạo giao dịch thất bại');
       }
-      const transactionId = transactionResponse.data.data.id;
       
-      const groupResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/family/groups/${values.groupId}/contributions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          transactionId: transactionId,
-          categoryId: values.categoryId,
-          groupId: values.groupId,
-          amount: values.amount,
-          contributionType: values.contributionType
-        }),
-      });
-
-      if (!groupResponse.ok) {
-        throw new Error('Tạo giao dịch nhóm thất bại');
+      const transactionData = transactionResponse.data;
+      console.log('Transaction response data:', transactionData);
+      
+      if (!transactionData.id || transactionData.id === undefined) {
+        throw new Error('Không tìm thấy ID giao dịch');
       }
 
+      const requestBody = {
+        transactionId: String(transactionData.id),
+        categoryId: String(values.categoryId),
+        groupId: values.groupId,
+        amount: Math.abs(values.amount),
+        contributionType: "BUDGET"
+      };
+      
+      console.log('Sending request body:', requestBody);
+      
+      const groupResponse = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/family/groups/${values.groupId}/contributions`,
+        requestBody,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
       message.success('Tạo giao dịch nhóm thành công');
       fetchTransactions('all', 'all', 'all', 'all');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to add group transaction:', error);
-      message.error('Tạo giao dịch nhóm thất bại');
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+        message.error(`Tạo giao dịch nhóm thất bại: ${error.response.data.message || error.message}`);
+      } else {
+        message.error('Tạo giao dịch nhóm thất bại');
+      }
     }
   };
 
