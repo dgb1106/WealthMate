@@ -17,7 +17,8 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SchedulesModule } from './schedules/schedules.module';
 import { FamilyModule } from './family/family.module';
-
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -43,8 +44,15 @@ import { FamilyModule } from './family/family.module';
     ScheduleModule.forRoot(),
     SchedulesModule,
     FamilyModule,
+    ThrottlerModule.forRoot([{
+      ttl: 60,          // Khoảng thời gian 60 giây
+      limit: 20,        // Tối đa 20 request trong 60 giây cho mỗi IP
+    }]),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, {
+    provide: APP_GUARD,
+    useClass: ThrottlerGuard,
+  }],
 })
 export class AppModule {}
