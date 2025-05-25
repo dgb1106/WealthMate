@@ -51,5 +51,10 @@ async function bootstrap() {
 
   SwaggerModule.setup('api', app, document);
   await app.listen(process.env.PORT ?? 8000);
+  app.use((req, res, next) => {
+    res.header('X-RateLimit-Limit', '20');
+    res.header('X-RateLimit-Remaining-TTL', '60');
+    next();
+  });
 }
 bootstrap();
